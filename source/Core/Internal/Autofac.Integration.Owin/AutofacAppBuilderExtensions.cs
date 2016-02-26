@@ -78,7 +78,7 @@ namespace Owin
         }
 
         [SecuritySafeCritical]
-        static void UseMiddlewareFromContainer(this IAppBuilder app, IComponentContext container)
+        internal static void UseMiddlewareFromContainer(this IAppBuilder app, IComponentContext container)
         {
             var services = container.ComponentRegistry.Registrations.SelectMany(r => r.Services)
                 .OfType<TypedService>()
