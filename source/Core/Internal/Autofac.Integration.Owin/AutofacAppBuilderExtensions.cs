@@ -32,6 +32,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Security;
+using IdentityServer3.Core.Logging;
 
 namespace Owin
 {
@@ -44,6 +45,7 @@ namespace Owin
     {
         // idsvr : unnecessary because we remove these guards so that multiple copies of middleware can be registered
         //const string MiddlewareRegisteredKey = "idsvr:AutofacMiddelwareRegistered";
+        private readonly static ILog Logger = LogProvider.GetCurrentClassLogger();
 
         /// <summary>
         /// Adds a component to the OWIN pipeline for using Autofac dependency injection with middleware.
@@ -69,8 +71,6 @@ namespace Owin
                 }
             });
 
-            UseMiddlewareFromContainer(app, container);
-
             // idsvr : remove these guards so that multiple copies of middleware can be registered
             //app.Properties.Add(MiddlewareRegisteredKey, true);
 
@@ -90,7 +90,11 @@ namespace Owin
             if (!typedServices.Any()) return;
 
             foreach (var typedService in typedServices)
+            {
+                Logger.InfoFormat("Using OwinMiddlware - {0}", typedService.FullName);
                 app.Use(typedService);
+            }
+                
         }
     }
 }
