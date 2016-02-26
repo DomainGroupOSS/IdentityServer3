@@ -69,9 +69,7 @@ namespace Owin
                     context.Set(Constants.OwinLifetimeScopeKey, lifetimeScope);
                     await next();
                 }
-            });
-
-            UseMiddlewareFromContainer(app, container);
+            });       
 
             // idsvr : remove these guards so that multiple copies of middleware can be registered
             //app.Properties.Add(MiddlewareRegisteredKey, true);
