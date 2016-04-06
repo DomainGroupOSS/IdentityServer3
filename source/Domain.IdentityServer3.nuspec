@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>IdentityServer3-Domain</id>
+    <id>Domain.IdentityServer3</id>
     <version>0.0.0</version>
-    <title>IdentityServer3 - Domain Fork</title>
+    <title>IdentityServer3 (DomainGroup Fork)</title>
     <authors>Allan Hardy</authors>
     <owners>Domain Group Services - Platform</owners>
     <projectUrl>https://github.com/IdentityServer/IdentityServer3</projectUrl>

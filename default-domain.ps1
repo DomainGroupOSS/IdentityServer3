@@ -11,7 +11,7 @@ properties {
 	$nuget_path = "$src_directory\.nuget\nuget.exe"
 
 	$buildNumber = 0;
-	$version = "2.4.0.0"
+	$version = "2.5.0.0"
 	$preRelease = $null
 }
 
@@ -93,7 +93,7 @@ task CreateNuGetPackage -depends ILMerge {
 	}
 
 
-	copy-item $src_directory\IdentityServer3-Domain.nuspec $dist_directory
+	copy-item $src_directory\Domain.IdentityServer3.nuspec $dist_directory
 	copy-item $output_directory\IdentityServer3.xml $dist_directory\lib\net45\
-	exec { . $nuget_path pack $dist_directory\IdentityServer3-Domain.nuspec -BasePath $dist_directory -o $dist_directory -version $packageVersion }
+	exec { . $nuget_path pack $dist_directory\Domain.IdentityServer3.nuspec -BasePath $dist_directory -o $dist_directory -version $packageVersion }
 }
