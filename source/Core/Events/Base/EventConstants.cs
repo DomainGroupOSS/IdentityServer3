@@ -63,6 +63,7 @@ namespace IdentityServer3.Core.Events
 
             public const int LocalLoginSuccess = AuthenticationEventsStart + 10;
             public const int LocalLoginFailure = AuthenticationEventsStart + 11;
+            public const int TwoFactoreCodeRequest = AuthenticationEventsStart + 12;
 
             public const int ExternalLoginSuccess = AuthenticationEventsStart + 20;
             public const int ExternalLoginFailure = AuthenticationEventsStart + 21;

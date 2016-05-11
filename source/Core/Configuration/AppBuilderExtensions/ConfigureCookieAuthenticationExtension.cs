@@ -64,6 +64,18 @@ namespace Owin
             };
             app.UseCookieAuthentication(primary);
 
+            var twoFactor = new CookieAuthenticationOptions
+            {
+                AuthenticationType = Constants.TwoFactorAuthenticationType,
+                AuthenticationMode = AuthenticationMode.Passive,
+                CookieName = options.Prefix + Constants.TwoFactorAuthenticationType,
+                ExpireTimeSpan = options.ExpireTimeSpan,
+                SlidingExpiration = options.SlidingExpiration,
+                TicketDataFormat = new TicketDataFormat(new DataProtectorAdapter(dataProtector, options.Prefix + Constants.TwoFactorAuthenticationType))
+            };
+            app.UseCookieAuthentication(twoFactor);
+
+
             var external = new CookieAuthenticationOptions
             {
                 AuthenticationType = Constants.ExternalAuthenticationType,
@@ -92,7 +104,7 @@ namespace Owin
             {
                 if (!String.IsNullOrWhiteSpace(path))
                 {
-                    primary.CookiePath = external.CookiePath = path;
+                    primary.CookiePath = external.CookiePath = twoFactor.CookiePath = path;
                     partial.CookiePath = path;
                 }
             };

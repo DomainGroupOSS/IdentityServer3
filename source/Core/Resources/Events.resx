@@ -159,4 +159,7 @@
   <data name="ResourceOwnerFlowLoginSuccess" xml:space="preserve">
     <value>Resource Owner Password Flow Login Success</value>
   </data>
+  <data name="TwoFactorCodeRequest" xml:space="preserve">
+    <value>Two Factor Authentication Code Request</value>
+  </data>
 </root>

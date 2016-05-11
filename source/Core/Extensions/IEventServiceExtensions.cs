@@ -84,6 +84,27 @@ namespace IdentityServer3.Core.Extensions
             await events.RaiseEventAsync(evt);
         }
 
+        public static async Task RaiseTwoFactorCodeRequestEventAsync(this IEventService events,
+           string username, string signInMessageId, SignInMessage signInMessage, AuthenticateResult authResult)
+        {
+            var evt = new Event<LocalLoginDetails>(
+                EventConstants.Categories.Authentication,
+                Resources.Events.TwoFactorCodeRequest,
+                EventTypes.Information,
+                EventConstants.Ids.TwoFactoreCodeRequest,
+                new LocalLoginDetails
+                {
+                    SubjectId = authResult.HasSubject ? authResult.User.GetSubjectId() : null,
+                    Name = authResult.User.Identity.Name,
+                    SignInId = signInMessageId,
+                    SignInMessage = signInMessage,
+                    PartialLogin = authResult.IsPartialSignIn,
+                    LoginUserName = username
+                });
+
+            await events.RaiseEventAsync(evt);
+        }
+
         public static async Task RaiseLocalLoginFailureEventAsync(this IEventService events, 
             string username, string signInMessageId, SignInMessage signInMessage, string error)
         {

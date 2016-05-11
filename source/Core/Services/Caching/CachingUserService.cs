@@ -82,6 +82,21 @@ namespace IdentityServer3.Core.Services.Caching
             return inner.AuthenticateExternalAsync(context);
         }
 
+        public Task TwoFactorAuthenticateCodeRequestAsync(TwoFactorAuthenticationContext context)
+        {
+            return inner.TwoFactorAuthenticateCodeRequestAsync(context);
+        }
+
+        /// <summary>
+        /// This method is called if user has enabled 2FA on their account.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <returns></returns>
+        public Task TwoFactorAuthenticateAsync(TwoFactorAuthenticationContext context)
+        {
+            return inner.TwoFactorAuthenticateAsync(context);
+        }
+
         /// <summary>
         /// This method is called prior to the user being issued a login cookie for IdentityServer.
         /// </summary>

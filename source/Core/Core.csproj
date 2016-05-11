@@ -211,6 +211,7 @@
     <Compile Include="Logging\NoopLogProvider.cs" />
     <Compile Include="Models\ClientPermissionDescription.cs" />
     <Compile Include="Models\Contexts\ExternalAuthenticationContext.cs" />
+    <Compile Include="Models\Contexts\TwoFactorAuthenticationContext.cs" />
     <Compile Include="Models\ParsedSecret.cs" />
     <Compile Include="Models\Contexts\PostAuthenticationContext.cs" />
     <Compile Include="Models\Contexts\ProfileDataRequestContext.cs" />
@@ -231,6 +232,7 @@
     </Compile>
     <Compile Include="ResponseHandling\IntrospectionResponseGenerator.cs" />
     <Compile Include="Results\CheckSessionResult.cs" />
+    <Compile Include="Results\TwoFactorActionResult.cs" />
     <Compile Include="Results\RevocationErrorResult.cs" />
     <Compile Include="Results\IntrospectionResult.cs" />
     <Compile Include="Results\WelcomeActionResult.cs" />
@@ -320,6 +322,7 @@
     <Compile Include="Validation\TokenRevocationRequestValidator.cs" />
     <Compile Include="Validation\ValidationResult.cs" />
     <Compile Include="ViewModels\AuthorizeResponseViewModel.cs" />
+    <Compile Include="ViewModels\VerifyTwoFactorCodeViewModel.cs" />
     <Compile Include="ViewModels\RevokeClientPermission.cs" />
     <Compile Include="ResponseHandling\EndSessionResponseGenerator.cs" />
     <Compile Include="Results\AuthorizeFormPostResult.cs" />
@@ -490,6 +493,7 @@
     <Compile Include="Extensions\StringsExtensions.cs" />
     <Compile Include="Services\IViewService.cs" />
     <Compile Include="ViewModels\ClientPermissionsViewModel.cs" />
+    <Compile Include="ViewModels\VerifyTwoFactorModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
@@ -498,6 +502,7 @@
     <EmbeddedResource Include="Resources\Events.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Events.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Messages.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
@@ -568,6 +573,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Services\DefaultViewService\HttpAssets\styles.css" />
+    <EmbeddedResource Include="Services\DefaultViewService\PageAssets\verifytwofactorcode.html" />
     <EmbeddedResource Include="Services\DefaultViewService\HttpAssets\styles.min.css">
       <DependentUpon>styles.css</DependentUpon>
     </EmbeddedResource>

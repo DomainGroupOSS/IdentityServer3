@@ -53,6 +53,14 @@ namespace IdentityServer3.Core.Models
         public string PartialSignInRedirectPath { get; private set; }
 
         /// <summary>
+        /// Two factor authentication is enabled
+        /// </summary>
+        /// <value>
+        /// True or false
+        /// </value>
+        public bool TwoFactorAuthenticationEnabled { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AuthenticateResult"/> class.
         /// </summary>
         /// <param name="errorMessage">The error message.</param>
@@ -73,7 +81,8 @@ namespace IdentityServer3.Core.Models
             IEnumerable<Claim> claims = null,
             string identityProvider = Constants.BuiltInIdentityProvider,
             string authenticationMethod = null,
-            string authenticationType = Constants.PrimaryAuthenticationType
+            string authenticationType = Constants.PrimaryAuthenticationType,
+            bool twoFactorAuthenticationEnabled = false
         )
         {
             if (String.IsNullOrWhiteSpace(subject)) throw new ArgumentNullException("subject");
@@ -84,12 +93,17 @@ namespace IdentityServer3.Core.Models
             {
                 if (identityProvider == Constants.BuiltInIdentityProvider)
                 {
-                    authenticationMethod = Constants.AuthenticationMethods.Password;
+                    authenticationMethod = twoFactorAuthenticationEnabled ? Constants.AuthenticationMethods.TwoFactorAuthentication : Constants.AuthenticationMethods.Password;
                 }
                 else
                 {
                     authenticationMethod = Constants.AuthenticationMethods.External;
                 }
+            }
+
+            if (twoFactorAuthenticationEnabled)
+            {
+                authenticationType = Constants.TwoFactorAuthenticationType;
             }
 
             var user = IdentityServerPrincipal.Create(subject, name, authenticationMethod, identityProvider, authenticationType);
@@ -101,6 +115,7 @@ namespace IdentityServer3.Core.Models
             }
 
             this.User = user;
+            this.TwoFactorAuthenticationEnabled = twoFactorAuthenticationEnabled;
         }
 
         /// <summary>
@@ -121,10 +136,11 @@ namespace IdentityServer3.Core.Models
         public AuthenticateResult(string subject, string name,
             IEnumerable<Claim> claims = null,
             string identityProvider = Constants.BuiltInIdentityProvider,
-            string authenticationMethod = null
+            string authenticationMethod = null,
+            bool twoFactorAuthenticationEnabled = false
         )
         {
-            Init(subject, name, claims, identityProvider, authenticationMethod);
+            Init(subject, name, claims, identityProvider, authenticationMethod, twoFactorAuthenticationEnabled: twoFactorAuthenticationEnabled);
         }
 
         /// <summary>

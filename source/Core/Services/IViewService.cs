@@ -78,5 +78,12 @@ namespace IdentityServer3.Core.Services
         /// <param name="model">The model.</param>
         /// <returns>Stream for the HTML</returns>
         Task<Stream> Error(ErrorViewModel model);
+
+        /// <summary>
+        /// Loads the HTML for the two factor code verifaiction page.
+        /// </summary>
+        /// <param name="model">The model.</param>
+        /// <returns>Stream for the HTML</returns>
+        Task<Stream> VerifyTwoFactorCode(VerifyTwoFactorCodeViewModel model);
     }
 }

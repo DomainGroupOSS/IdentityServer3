@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using System;
+
 namespace IdentityServer3.Core.Models
 {
     /// <summary>
@@ -140,5 +142,13 @@ namespace IdentityServer3.Core.Models
         /// Absolute token expiration
         /// </summary>
         Absolute = 1
+    }
+
+    [Flags]
+    public enum Remember
+    {
+        None = 1,
+        Login = 2,
+        TwoFA =4
     }
 }

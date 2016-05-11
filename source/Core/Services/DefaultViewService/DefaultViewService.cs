@@ -60,6 +60,10 @@ namespace IdentityServer3.Core.Services.Default
         /// The authorize response view
         /// </summary>
         public const string AuthorizeResponseView = "authorizeresponse";
+        /// <summary>
+        /// The two factor code view
+        /// </summary>
+        public const string TwoFactorCodeView = "verifytwofactorcode";
 
         static readonly Newtonsoft.Json.JsonSerializerSettings settings = new Newtonsoft.Json.JsonSerializerSettings()
         {
@@ -164,7 +168,19 @@ namespace IdentityServer3.Core.Services.Default
             return Render(model, ErrorView);
         }
 
-         /// <summary>
+        /// <summary>
+        /// Loads the HTML for the two factor code verifaction page.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns>
+        /// Stream for the HTML
+        /// </returns>
+        public Task<Stream> VerifyTwoFactorCode(VerifyTwoFactorCodeViewModel model)
+        {
+            return Render(model, TwoFactorCodeView);
+        }
+
+        /// <summary>
         /// Loads the HTML for the authorize response page.
         /// </summary>
         /// <param name="model">The model.</param>

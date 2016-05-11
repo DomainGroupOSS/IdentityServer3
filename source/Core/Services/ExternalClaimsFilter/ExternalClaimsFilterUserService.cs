@@ -50,6 +50,16 @@ namespace IdentityServer3.Core.Services.Default
             return inner.AuthenticateExternalAsync(context);
         }
 
+        public Task TwoFactorAuthenticateCodeRequestAsync(TwoFactorAuthenticationContext context)
+        {
+            return inner.TwoFactorAuthenticateCodeRequestAsync(context);
+        }
+
+        public Task TwoFactorAuthenticateAsync(TwoFactorAuthenticationContext context)
+        {
+            return inner.TwoFactorAuthenticateAsync(context);
+        }
+
         public Task PostAuthenticateAsync(PostAuthenticationContext context)
         {
             return inner.PostAuthenticateAsync(context);

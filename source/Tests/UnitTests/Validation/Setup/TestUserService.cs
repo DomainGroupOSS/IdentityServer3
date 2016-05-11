@@ -48,6 +48,16 @@ namespace IdentityServer3.Tests.Validation
             return Task.FromResult(0);
         }
 
+        public Task TwoFactorAuthenticateCodeRequestAsync(TwoFactorAuthenticationContext context)
+        {
+            return Task.FromResult(0);
+        }
+
+        public Task TwoFactorAuthenticateAsync(TwoFactorAuthenticationContext context)
+        {
+            return Task.FromResult(0);
+        }
+
         public Task PostAuthenticateAsync(PostAuthenticationContext context)
         {
             return Task.FromResult(0);

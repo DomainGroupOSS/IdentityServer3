@@ -32,12 +32,14 @@ namespace IdentityServer3.Core
         public const string PrimaryAuthenticationType       = "idsrv";
         public const string ExternalAuthenticationType      = "idsrv.external";
         public const string PartialSignInAuthenticationType = "idsrv.partial";
-        
+        public const string TwoFactorAuthenticationType = "idsrv.twofactor";
+
         internal static readonly string[] IdentityServerAuthenticationTypes = new string[]
         {
             PrimaryAuthenticationType,
             ExternalAuthenticationType,
-            PartialSignInAuthenticationType
+            PartialSignInAuthenticationType,
+            TwoFactorAuthenticationType
         };
         
         public const string BuiltInIdentityProvider         = "idsrv";
@@ -666,6 +668,7 @@ namespace IdentityServer3.Core
             public const string LoginExternalCallback = "idsrv.authentication.loginexternalcallback";
             public const string LogoutPrompt = "idsrv.authentication.logoutprompt";
             public const string Logout = "idsrv.authentication.logout";
+            public const string VerifyTwoFactor = "idsrv.authentication.verify";
             public const string ResumeLoginFromRedirect = "idsrv.authentication.resume";
             public const string CspReport = "idsrv.csp.report";
             public const string ClientPermissions = "idsrv.permissions";
@@ -696,6 +699,7 @@ namespace IdentityServer3.Core
             public const string LoginExternal = "external";
             public const string LoginExternalCallback = "callback";
             public const string Logout = "logout";
+            public const string VerifyTwoFactor = "verify";
             public const string ResumeLoginFromRedirect = "return";
             public const string CspReport = "csp/report";
             public const string ClientPermissions = "permissions";

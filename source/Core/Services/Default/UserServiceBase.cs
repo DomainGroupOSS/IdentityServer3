@@ -57,6 +57,26 @@ namespace IdentityServer3.Core.Services.Default
         }
 
         /// <summary>
+        /// This method is called if user has enabled 2FA on their account.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <returns></returns>
+        public virtual Task TwoFactorAuthenticateCodeRequestAsync(TwoFactorAuthenticationContext context)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
+        /// This method is called if user has enabled 2FA on their account.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <returns></returns>
+        public virtual Task TwoFactorAuthenticateAsync(TwoFactorAuthenticationContext context)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
         /// This method is called prior to the user being issued a login cookie for IdentityServer.
         /// </summary>
         /// <param name="context">The context.</param>

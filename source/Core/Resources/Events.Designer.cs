@@ -185,5 +185,14 @@ namespace IdentityServer3.Core.Resources {
                 return ResourceManager.GetString("ResourceOwnerFlowLoginSuccess", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Two Factor Authentication Code Request.
+        /// </summary>
+        public static string TwoFactorCodeRequest {
+            get {
+                return ResourceManager.GetString("TwoFactorCodeRequest", resourceCulture);
+            }
+        }
     }
 }

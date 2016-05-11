@@ -48,6 +48,20 @@ namespace IdentityServer3.Core.Services
         Task AuthenticateExternalAsync(ExternalAuthenticationContext context);
 
         /// <summary>
+        /// This method is called if user has enabled 2FA on their account.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <returns></returns>
+        Task TwoFactorAuthenticateCodeRequestAsync(TwoFactorAuthenticationContext context);
+
+        /// <summary>
+        /// This method is called if user has enabled 2FA on their account.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <returns></returns>
+        Task TwoFactorAuthenticateAsync(TwoFactorAuthenticationContext context);
+
+        /// <summary>
         /// This method is called prior to the user being issued a login cookie for IdentityServer. 
         /// </summary>
         /// <param name="context">The context.</param>
