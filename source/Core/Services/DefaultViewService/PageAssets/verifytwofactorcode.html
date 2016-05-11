@@ -1,0 +1,47 @@
+﻿<div class="page-header">
+    <h1>Login</h1>
+</div>
+
+<div class="row" ng-show="model.errorMessage">
+    <div class="col-md-12 col-sm-12">
+        <div class="alert alert-danger">
+            <strong>Error:</strong>
+            {{model.errorMessage}}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-sm-6" ng-show="model.loginUrl">
+        <div class="panel panel-default">
+            <p class="panel-heading">
+                Please enter the security code that was sent to your registered mobile device via SMS to access your services.
+            </p>
+            <div class="panel-body">
+                <form name="verifyTwoFactorForm" method="post" action="{{model.verifyCodeUrl}}">
+                    <anti-forgery-token token="model.antiForgery"></anti-forgery-token>
+                    <fieldset>
+                        <div class="form-group">
+                            <label for="code">Code</label>
+                            <input required name="code" autofocus id="code" type="text" class="form-control" placeholder="Username" ng-model="model.code" maxlength="100">
+                        </div>
+                        
+                        <div class="form-group login-remember" ng-show="model.allowRememberMe">
+                            <label for="rememberTwoFactor">
+                                <input type="checkbox" id="rememberTwoFactor" name="rememberTwoFactor" ng-model="model.rememberTwoFactor" value="true">
+                                <strong>Remember this computer for 30 days</strong>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <button name="button" value="submit" class="btn btn-primary" autofocus>Submit</button>
+                            <button name="button" value="resend" class="btn">Resend Code</button>
+                        </div>
+                        <input name="signinid" id="signinid" type="hidden" value="{{model.signinid}}">
+                        <input name="subject" id="subject" type="hidden" value="{{model.subject}}">
+                        <input name="RememberLogin" id="rememberLogin" type="hidden" value="{{model.rememberLogin}}">
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
