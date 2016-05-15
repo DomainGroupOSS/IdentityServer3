@@ -180,6 +180,14 @@ namespace IdentityServer3.Core.Configuration
         ///////////////////////
 
         /// <summary>
+        /// Gets or sets the two factor service - Implements logic of two factor challenge 
+        /// </summary>
+        /// <value>
+        /// The two factor service.
+        /// </value>
+        public Registration<ITwoFactorService> TwoFactorService { get; set; }
+
+        /// <summary>
         /// Gets or sets the consent service - Implements logic of consent decisions 
         /// </summary>
         /// <value>

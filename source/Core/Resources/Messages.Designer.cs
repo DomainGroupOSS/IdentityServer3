@@ -187,6 +187,33 @@ namespace IdentityServer3.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid code.
+        /// </summary>
+        public static string TwoFactorCodeInvalid {
+            get {
+                return ResourceManager.GetString("TwoFactorCodeInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Code is required.
+        /// </summary>
+        public static string TwoFactorCodeRequired {
+            get {
+                return ResourceManager.GetString("TwoFactorCodeRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The code has been resent, please enter the new code.
+        /// </summary>
+        public static string TwoFactorCodeResent {
+            get {
+                return ResourceManager.GetString("TwoFactorCodeResent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The client application is not known or is not authorized..
         /// </summary>
         public static string unauthorized_client {

@@ -44,6 +44,11 @@ namespace IdentityServer3.Core.Services.Default
         /// The logged out view
         /// </summary>
         public const string LoggedOutView = "loggedOut";
+
+        /// <summary>
+        /// The two factor challenge view
+        /// </summary>
+        public const string TwoFactorChallengeView = "twoFactorChallenge";
         /// <summary>
         /// The consent view
         /// </summary>
@@ -125,6 +130,19 @@ namespace IdentityServer3.Core.Services.Default
         public virtual Task<Stream> LoggedOut(LoggedOutViewModel model, SignOutMessage message)
         {
             return Render(model, LoggedOutView);
+        }
+
+        /// <summary>
+        /// Loads the HTML for the user two factor challenge page.
+        /// </summary>
+        /// <param name="model">The model.</param>
+        /// <param name="authorizeRequest">The validated authorize request.</param>
+        /// <returns>
+        /// Stream for the HTML
+        /// </returns>
+        public virtual Task<Stream> TwoFactorChallenge(TwoFactorChallengeViewModel model, ValidatedAuthorizeRequest authorizeRequest)
+        {
+            return Render(model, TwoFactorChallengeView);
         }
 
         /// <summary>

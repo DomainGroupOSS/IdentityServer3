@@ -174,4 +174,13 @@
   <data name="invalid_request" xml:space="preserve">
     <value>The client application made an invalid request.</value>
   </data>
+  <data name="TwoFactorCodeInvalid" xml:space="preserve">
+    <value>Invalid code</value>
+  </data>
+  <data name="TwoFactorCodeRequired" xml:space="preserve">
+    <value>Code is required</value>
+  </data>
+  <data name="TwoFactorCodeResent" xml:space="preserve">
+    <value>The code has been resent, please enter the new code</value>
+  </data>
 </root>

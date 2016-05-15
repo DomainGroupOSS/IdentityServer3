@@ -22,6 +22,17 @@ using System.ComponentModel;
 namespace IdentityServer3.Core.Models
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
+    public class TwoFactorChallengeResponse
+    {
+        public ValidatedAuthorizeRequest Request { get; set; }
+        public string ChallengeUri { get; set; }
+
+        public string Error { get; set; }
+        public string ErrorDescription { get; set; }
+        public bool IsError { get; set; }
+    }
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public class AuthorizeResponse
     {
         public ValidatedAuthorizeRequest Request { get; set; }

@@ -66,6 +66,14 @@ namespace IdentityServer3.Core.Services
         Task<Stream> Consent(ConsentViewModel model, ValidatedAuthorizeRequest authorizeRequest);
 
         /// <summary>
+        /// Loads the HTML for the user two factor challenge page.
+        /// </summary>
+        /// <param name="model">The model.</param>
+        /// <param name="authorizeRequest">The authorize request.</param>
+        /// <returns></returns>
+        Task<Stream> TwoFactorChallenge(TwoFactorChallengeViewModel model, ValidatedAuthorizeRequest authorizeRequest);
+
+        /// <summary>
         /// Loads the HTML for the client permissions page.
         /// </summary>
         /// <param name="model">The model.</param>

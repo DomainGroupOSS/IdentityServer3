@@ -68,6 +68,7 @@ namespace IdentityServer3.Core.Configuration.Hosting
             builder.RegisterDefaultType<IExternalClaimsFilter, NopClaimsFilter>(fact.ExternalClaimsFilter);
             builder.RegisterDefaultType<ICustomTokenValidator, DefaultCustomTokenValidator>(fact.CustomTokenValidator);
             builder.RegisterDefaultType<ICustomTokenResponseGenerator, DefaultCustomTokenResponseGenerator>(fact.CustomTokenResponseGenerator);
+            builder.RegisterDefaultType<ITwoFactorService, DefaultTwoFactorService>(fact.TwoFactorService);
             builder.RegisterDefaultType<IConsentService, DefaultConsentService>(fact.ConsentService);
             builder.RegisterDefaultType<IAuthenticationSessionValidator, DefaultAuthenticationSessionValidator>(fact.AuthenticationSessionValidator);
 

@@ -65,6 +65,31 @@ namespace Owin
             };
             app.UseCookieAuthentication(primary);
 
+            var secondary = new CookieAuthenticationOptions
+            {
+                AuthenticationMode = AuthenticationMode.Passive,
+                AuthenticationType = Constants.SecondaryAuthenticationType,
+                CookieName = Constants.SecondaryAuthenticationType,
+                ExpireTimeSpan = options.TwoFactorExpireTimeSpan,
+                SlidingExpiration = options.TwoFactorSlidingExpiration,
+                CookieSecure = GetCookieSecure(options.SecureMode),
+                TicketDataFormat = new TicketDataFormat(new DataProtectorAdapter(dataProtector, options.Prefix + Constants.SecondaryAuthenticationType)),
+                SessionStore = GetSessionStore(options.SessionStoreProvider),
+                Provider = new CookieAuthenticationProvider
+                {
+                    OnValidateIdentity = async cookieCtx =>
+                    {
+                        var validator = cookieCtx.OwinContext.Environment.ResolveDependency<IAuthenticationSessionValidator>();
+                        var isValid = await validator.IsAuthenticationSessionValidAsync(new ClaimsPrincipal(cookieCtx.Identity));
+                        if (isValid == false)
+                        {
+                            cookieCtx.RejectIdentity();
+                        }
+                    }
+                }
+            };
+            app.UseCookieAuthentication(secondary);
+
             var external = new CookieAuthenticationOptions
             {
                 AuthenticationType = Constants.ExternalAuthenticationType,
@@ -99,6 +124,7 @@ namespace Owin
                 if (!String.IsNullOrWhiteSpace(path))
                 {
                     primary.CookiePath = external.CookiePath = path;
+                    secondary.CookiePath = external.CookiePath = path;
                     partial.CookiePath = path;
                 }
             };

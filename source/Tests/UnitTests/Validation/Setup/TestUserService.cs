@@ -59,6 +59,11 @@ namespace IdentityServer3.Tests.Validation
             return Task.FromResult(0);
         }
 
+        public Task RequiresTwoFactorChallenge(RequiresTwoFactorChallengeContext context)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public Task PreAuthenticateAsync(PreAuthenticationContext context)
         {
             return Task.FromResult(0);

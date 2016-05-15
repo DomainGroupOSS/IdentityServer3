@@ -27,10 +27,13 @@ using IdentityServer3.Core.Validation;
 using IdentityServer3.Core.ViewModels;
 using System;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Microsoft.Owin;
+using Microsoft.Owin.Security;
 
 namespace IdentityServer3.Core.Endpoints
 {
@@ -68,6 +71,7 @@ namespace IdentityServer3.Core.Endpoints
         /// <param name="events">The event service.</param>
         /// <param name="antiForgeryToken">The anti forgery token.</param>
         /// <param name="clientListCookie">The client list cookie.</param>
+        /// <param name="twoFactorSessionCookie"></param>
         public AuthorizeEndpointController(
             IViewService viewService,
             AuthorizeRequestValidator validator,
@@ -107,7 +111,8 @@ namespace IdentityServer3.Core.Endpoints
             return response;
         }
 
-        private async Task<IHttpActionResult> ProcessRequestAsync(NameValueCollection parameters, UserConsent consent = null)
+        public async Task<IHttpActionResult> ProcessRequestAsync(NameValueCollection parameters, 
+            UserConsent consent = null, UserTwoFactorChallenge twoFactorChallenge = null)
         {
             // validate request
             var result = await _validator.ValidateAsync(parameters, User as ClaimsPrincipal);
@@ -152,6 +157,39 @@ namespace IdentityServer3.Core.Endpoints
                 return this.RedirectToLogin(loginInteraction.SignInMessage, request.Raw);
             }
 
+            var context = Request.GetOwinContext();
+
+            var twoFactorAuthResult = await context.Authentication.AuthenticateAsync(Constants.SecondaryAuthenticationType);
+
+            var claimsIdentity = User.Identity as ClaimsIdentity;
+
+            var amrClaim = claimsIdentity.Claims.FirstOrDefault(c => c.Type == Constants.ClaimTypes.AuthenticationMethod);
+
+            if (twoFactorAuthResult == null && amrClaim != null && amrClaim.Value == Constants.AuthenticationMethods.TwoFactorAuthentication)
+            {
+                var twoFactorInteraction = await _interactionGenerator.ProcessTwoFactorAsync(request, twoFactorChallenge);
+
+                if (twoFactorInteraction.IsError)
+                {
+                    return await this.AuthorizeErrorAsync(
+                        twoFactorInteraction.Error.ErrorType,
+                        twoFactorInteraction.Error.Error,
+                        null,
+                        request);
+                }
+
+                if (twoFactorInteraction.IsTwoFactorChallenge)
+                {
+                    Logger.Info("Showing two factor screen");
+                    return CreateTwoFactorChallengeResult(request, twoFactorChallenge, request.Raw,
+                        twoFactorInteraction.TwoFactorChallengeError, twoFactorInteraction.TwoFactorChallengeInfo);
+                }
+                else
+                {
+                    IssueTwoFactorAuthCookie(context, context.Authentication.User.GetSubjectId(), twoFactorChallenge == null ? null : (bool?)twoFactorChallenge.RememberThisDevice);
+                }
+            }           
+
             var consentInteraction = await _interactionGenerator.ProcessConsentAsync(request, consent);
 
             if (consentInteraction.IsError)
@@ -174,10 +212,20 @@ namespace IdentityServer3.Core.Endpoints
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public Task<IHttpActionResult> PostTwoFactorChallenge(UserTwoFactorChallenge model)
+        {
+            Logger.Info("Resuming from two factor challenge, restarting validation");
+
+            return ProcessRequestAsync(Request.RequestUri.ParseQueryString(), 
+                twoFactorChallenge: model ?? new UserTwoFactorChallenge());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public Task<IHttpActionResult> PostConsent(UserConsent model)
         {
             Logger.Info("Resuming from consent, restarting validation");
-            return ProcessRequestAsync(Request.RequestUri.ParseQueryString(), model ?? new UserConsent());
+            return ProcessRequestAsync(Request.RequestUri.ParseQueryString(), consent: model ?? new UserConsent());
         }
 
         [HttpGet]
@@ -213,6 +261,51 @@ namespace IdentityServer3.Core.Endpoints
 
             Logger.Error("Unsupported response mode. Aborting.");
             throw new InvalidOperationException("Unsupported response mode");
+        }
+
+        private void IssueTwoFactorAuthCookie(IOwinContext context, string subject, bool? rememberThisDevice)
+        {
+            var props = new AuthenticationProperties();
+            var id = new ClaimsIdentity(Constants.SecondaryAuthenticationType, Constants.ClaimTypes.Name, Constants.ClaimTypes.Role);
+
+            id.AddClaim(new Claim(Constants.ClaimTypes.Subject, subject));
+
+            if (rememberThisDevice == true)
+            {
+                props.IsPersistent = true;
+                var expires = DateTimeHelper.UtcNow.Add(_options.AuthenticationOptions.CookieOptions.TwoFactorRememberThisDeviceDuration);
+                props.ExpiresUtc = new DateTimeOffset(expires);
+            }
+
+            context.Authentication.SignIn(props, id);
+        }
+
+        private IHttpActionResult CreateTwoFactorChallengeResult(
+            ValidatedAuthorizeRequest validatedRequest,
+            UserTwoFactorChallenge twoFactorChallenge,
+            NameValueCollection requestParameters,
+            string errorMessage,
+            string infoMessage)
+        {
+            var env = Request.GetOwinEnvironment();
+            var twoFactorModel = new TwoFactorChallengeViewModel
+            {
+                RequestId = env.GetRequestId(),
+                SiteName = _options.SiteName,
+                SiteUrl = env.GetIdentityServerBaseUrl(),
+                ErrorMessage = errorMessage,
+                InfoMessage = infoMessage,
+                CurrentUser = env.GetCurrentUserDisplayName(),
+                LogoutUrl = env.GetIdentityServerLogoutUrl(),
+                ClientName = validatedRequest.Client.ClientName,
+                ClientUrl = validatedRequest.Client.ClientUri,
+                ClientLogoUrl = validatedRequest.Client.LogoUri,
+                RememberThisDevice = twoFactorChallenge != null && twoFactorChallenge.RememberThisDevice,
+                ChallengeUrl = Url.Route(Constants.RouteNames.Oidc.TwoFactorChallenge, null).AddQueryString(requestParameters.ToQueryString()),
+                AntiForgery = _antiForgeryToken.GetAntiForgeryToken(),                
+            };
+
+            return new TwoFactorChallengeActionResult(_viewService, twoFactorModel, validatedRequest);
         }
 
         private IHttpActionResult CreateConsentResult(

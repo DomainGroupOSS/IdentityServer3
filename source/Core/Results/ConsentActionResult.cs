@@ -31,4 +31,15 @@ namespace IdentityServer3.Core.Results
             if (validatedRequest == null) throw new ArgumentNullException("validatedRequest");
         }
     }
+
+    internal class TwoFactorChallengeActionResult : HtmlStreamActionResult
+    {
+        public TwoFactorChallengeActionResult(IViewService viewSvc, TwoFactorChallengeViewModel model, ValidatedAuthorizeRequest validatedRequest)
+            : base(async () => await viewSvc.TwoFactorChallenge(model, validatedRequest))
+        {
+            if (viewSvc == null) throw new ArgumentNullException("viewSvc");
+            if (model == null) throw new ArgumentNullException("model");
+            if (validatedRequest == null) throw new ArgumentNullException("validatedRequest");
+        }
+    }
 }

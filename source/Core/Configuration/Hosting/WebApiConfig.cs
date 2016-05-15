@@ -95,6 +95,10 @@ namespace IdentityServer3.Core.Configuration.Hosting
                     Constants.RoutePaths.Oidc.Authorize,
                     new { controller = "AuthorizeEndpoint", action = "Get" });
                 config.Routes.MapHttpRoute(
+                    Constants.RouteNames.Oidc.TwoFactorChallenge,
+                    Constants.RoutePaths.Oidc.TwoFactorChallenge,
+                    new { controller = "AuthorizeEndpoint", action = "PostTwoFactorChallenge" });
+                config.Routes.MapHttpRoute(
                     Constants.RouteNames.Oidc.Consent,
                     Constants.RoutePaths.Oidc.Consent,
                     new { controller = "AuthorizeEndpoint", action = "PostConsent" });

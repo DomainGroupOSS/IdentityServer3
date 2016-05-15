@@ -55,9 +55,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Autofac.WebApi2.3.4.0\lib\net45\Autofac.Integration.WebApi.dll</HintPath>
     </Reference>
-    <Reference Include="IdentityModel, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="IdentityModel">
       <HintPath>..\packages\IdentityModel.1.9.2\lib\net45\IdentityModel.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -237,6 +236,7 @@
     <Compile Include="Services\Caching\CachingClientStore.cs" />
     <Compile Include="Services\Caching\CachingUserService.cs" />
     <Compile Include="Services\Caching\CachingScopeStore.cs" />
+    <Compile Include="Services\DefaultTwoFactorService.cs" />
     <Compile Include="Services\DefaultViewService\DefaultViewServiceOptions.cs" />
     <Compile Include="Services\DefaultViewService\DefaultViewServiceRegistration.cs" />
     <Compile Include="Services\Default\DefaultAuthenticationSessionValidator.cs" />
@@ -246,6 +246,7 @@
     <Compile Include="Services\IAuthenticationSessionValidator.cs" />
     <Compile Include="Services\ICustomTokenResponseGenerator.cs" />
     <Compile Include="Services\ISigningKeyService.cs" />
+    <Compile Include="Services\ITwoFactorService.cs" />
     <Compile Include="Validation\BasicAuthenticationSecretParser.cs" />
     <Compile Include="Validation\IntrospectionRequestValidationResult.cs" />
     <Compile Include="Validation\IntrospectionRequestValidator.cs" />
@@ -409,6 +410,7 @@
     <Compile Include="Endpoints\Connect\EndSessionController.cs" />
     <Compile Include="Endpoints\Connect\UserInfoEndpointController.cs" />
     <Compile Include="Models\AuthorizationCode.cs" />
+    <Compile Include="ViewModels\TwoFactorChallengeViewModel.cs" />
     <Compile Include="ViewModels\UserConsent.cs" />
     <Compile Include="ResponseHandling\UserInfoResponseGenerator.cs" />
     <Compile Include="Results\ProtectedResourceErrorResult.cs" />
@@ -490,6 +492,7 @@
     <Compile Include="Extensions\StringsExtensions.cs" />
     <Compile Include="Services\IViewService.cs" />
     <Compile Include="ViewModels\ClientPermissionsViewModel.cs" />
+    <Compile Include="ViewModels\UserTwoFactorChallenge.cs" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
@@ -568,6 +571,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Services\DefaultViewService\HttpAssets\styles.css" />
+    <EmbeddedResource Include="Services\DefaultViewService\PageAssets\twoFactorChallenge.html" />
     <EmbeddedResource Include="Services\DefaultViewService\HttpAssets\styles.min.css">
       <DependentUpon>styles.css</DependentUpon>
     </EmbeddedResource>

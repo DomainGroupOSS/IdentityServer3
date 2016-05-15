@@ -89,6 +89,14 @@ namespace IdentityServer3.Core.Validation
         public bool WasConsentShown { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether two factor challenge was shown.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if two factor challenge was shown; otherwise, <c>false</c>.
+        /// </value>
+        public bool WasTwoFactorChallengeShown { get; set; }
+
+        /// <summary>
         /// Gets or sets the state.
         /// </summary>
         /// <value>

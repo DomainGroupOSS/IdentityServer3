@@ -27,6 +27,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Owin;
+using Microsoft.Owin.Security;
 
 #pragma warning disable 1591
 
@@ -40,13 +42,17 @@ namespace IdentityServer3.Core.ResponseHandling
         private readonly SignInMessage _signIn;
         private readonly IdentityServerOptions _options;
         private readonly IConsentService _consent;
+        private readonly ITwoFactorService _twoFactor;
         private readonly IUserService _users;
         private readonly ILocalizationService _localizationService;
 
-        public AuthorizeInteractionResponseGenerator(IdentityServerOptions options, IConsentService consent, IUserService users, ILocalizationService localizationService)
+        public AuthorizeInteractionResponseGenerator(IdentityServerOptions options, 
+            IConsentService consent, IUserService users, 
+            ITwoFactorService twoFactor, ILocalizationService localizationService)
         {
             _signIn = new SignInMessage();
             _options = options;
+            _twoFactor = twoFactor;
             _consent = consent;
             _users = users;
             _localizationService = localizationService;
@@ -127,7 +133,7 @@ namespace IdentityServer3.Core.ResponseHandling
                 await _users.IsActiveAsync(isActiveCtx);
                 
                 isActive = isActiveCtx.IsActive; 
-                if (!isActive) Logger.Info("User is not active. Redirecting to login.");
+                if (!isActive) Logger.Info("User is not active. Redirecting to login.");               
             }
 
             if (!isAuthenticated || !isActive)
@@ -187,7 +193,7 @@ namespace IdentityServer3.Core.ResponseHandling
                         SignInMessage = _signIn
                     };
                 }
-            }
+            }            
 
             return new LoginInteractionResponse();
         }
@@ -229,6 +235,93 @@ namespace IdentityServer3.Core.ResponseHandling
             }
 
             return Task.FromResult(new LoginInteractionResponse());
+        }
+
+        public async Task<TwoFactorInteractionResponse> ProcessTwoFactorAsync(ValidatedAuthorizeRequest request, UserTwoFactorChallenge twoFactorChallenge)
+        {
+            if (request.PromptMode != null &&
+                request.PromptMode != Constants.PromptModes.None &&
+                request.PromptMode != Constants.PromptModes.TwoFactorChallenge)
+            {
+                throw new ArgumentException("Invalid PromptMode");
+            }
+
+            var challengeRequired = await _twoFactor.ShouldChallengeAsync(request.Client, request.Subject, request.RequestedScopes);
+
+            if (challengeRequired && request.PromptMode == Constants.PromptModes.None)
+            {
+                Logger.Info("Prompt=none requested, but two factor challenge is required.");
+
+                return new TwoFactorInteractionResponse
+                {
+                    Error = new AuthorizeError
+                    {
+                        ErrorType = ErrorTypes.Client,
+                        Error = Constants.AuthorizeErrors.InteractionRequired,
+                        ResponseMode = request.ResponseMode,
+                        ErrorUri = request.RedirectUri,
+                        State = request.State
+                    }
+                };
+            }
+
+            if (request.PromptMode == Constants.PromptModes.TwoFactorChallenge || challengeRequired)
+            {
+                var response = new TwoFactorInteractionResponse();
+
+                response.IsTwoFactorChallenge = true;
+
+                if (twoFactorChallenge == null)
+                {
+                    await _twoFactor.SendCodeAsync(request.Client, request.Subject);
+                    return response;
+                }
+
+                request.WasTwoFactorChallengeShown = true;
+
+                if (twoFactorChallenge.Code.IsMissing() && twoFactorChallenge.WantsToContinue)
+                {
+                    response.IsTwoFactorChallenge = true;
+                    response.TwoFactorChallengeError = _localizationService.GetMessage(MessageIds.TwoFactorCodeRequired);
+                    return response;
+                }
+
+                if (twoFactorChallenge.WantsToResendCode)
+                {
+                    await _twoFactor.ReSendCodeAsync(request.Client, request.Subject);
+                    response.IsTwoFactorChallenge = true;
+                    response.TwoFactorChallengeInfo = _localizationService.GetMessage(MessageIds.TwoFactorCodeResent);
+                    return response;
+                }
+
+                if (twoFactorChallenge.WantsToCancel)
+                {                    
+                    response.Error = new AuthorizeError
+                    {
+                        ErrorType = ErrorTypes.Client,
+                        Error = Constants.AuthorizeErrors.AccessDenied,
+                        ResponseMode = request.ResponseMode,
+                        ErrorUri = request.RedirectUri,
+                        State = request.State
+                    };
+
+                    return response;
+                }
+                
+
+                var twoFactorVerifyResult = await _twoFactor.VerifyCodeAsync(request.Client, request.Subject, twoFactorChallenge.Code);
+
+                if (!twoFactorVerifyResult)
+                {
+                    response.IsTwoFactorChallenge = true;
+                    response.TwoFactorChallengeError = _localizationService.GetMessage(MessageIds.TwoFactorCodeInvalid);
+                    return response;
+                }
+
+                return new TwoFactorInteractionResponse();
+            }
+
+            return new TwoFactorInteractionResponse();
         }
 
         public async Task<ConsentInteractionResponse> ProcessConsentAsync(ValidatedAuthorizeRequest request, UserConsent consent = null)

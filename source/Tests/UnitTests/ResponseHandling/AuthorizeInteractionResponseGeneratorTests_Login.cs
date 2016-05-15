@@ -43,7 +43,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         [Fact]
         public async Task Anonymous_User_must_SignIn()
         {
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, null, new DefaultLocalizationService());
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, null, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -59,7 +59,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         public async Task Authenticated_User_must_not_SignIn()
         {
             var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, new DefaultLocalizationService());
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -77,7 +77,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         public async Task Authenticated_User_with_allowed_current_Idp_must_not_SignIn()
         {
             var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, new DefaultLocalizationService());
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -101,7 +101,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         public async Task Authenticated_User_with_restricted_current_Idp_must_SignIn()
         {
             var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, new DefaultLocalizationService());
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -125,7 +125,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         public async Task Authenticated_User_with_allowed_requested_Idp_must_not_SignIn()
         {
             var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, new DefaultLocalizationService());
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -146,7 +146,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         public async Task Authenticated_User_with_different_requested_Idp_must_SignIn()
         {
             var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, new DefaultLocalizationService());
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -169,7 +169,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
             options.AuthenticationOptions.EnableLocalLogin = false;
 
             var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, new DefaultLocalizationService());
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -194,7 +194,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
             options.AuthenticationOptions.EnableLocalLogin = true;
 
             var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, new DefaultLocalizationService());
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {

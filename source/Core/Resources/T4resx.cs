@@ -41,7 +41,10 @@ namespace IdentityServer3.Core.Resources
 			public const string Unsupported_response_type = "unsupported_response_type";
 			public const string UnsupportedMediaType = "UnsupportedMediaType";
 			public const string UsernameRequired = "UsernameRequired";
-	}
+            public const string TwoFactorCodeRequired = "TwoFactorCodeRequired";        
+            public const string TwoFactorCodeInvalid = "TwoFactorCodeInvalid";
+            public const string TwoFactorCodeResent = "TwoFactorCodeResent";
+    }
 	public class ScopeIds
 	{
 			public const string Address_DisplayName = "address_DisplayName";

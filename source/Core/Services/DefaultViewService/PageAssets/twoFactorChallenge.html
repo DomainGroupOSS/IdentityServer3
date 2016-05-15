@@ -1,0 +1,41 @@
+﻿<div class="row page-header">
+    <div class="col-sm-10">
+        <div class="client-logo" ng-show="model.clientLogoUrl"><img ng-src="{{model.clientLogoUrl}}"></div>
+        <h1>
+            {{model.clientName}}
+            <small>is requesting you use your second factor to authenticate</small>
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-8">
+        <div ng-show="model.errorMessage" class="alert alert-danger">
+            <strong>Error:</strong>
+            {{model.errorMessage}}
+        </div>
+        <div ng-show="model.infoMessage" class="alert alert-info">
+            {{model.infoMessage}}
+        </div>
+        <form name="form" method="post" action="{{model.challengeUrl}}" class="challengeForm">
+            <anti-forgery-token token="model.antiForgery"></anti-forgery-token>
+            <fieldset>
+                <div class="form-group">
+                    <label for="code">Code</label>
+                    <input id="code" name="code" class="form-control" placeholder="Code" ng-model="model.code" maxlength="100" autocomplete="off">
+                </div>
+                <div class="form-group login-remember">
+                    <label for="rememberThisDevice">
+                        <input type="checkbox" id="rememberThisDevice" name="rememberThisDevice" ng-model="model.rememberThisDevice" value="true">
+                        <strong>Remember This Device?</strong>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <button name="button" class="btn btn-primary" value="submit" ng-disabled="challengeForm.$invalid" autofocus="">Submit</button>
+                    <button name="button" class="btn" value="resend">Resend</button>
+                    <button name="button" class="btn" value="cancel">Cancel</button>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>

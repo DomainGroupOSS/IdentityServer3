@@ -30,8 +30,11 @@ namespace IdentityServer3.Core.Configuration
         {
             ExpireTimeSpan = Constants.DefaultCookieTimeSpan;
             SlidingExpiration = false;
+            TwoFactorSlidingExpiration = false;
             AllowRememberMe = true;
             RememberMeDuration = Constants.DefaultRememberMeDuration;
+            TwoFactorRememberThisDeviceDuration = Constants.DefaultRememberTwoFactorDuration;
+            TwoFactorExpireTimeSpan = Constants.DefaultTwoFactorCookieTimeSpan;
             SecureMode = CookieSecureMode.SameAsRequest;
         }
 
@@ -52,6 +55,14 @@ namespace IdentityServer3.Core.Configuration
         public TimeSpan ExpireTimeSpan { get; set; }
 
         /// <summary>
+        /// The expiration duration of the two factor challenge cookie. Defaults to 10 hours.
+        /// </summary>
+        /// <value>
+        /// The expire time span.
+        /// </value>
+        public TimeSpan TwoFactorExpireTimeSpan { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether the authentication cookie is marked as persistent. Defaults to <c>false</c>.
         /// </summary>
         /// <value>
@@ -66,6 +77,14 @@ namespace IdentityServer3.Core.Configuration
         ///   <c>true</c> if sliding; otherwise, <c>false</c>.
         /// </value>
         public bool SlidingExpiration { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating if the two factor authentication cookie is sliding, which means it auto renews as the user is active. Defaults to <c>false</c>.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if sliding; otherwise, <c>false</c>.
+        /// </value>
+        public bool TwoFactorSlidingExpiration { get; set; }
 
         /// <summary>
         /// Gets or sets the cookie path.
@@ -92,6 +111,15 @@ namespace IdentityServer3.Core.Configuration
         /// The duration of the "remember me" persistent cookie.
         /// </value>
         public TimeSpan RememberMeDuration { get; set; }
+
+        /// <summary>
+        /// Gets or sets the duration of the persistent cookie issued by the "remember this device" option on the two factor challenge page.
+        /// Defaults to 30 days.
+        /// </summary>
+        /// <value>
+        /// The duration of the "remember me" persistent cookie.
+        /// </value>
+        public TimeSpan TwoFactorRememberThisDeviceDuration { get; set; }
 
         /// <summary>
         /// Gets or sets the mode for issuing the secure flag on the cookies issued. Defaults to SameAsRequest.

@@ -32,10 +32,12 @@ namespace IdentityServer3.Core
         public const string PrimaryAuthenticationType       = "idsrv";
         public const string ExternalAuthenticationType      = "idsrv.external";
         public const string PartialSignInAuthenticationType = "idsrv.partial";
-        
+        public static string SecondaryAuthenticationType = "idsrv.secondary";
+
         internal static readonly string[] IdentityServerAuthenticationTypes = new string[]
         {
             PrimaryAuthenticationType,
+            SecondaryAuthenticationType,
             ExternalAuthenticationType,
             PartialSignInAuthenticationType
         };
@@ -47,6 +49,8 @@ namespace IdentityServer3.Core
         public static readonly TimeSpan DefaultCookieTimeSpan = TimeSpan.FromHours(10);
         public static readonly TimeSpan ExternalCookieTimeSpan = TimeSpan.FromMinutes(10);
         public static readonly TimeSpan DefaultRememberMeDuration = TimeSpan.FromDays(30);
+        public static readonly TimeSpan DefaultRememberTwoFactorDuration = TimeSpan.FromDays(30);
+        public static readonly TimeSpan DefaultTwoFactorCookieTimeSpan = TimeSpan.FromHours(10);
 
         public static readonly TimeSpan DefaultCacheDuration = TimeSpan.FromMinutes(5);
 
@@ -296,6 +300,7 @@ namespace IdentityServer3.Core
         {
             public const string None          = "none";
             public const string Login         = "login";
+            public const string TwoFactorChallenge = "twofactor_challenge";
             public const string Consent       = "consent";
             public const string SelectAccount = "select_account";
         }
@@ -341,7 +346,7 @@ namespace IdentityServer3.Core
             public const string InteractionRequired      = "interaction_required";
             public const string LoginRequired            = "login_required";
             public const string AccountSelectionRequired = "account_selection_required";
-            public const string ConsentRequired          = "consent_required";
+            public const string ConsentRequired          = "consent_required";                        
             public const string InvalidRequestUri        = "invalid_request_uri";
             public const string InvalidRequestObject     = "invalid_request_object";
             public const string RequestNotSupported      = "request_not_supported";
@@ -675,6 +680,7 @@ namespace IdentityServer3.Core
                 public const string AccessTokenValidation = "idsrv.oidc.accesstokenvalidation";
                 public const string Authorize = "idsrv.oidc.authorize";
                 public const string Consent = "idsrv.oidc.consent";
+                public const string TwoFactorChallenge = "idsrv.oidc.twofactorchallenge";
                 public const string SwitchUser = "idsrv.oidc.switch";
                 public const string CheckSession = "idsrv.oidc.checksession";
                 public const string DiscoveryConfiguration = "idsrv.oidc.discoveryconfiguration";
@@ -703,6 +709,7 @@ namespace IdentityServer3.Core
             public static class Oidc
             {
                 public const string Authorize = "connect/authorize";
+                public const string TwoFactorChallenge = "connect/challenge";
                 public const string Consent = "connect/consent";
                 public const string SwitchUser = "connect/switch";
                 public const string DiscoveryConfiguration = ".well-known/openid-configuration";

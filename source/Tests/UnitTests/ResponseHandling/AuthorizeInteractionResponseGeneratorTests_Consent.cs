@@ -39,6 +39,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
     public class AuthorizeInteractionResponseGeneratorTests_Consent
     {
         Mock<IConsentService> mockConsent;
+        Mock<ITwoFactorService> mockTwoFactor;
         Mock<IUserService> mockUserService;
         AuthorizeInteractionResponseGenerator subject;
         IdentityServerOptions options;
@@ -102,8 +103,9 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         {
             options = new IdentityServerOptions();
             mockConsent = new Mock<IConsentService>();
+            mockTwoFactor = new Mock<ITwoFactorService>();
             mockUserService = new Mock<IUserService>();
-            subject = new AuthorizeInteractionResponseGenerator(options, mockConsent.Object, mockUserService.Object, new DefaultLocalizationService());
+            subject = new AuthorizeInteractionResponseGenerator(options, mockConsent.Object, mockUserService.Object, mockTwoFactor.Object, new DefaultLocalizationService());
         }
 
         [Fact]
