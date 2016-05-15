@@ -96,5 +96,10 @@ namespace IdentityServer3.Core.Services.Default
         {
             return Task.FromResult(0);
         }
+
+        public virtual Task RequiresTwoFactorChallenge(RequiresTwoFactorChallengeContext context)
+        {
+            return Task.FromResult(0);
+        }
     }
 }

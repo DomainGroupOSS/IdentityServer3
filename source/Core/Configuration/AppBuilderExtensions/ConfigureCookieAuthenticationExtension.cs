@@ -40,6 +40,30 @@ namespace Owin
                 options.Prefix += ".";
             }
 
+            var twoFactorRememberMe = new CookieAuthenticationOptions
+            {
+                AuthenticationMode = AuthenticationMode.Passive,
+                AuthenticationType = Constants.TwoFactorRememberMeCookieAuthenticationScheme,
+                CookieName = Constants.TwoFactorRememberMeCookieAuthenticationScheme,
+                ExpireTimeSpan = TimeSpan.FromDays(30),
+                SlidingExpiration = false,
+                CookieSecure = GetCookieSecure(options.SecureMode),
+                TicketDataFormat = new TicketDataFormat(new DataProtectorAdapter(dataProtector, options.Prefix + Constants.TwoFactorRememberMeCookieAuthenticationScheme))
+            };
+            app.UseCookieAuthentication(twoFactorRememberMe);
+
+            var twoFactorUserId = new CookieAuthenticationOptions
+            {
+                AuthenticationMode = AuthenticationMode.Passive,
+                AuthenticationType = Constants.TwoFactorUserIdCookieAuthenticationScheme,
+                CookieName = Constants.TwoFactorUserIdCookieAuthenticationScheme,
+                ExpireTimeSpan = TimeSpan.FromMinutes(5),
+                SlidingExpiration = false,
+                CookieSecure = GetCookieSecure(options.SecureMode),
+                TicketDataFormat = new TicketDataFormat(new DataProtectorAdapter(dataProtector, options.Prefix + Constants.TwoFactorUserIdCookieAuthenticationScheme))
+            };
+            app.UseCookieAuthentication(twoFactorUserId);
+
             var primary = new CookieAuthenticationOptions
             {
                 AuthenticationType = Constants.PrimaryAuthenticationType,

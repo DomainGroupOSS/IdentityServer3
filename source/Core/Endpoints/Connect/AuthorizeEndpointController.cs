@@ -27,6 +27,7 @@ using IdentityServer3.Core.Validation;
 using IdentityServer3.Core.ViewModels;
 using System;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -152,6 +153,36 @@ namespace IdentityServer3.Core.Endpoints
                 return this.RedirectToLogin(loginInteraction.SignInMessage, request.Raw);
             }
 
+            var context = Request.GetOwinContext();
+
+            var rememberTwoFactorRememberClientResult = await context.Authentication.AuthenticateAsync(Constants.TwoFactorRememberMeCookieAuthenticationScheme);
+            var rememberTwoFactorUserIdResult = await context.Authentication.AuthenticateAsync(Constants.TwoFactorUserIdCookieAuthenticationScheme);
+
+
+            var claimsIdentity = User.Identity as ClaimsIdentity;
+
+            var amrClaim = claimsIdentity.Claims.FirstOrDefault(c => c.Type == "amr");
+
+            if (rememberTwoFactorRememberClientResult == null && rememberTwoFactorUserIdResult == null && amrClaim != null && amrClaim.Value == "2fa")
+            {
+                var twoFactorInteration = await _interactionGenerator.ProcessTwoFactorAsync(request);
+
+                if (twoFactorInteration.IsError)
+                {
+                    return await this.AuthorizeErrorAsync(
+                        twoFactorInteration.Error.ErrorType,
+                        twoFactorInteration.Error.Error,
+                        null,
+                        request);
+                }
+
+                if (twoFactorInteration.ShouldChallenge)
+                {
+                    Logger.Info("Showing two factor screen");
+                    return CreateTwoFactorResult(request, twoFactorInteration.ChallengeUri);
+                }
+            }           
+
             var consentInteraction = await _interactionGenerator.ProcessConsentAsync(request, consent);
 
             if (consentInteraction.IsError)
@@ -213,6 +244,20 @@ namespace IdentityServer3.Core.Endpoints
 
             Logger.Error("Unsupported response mode. Aborting.");
             throw new InvalidOperationException("Unsupported response mode");
+        }
+
+        private IHttpActionResult CreateTwoFactorResult(
+            ValidatedAuthorizeRequest validateRequest,
+            string challengeUri,
+            string errorMessage = null)
+        {
+            var response = new TwoFactorChallengeResponse
+            {
+                ChallengeUri = challengeUri,
+                Request = validateRequest,
+                Error = errorMessage
+            };
+            return new TwoFactorChallengeRedirectResult(response);
         }
 
         private IHttpActionResult CreateConsentResult(

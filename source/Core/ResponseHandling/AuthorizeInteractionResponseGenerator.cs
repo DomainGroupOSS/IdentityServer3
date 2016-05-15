@@ -127,7 +127,7 @@ namespace IdentityServer3.Core.ResponseHandling
                 await _users.IsActiveAsync(isActiveCtx);
                 
                 isActive = isActiveCtx.IsActive; 
-                if (!isActive) Logger.Info("User is not active. Redirecting to login.");
+                if (!isActive) Logger.Info("User is not active. Redirecting to login.");               
             }
 
             if (!isAuthenticated || !isActive)
@@ -187,7 +187,7 @@ namespace IdentityServer3.Core.ResponseHandling
                         SignInMessage = _signIn
                     };
                 }
-            }
+            }            
 
             return new LoginInteractionResponse();
         }
@@ -229,6 +229,35 @@ namespace IdentityServer3.Core.ResponseHandling
             }
 
             return Task.FromResult(new LoginInteractionResponse());
+        }
+
+        public async Task<TwoFactorInteractionResponse> ProcessTwoFactorAsync(ValidatedAuthorizeRequest request)
+        {
+            if (request == null) throw new ArgumentNullException("request");
+
+            var twoFactorChallengeCtx = new RequiresTwoFactorChallengeContext(request.Subject, request.Client);
+            await _users.RequiresTwoFactorChallenge(twoFactorChallengeCtx);
+
+            if (twoFactorChallengeCtx.ShouldChallenge && twoFactorChallengeCtx.ChallengeRedirectUri.IsMissing())
+            {
+                return new TwoFactorInteractionResponse
+                {
+                    Error = new AuthorizeError
+                    {
+                        ErrorType = ErrorTypes.Client,
+                        Error = "invalid_challenge_uri",//Constants.AuthorizeErrors.InteractionRequired,
+                        ResponseMode = request.ResponseMode,
+                        ErrorUri = request.RedirectUri,
+                        State = request.State,                        
+                    }
+                };
+            }
+
+            return new TwoFactorInteractionResponse
+            {
+                ShouldChallenge = twoFactorChallengeCtx.ShouldChallenge,
+                ChallengeUri = twoFactorChallengeCtx.ChallengeRedirectUri
+            };
         }
 
         public async Task<ConsentInteractionResponse> ProcessConsentAsync(ValidatedAuthorizeRequest request, UserConsent consent = null)

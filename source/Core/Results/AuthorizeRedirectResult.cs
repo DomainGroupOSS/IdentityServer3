@@ -74,4 +74,40 @@ namespace IdentityServer3.Core.Results
             return responseMessage;
         }
     }
+
+    internal class TwoFactorChallengeRedirectResult : IHttpActionResult
+    {
+        private readonly static ILog Logger = LogProvider.GetCurrentClassLogger();
+
+        private readonly TwoFactorChallengeResponse _response;
+
+        public TwoFactorChallengeRedirectResult(TwoFactorChallengeResponse response)
+        {
+            _response = response;
+        }
+
+        public Task<HttpResponseMessage> ExecuteAsync(System.Threading.CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Execute());
+        }
+
+        HttpResponseMessage Execute()
+        {
+            var responseMessage = new HttpResponseMessage(HttpStatusCode.Redirect);
+            var url = _response.ChallengeUri;
+
+            responseMessage.Headers.Location = new Uri(url);
+
+            if (_response.IsError)
+            {
+                Logger.Info("Redirecting to: " + url);
+            }
+            else
+            {
+                Logger.Info("Redirecting to: " + _response.ChallengeUri);
+            }
+
+            return responseMessage;
+        }
+    }
 }

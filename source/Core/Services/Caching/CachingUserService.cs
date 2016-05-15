@@ -128,6 +128,11 @@ namespace IdentityServer3.Core.Services.Caching
             return inner.IsActiveAsync(context);
         }
 
+        public Task RequiresTwoFactorChallenge(RequiresTwoFactorChallengeContext context)
+        {
+            return inner.RequiresTwoFactorChallenge(context);
+        }
+
         private string GetKey(ClaimsPrincipal subject, IEnumerable<string> requestedClaimTypes)
         {
             var sub = subject.GetSubjectId();

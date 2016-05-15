@@ -35,6 +35,13 @@ namespace IdentityServer3.Core.Models
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
+    public class TwoFactorInteractionResponse : InteractionResponse
+    {
+        public bool ShouldChallenge { get; set; }
+        public string ChallengeUri { get; set; }
+    }
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public class ConsentInteractionResponse : InteractionResponse
     {
         public bool IsConsent { get; set; }

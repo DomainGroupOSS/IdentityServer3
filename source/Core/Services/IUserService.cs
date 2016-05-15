@@ -75,5 +75,12 @@ namespace IdentityServer3.Core.Services
         /// <param name="context">The context.</param>
         /// <returns></returns>
         Task IsActiveAsync(IsActiveContext context);
+
+        /// <summary>
+        /// Requireses the two factor challenge.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <returns></returns>
+        Task RequiresTwoFactorChallenge(RequiresTwoFactorChallengeContext context);
     }
 }

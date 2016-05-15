@@ -32,7 +32,9 @@ namespace IdentityServer3.Core
         public const string PrimaryAuthenticationType       = "idsrv";
         public const string ExternalAuthenticationType      = "idsrv.external";
         public const string PartialSignInAuthenticationType = "idsrv.partial";
-        
+        public static string TwoFactorRememberMeCookieAuthenticationScheme = "idsrv.twofactor.rememberme";
+        public static string TwoFactorUserIdCookieAuthenticationScheme = "idsrv.twofactor.userid";
+
         internal static readonly string[] IdentityServerAuthenticationTypes = new string[]
         {
             PrimaryAuthenticationType,

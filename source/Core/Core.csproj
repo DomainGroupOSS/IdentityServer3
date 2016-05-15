@@ -55,9 +55,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Autofac.WebApi2.3.4.0\lib\net45\Autofac.Integration.WebApi.dll</HintPath>
     </Reference>
-    <Reference Include="IdentityModel, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IdentityModel.1.9.2\lib\net45\IdentityModel.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="IdentityModel">
+      <HintPath>..\..\..\..\domain-auth-fixed\domain-auth\packages\IdentityModel.1.9.2\lib\net45\IdentityModel.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -237,6 +236,7 @@
     <Compile Include="Services\Caching\CachingClientStore.cs" />
     <Compile Include="Services\Caching\CachingUserService.cs" />
     <Compile Include="Services\Caching\CachingScopeStore.cs" />
+    <Compile Include="Services\DefaultTwoFactorService.cs" />
     <Compile Include="Services\DefaultViewService\DefaultViewServiceOptions.cs" />
     <Compile Include="Services\DefaultViewService\DefaultViewServiceRegistration.cs" />
     <Compile Include="Services\Default\DefaultAuthenticationSessionValidator.cs" />

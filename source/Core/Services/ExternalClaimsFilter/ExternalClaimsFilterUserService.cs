@@ -65,6 +65,11 @@ namespace IdentityServer3.Core.Services.Default
             return inner.IsActiveAsync(context);
         }
 
+        public Task RequiresTwoFactorChallenge(RequiresTwoFactorChallengeContext context)
+        {
+            return inner.RequiresTwoFactorChallenge(context);
+        }
+
         public Task SignOutAsync(SignOutContext context)
         {
             return inner.SignOutAsync(context);
