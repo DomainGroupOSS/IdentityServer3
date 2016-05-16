@@ -30,7 +30,8 @@ namespace Owin
 {
     internal static class UseCookieAuthenticationExtension
     {
-        public static IAppBuilder ConfigureCookieAuthentication(this IAppBuilder app, CookieOptions options, IDataProtector dataProtector)
+        public static IAppBuilder ConfigureCookieAuthentication(this IAppBuilder app, CookieOptions options, IDataProtector dataProtector, 
+            Action<IAppBuilder, CookieOptions, IDataProtector> customCookieAuthentication)
         {
             if (options == null) throw new ArgumentNullException("options");
             if (dataProtector == null) throw new ArgumentNullException("dataProtector");
@@ -75,6 +76,11 @@ namespace Owin
                 TicketDataFormat = new TicketDataFormat(new DataProtectorAdapter(dataProtector, options.Prefix + Constants.ExternalAuthenticationType))
             };
             app.UseCookieAuthentication(external);
+
+            if (customCookieAuthentication != null)
+            {
+                customCookieAuthentication(app, options, dataProtector);
+            }
 
             var partial = new CookieAuthenticationOptions
             {

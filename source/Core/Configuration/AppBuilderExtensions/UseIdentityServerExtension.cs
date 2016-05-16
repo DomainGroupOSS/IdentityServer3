@@ -85,7 +85,8 @@ namespace Owin
 
             // this needs to be before external middleware
             app.UseCors();
-            app.ConfigureCookieAuthentication(options.AuthenticationOptions.CookieOptions, options.DataProtector);
+            app.ConfigureCookieAuthentication(options.AuthenticationOptions.CookieOptions, 
+                options.DataProtector, options.CustomCookieAuthentication);
             app.ConfigureSignOutMessageCookie();
 
             app.UseMiddlewareFromContainer(container);

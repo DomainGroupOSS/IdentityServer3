@@ -135,6 +135,14 @@ namespace IdentityServer3.Core.Configuration
         public IDataProtector DataProtector { get; set; }
 
         /// <summary>
+        /// Extensibility point for add addition cookie authentication middleware
+        /// </summary>
+        /// <value>
+        /// custom cookie authentication middleware.
+        /// </value>
+        public Action<IAppBuilder, CookieOptions, IDataProtector> CustomCookieAuthentication { get; set; }
+
+        /// <summary>
         /// Gets or sets the endpoint configuration.
         /// </summary>
         /// <value>
