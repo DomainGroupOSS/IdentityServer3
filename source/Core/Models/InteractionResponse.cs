@@ -39,6 +39,7 @@ namespace IdentityServer3.Core.Models
     {
         public bool ShouldChallenge { get; set; }
         public string ChallengeUri { get; set; }
+
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]

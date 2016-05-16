@@ -43,7 +43,7 @@ namespace IdentityServer3.Core.Endpoints
     [SecurityHeaders]
     [NoCache]
     [PreventUnsupportedRequestMediaTypes(allowFormUrlEncoded: true)]
-    internal class AuthorizeEndpointController : ApiController
+    public class AuthorizeEndpointController : ApiController
     {
         private readonly static ILog Logger = LogProvider.GetCurrentClassLogger();
 
@@ -108,7 +108,7 @@ namespace IdentityServer3.Core.Endpoints
             return response;
         }
 
-        private async Task<IHttpActionResult> ProcessRequestAsync(NameValueCollection parameters, UserConsent consent = null)
+        public async Task<IHttpActionResult> ProcessRequestAsync(NameValueCollection parameters, UserConsent consent = null)
         {
             // validate request
             var result = await _validator.ValidateAsync(parameters, User as ClaimsPrincipal);
@@ -253,7 +253,7 @@ namespace IdentityServer3.Core.Endpoints
         {
             var response = new TwoFactorChallengeResponse
             {
-                ChallengeUri = challengeUri,
+                ChallengeUri = challengeUri + "?redirect_uri=" + validateRequest.RedirectUri,
                 Request = validateRequest,
                 Error = errorMessage
             };

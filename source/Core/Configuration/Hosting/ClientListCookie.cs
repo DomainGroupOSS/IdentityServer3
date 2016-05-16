@@ -23,7 +23,7 @@ using System.Linq;
 
 namespace IdentityServer3.Core.Configuration.Hosting
 {
-    internal class ClientListCookie
+    public class ClientListCookie
     {
         const string ClientListCookieName = "idsvr.clients";
 
