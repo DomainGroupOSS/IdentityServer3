@@ -65,7 +65,8 @@ task ILMerge -depends Compile {
 			# Exclude IdentityServer3.dll as that will be the primary assembly
 			if ("$_" -ne "IdentityServer3.dll" -and
 			     "$_" -ne "Owin.dll" -and
-				 "$_" -ne "Microsoft.Owin.dll") {
+				 "$_" -ne "Microsoft.Owin.dll" -and
+				 "$_" -ne "Microsoft.Owin.Security.dll") {
 				$input_dlls = "$input_dlls $output_directory\$_"
 			}
 	}
