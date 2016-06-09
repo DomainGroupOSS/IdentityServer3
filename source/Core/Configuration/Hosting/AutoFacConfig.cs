@@ -88,7 +88,7 @@ namespace IdentityServer3.Core.Configuration.Hosting
             builder.RegisterDefaultType<IRedirectUriValidator, DefaultRedirectUriValidator>(fact.RedirectUriValidator);
             builder.RegisterDefaultType<ILocalizationService, DefaultLocalizationService>(fact.LocalizationService);
             builder.RegisterDefaultType<IClientPermissionsService, DefaultClientPermissionsService>(fact.ClientPermissionsService);
-
+            builder.RegisterDefaultType<AuthorizeResponseGenerator, AuthorizeResponseGenerator>(fact.AuthorizeResponseGenerator);
             // register custom grant validators
             builder.RegisterType<CustomGrantValidator>();
             if (fact.CustomGrantValidators.Any())
@@ -150,7 +150,6 @@ namespace IdentityServer3.Core.Configuration.Hosting
 
             // processors
             builder.RegisterType<TokenResponseGenerator>();
-            builder.RegisterType<AuthorizeResponseGenerator>();
             builder.RegisterType<AuthorizeInteractionResponseGenerator>();
             builder.RegisterType<UserInfoResponseGenerator>();
             builder.RegisterType<EndSessionResponseGenerator>();
