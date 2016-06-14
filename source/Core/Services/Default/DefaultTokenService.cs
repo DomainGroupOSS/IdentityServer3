@@ -210,6 +210,12 @@ namespace IdentityServer3.Core.Services.Default
                 claims.Add(new Claim(Constants.ClaimTypes.Confirmation, request.ProofKey, Constants.ClaimValueTypes.Json));
             }
 
+            var code = request.ValidatedRequest.Raw.Get(Constants.TokenRequest.Code);
+            if (code.IsPresent())
+            {
+                claims.Add(new Claim(Constants.ClaimTypes.AuthorizationCode, code));
+            }
+
             var token = new Token(Constants.TokenTypes.AccessToken)
             {
                 Audience = string.Format(Constants.AccessTokenAudience, IssuerUri.EnsureTrailingSlash()),
