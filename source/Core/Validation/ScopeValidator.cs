@@ -77,6 +77,15 @@ namespace IdentityServer3.Core.Validation
             GrantedScopes.RemoveAll(scope => !scope.Required && !consentedScopes.Contains(scope.Name));
         }
 
+        internal async Task<IEnumerable<string>> GetValidScopesForExternalClientAsync(IEnumerable<string> requestedScopes)
+        {
+            if (requestedScopes == null || !requestedScopes.Any())
+                return Enumerable.Empty<string>();
+
+            var availableScopes = await _store.FindScopesAsync(requestedScopes);
+            return  availableScopes.Where(s => s.Type == ScopeType.Identity && s.Enabled).Select(s=> s.Name);
+        }
+
         public async Task<bool> AreScopesValidAsync(IEnumerable<string> requestedScopes)
         {
             var availableScopes = await _store.FindScopesAsync(requestedScopes);

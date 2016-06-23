@@ -21,6 +21,7 @@ using IdentityServer3.Core.Logging;
 using IdentityServer3.Core.Models;
 using IdentityServer3.Core.Services;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
@@ -77,6 +78,27 @@ namespace IdentityServer3.Core.Validation
             if (parameters == null)
             {
                 throw new ArgumentNullException("parameters");
+            }
+
+            if (client.Claims.Any(c => c.Type == Constants.ClaimTypes.ExternalProviderClient && c.Value == bool.TrueString))
+            {
+                var rawRequestedScopes = parameters.Get(Constants.TokenRequest.Scope);
+                var requestedScopes = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(rawRequestedScopes))
+                {
+                    requestedScopes = rawRequestedScopes.Trim()
+                        .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Distinct()
+                        .ToList();
+                }
+
+                var validScopes = await _scopeValidator.GetValidScopesForExternalClientAsync(requestedScopes);
+                
+                var clientScope = string.Join(" ", client.AllowedScopes.Concat(validScopes));
+
+                parameters.Remove(Constants.TokenRequest.Scope);
+                parameters.Add(Constants.TokenRequest.Scope, clientScope);
             }
 
             _validatedRequest.Raw = parameters;
