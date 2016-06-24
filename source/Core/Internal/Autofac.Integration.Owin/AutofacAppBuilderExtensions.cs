@@ -23,21 +23,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Security;
 using Autofac;
 using Autofac.Core;
 using Autofac.Core.Lifetime;
 using Autofac.Integration.Owin;
-using Microsoft.Owin;
-using System;
-using System.ComponentModel;
-using System.Linq;
-using System.Security;
 using IdentityServer3.Core.Logging;
+using Microsoft.Owin;
 
 namespace Owin
 {
     /// <summary>
-    /// Extension methods for configuring Autofac within the OWIN pipeline.
+    ///     Extension methods for configuring Autofac within the OWIN pipeline.
     /// </summary>
     [SecuritySafeCritical]
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -48,7 +49,7 @@ namespace Owin
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
 
         /// <summary>
-        /// Adds a component to the OWIN pipeline for using Autofac dependency injection with middleware.
+        ///     Adds a component to the OWIN pipeline for using Autofac dependency injection with middleware.
         /// </summary>
         /// <param name="app">The application builder.</param>
         /// <param name="container">The Autofac application lifetime scope/container.</param>
@@ -60,7 +61,7 @@ namespace Owin
 
             // idsvr : remove these guards so that multiple copies of middleware can be registered
             //if (app.Properties.ContainsKey(MiddlewareRegisteredKey)) return app;
-            
+
             app.Use(async (context, next) =>
             {
                 using (var lifetimeScope = container.BeginLifetimeScope(MatchingScopeLifetimeTags.RequestLifetimeScopeTag,
@@ -69,7 +70,7 @@ namespace Owin
                     context.Set(Constants.OwinLifetimeScopeKey, lifetimeScope);
                     await next();
                 }
-            });       
+            });
 
             // idsvr : remove these guards so that multiple copies of middleware can be registered
             //app.Properties.Add(MiddlewareRegisteredKey, true);
@@ -78,25 +79,63 @@ namespace Owin
         }
 
         [SecuritySafeCritical]
-        internal static void UseMiddlewareFromContainer(this IAppBuilder app, IComponentContext container)
+        internal static void UseMiddlewareFromContainer(this IAppBuilder app, IComponentContext container,
+            IDictionary<string, Type> controllerRoutes)
         {
-            var services = container.ComponentRegistry.Registrations.SelectMany(r => r.Services)
+            var controllerTypes = controllerRoutes == null ? Enumerable.Empty<Type>() : (controllerRoutes.Select(r => r.Value));
+
+            var controllers = container.ComponentRegistry.Registrations.SelectMany(r => r.Services)
+                .OfType<TypedService>()
+                .Where(s => s.ServiceType.IsAssignableTo<OwinMiddleware>()
+                            && typeof(IOwinController).IsAssignableFrom(s.ServiceType) && !s.ServiceType.IsAbstract)
+                .Select(service => typeof(AutofacMiddleware<>).MakeGenericType(service.ServiceType))
+                .Where(serviceType => !container.IsRegistered(serviceType)).Except(controllerTypes);
+
+            var middlewareComponents = container.ComponentRegistry.Registrations.SelectMany(r => r.Services)
                 .OfType<TypedService>()
                 .Where(s => s.ServiceType.IsAssignableTo<OwinMiddleware>() && !s.ServiceType.IsAbstract)
                 .Select(service => typeof(AutofacMiddleware<>).MakeGenericType(service.ServiceType))
-                .Where(serviceType => !container.IsRegistered(serviceType));
+                .Where(serviceType => !container.IsRegistered(serviceType)).Except(controllerTypes)
+                .Except(controllers);
 
-            var typedServices = services.ToArray();
-            if (!typedServices.Any())
-                            {
-                Logger.Info("There were no OwinMiddleware components registered");
-                                return;
-                            }
+            var typedMiddleware = middlewareComponents.ToArray();
+            var typedControllers = controllers.ToArray();
 
-            foreach (var typedService in typedServices)
+
+            if (!typedMiddleware.Any())
             {
-                Logger.InfoFormat("Using OwinMiddlware - {0}", typedService.FullName);
-                app.Use(typedService);
+                Logger.Info("There were no OwinMiddleware components registered");
+            }
+            else
+            {
+                foreach (var middleware in typedMiddleware)
+                {
+                    Logger.InfoFormat("Using OwinMiddlware - {0}", middleware.FullName);
+                    app.Use(middleware);
+                }
+            }
+
+            if (!typedControllers.Any())
+            {
+                Logger.Info("There were no OwinControllers registered with the container");
+            }
+            else
+            {
+                foreach (var route in controllerRoutes)
+                {
+                    var route1 = route;
+
+                    app.MapWhen(context => context.Request.Uri.GetLeftPart(UriPartial.Path).EndsWith(route1.Key), builder =>
+                    {
+                        Logger.InfoFormat("Using OwinController - {0}", route1.Value.FullName);
+
+                        var controller = typedControllers.FirstOrDefault(c => c.GetGenericArguments().First() == route1.Value);
+                        if (controller != null)
+                        {
+                            builder.Use(controller);
+                        }
+                    });
+                }
             }
         }
     }

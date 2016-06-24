@@ -89,7 +89,7 @@ namespace Owin
                 options.DataProtector, options.CustomCookieAuthentication);
             app.ConfigureSignOutMessageCookie();
 
-            app.UseMiddlewareFromContainer(container);
+            app.UseMiddlewareFromContainer(container, options.ControllerRoutes);
 
 
             if (options.PluginConfiguration != null)

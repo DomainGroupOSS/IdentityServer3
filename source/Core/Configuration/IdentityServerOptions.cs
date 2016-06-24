@@ -221,6 +221,8 @@ namespace IdentityServer3.Core.Configuration
         /// <c>true</c> if the welcome page is enabled; otherwise, <c>false</c>.
         /// </value>
         public bool EnableWelcomePage { get; set; }
+
+        public IDictionary<string, Type> ControllerRoutes { get; set; }
         
         internal IEnumerable<X509Certificate2> PublicKeysForMetadata
         {

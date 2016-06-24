@@ -191,6 +191,7 @@
     <Compile Include="Internal\Autofac.Integration.Owin\AutofacAppBuilderExtensions.cs" />
     <Compile Include="Internal\Autofac.Integration.Owin\AutofacMiddleware.cs" />
     <Compile Include="Internal\Autofac.Integration.Owin\Constants.cs" />
+    <Compile Include="Internal\Autofac.Integration.Owin\IOwinController.cs" />
     <Compile Include="Internal\Autofac.Integration.Owin\OwinContextExtensions.cs" />
     <Compile Include="Internal\Autofac.Integration.WebApi.Owin\AutofacWebApiAppBuilderExtensions.cs" />
     <Compile Include="Internal\Autofac.Integration.WebApi.Owin\DependencyScopeHandler.cs" />
