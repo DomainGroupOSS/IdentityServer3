@@ -16,6 +16,8 @@
 
 using IdentityServer3.Core.Models;
 using System.Collections.Generic;
+using System.Security.Claims;
+using IdentityServer3.Core;
 
 namespace IdentityServer3.Tests.Validation
 {
@@ -47,7 +49,6 @@ namespace IdentityServer3.Tests.Validation
 
                     AuthorizationCodeLifetime = 60
                 },
-
                 new Client
                 {
                     ClientName = "Code with Proof Key Client",
@@ -232,6 +233,36 @@ namespace IdentityServer3.Tests.Validation
                 },
                 new Client
                 {
+                    ClientName = "External Code Client with Scope Restrictions",
+                    Enabled = true,
+                    ClientId = "external_codeclient_restricted",
+                    ClientSecrets = new List<Secret>
+                    {
+                        new Secret("secret".Sha256())
+                    },
+
+                    Flow = Flows.AuthorizationCode,
+                    AllowAccessToAllScopes = false,
+                    Claims = new List<Claim>
+                    {
+                        new Claim(Constants.ClaimTypes.ExternalProviderClient, bool.TrueString)
+                    },
+                    AllowedScopes = new List<string>
+                    {
+                        "openid"
+                    },
+                    RequireConsent = false,
+
+                    RedirectUris = new List<string>
+                    {
+                        "https://server/cb",
+                    },
+
+                    AuthorizationCodeLifetime = 60
+                },
+
+                new Client
+                {
                     ClientName = "Client Credentials Client",
                     Enabled = true,
                     ClientId = "client",
@@ -261,6 +292,25 @@ namespace IdentityServer3.Tests.Validation
                     {
                         "resource"
                     },
+                },
+                new Client
+                {
+                    ClientName = "External Client Credentials Client (restricted)",
+                    Enabled = true,
+                    ClientId = "external_client_restricted",
+                    ClientSecrets = new List<Secret>
+                    {
+                        new Secret("secret".Sha256())
+                    },
+                    Claims = new List<Claim>
+                    {
+                        new Claim(Constants.ClaimTypes.ExternalProviderClient, bool.TrueString)
+                    },
+                    Flow = Flows.ClientCredentials,
+                    AllowedScopes = new List<string>
+                    {
+                        "resource"
+                    }
                 },
                 new Client
                 {

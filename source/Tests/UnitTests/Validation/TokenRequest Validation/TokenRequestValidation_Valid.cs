@@ -168,6 +168,31 @@ namespace IdentityServer3.Tests.Validation.TokenRequest
 
         [Fact]
         [Trait("Category", Category)]
+        public async Task Valid_ExternalClientCredentials_Request_Restricted_Client()
+        {
+            var client = await _clients.FindClientByIdAsync("external_client_restricted");
+
+            var validator = Factory.CreateTokenRequestValidator();
+
+            var parameters = new NameValueCollection
+            {
+                {
+                    Constants.TokenRequest.GrantType,
+                    Constants.GrantTypes.ClientCredentials
+                },
+                {
+                   Constants.TokenRequest.Scope,
+                   "resource"
+                }
+            };
+
+            var result = await validator.ValidateRequestAsync(parameters, client);
+
+            result.IsError.Should().BeFalse();
+        }
+
+        [Fact]
+        [Trait("Category", Category)]
         public async Task Valid_ResourceOwner_Request()
         {
             var client = await _clients.FindClientByIdAsync("roclient");

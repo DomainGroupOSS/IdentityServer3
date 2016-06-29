@@ -141,6 +141,26 @@ namespace IdentityServer3.Tests.Validation.AuthorizeRequest
 
         [Fact]
         [Trait("Category", Category)]
+        public async Task OpenId_Code_Request_With_Restricted_Scope_External_Client()
+        {
+            var parameters = new NameValueCollection
+            {
+                { Constants.AuthorizeRequest.ClientId, "external_codeclient_restricted" },
+                { Constants.AuthorizeRequest.Scope, "openid profile" },
+                { Constants.AuthorizeRequest.RedirectUri, "https://server/cb" },
+                { Constants.AuthorizeRequest.ResponseType, Constants.ResponseTypes.Code }
+            };
+
+            var validator = Factory.CreateAuthorizeRequestValidator();
+            var result = await validator.ValidateAsync(parameters);
+
+            result.IsError.Should().BeTrue();
+            result.ErrorType.Should().Be(ErrorTypes.User);
+            result.Error.Should().Be(Constants.AuthorizeErrors.UnauthorizedClient);
+        }
+
+        [Fact]
+        [Trait("Category", Category)]
         public async Task OpenId_CodeIdTokenToken_with_NoTokenViaBrowser_Request()
         {
             var parameters = new NameValueCollection();

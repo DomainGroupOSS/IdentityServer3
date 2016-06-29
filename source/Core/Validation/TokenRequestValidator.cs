@@ -93,9 +93,10 @@ namespace IdentityServer3.Core.Validation
                         .ToList();
                 }
 
-                var validScopes = await _scopeValidator.GetValidScopesForExternalClientAsync(requestedScopes);
-                
-                var clientScope = string.Join(" ", client.AllowedScopes.Concat(validScopes));
+                var validScopes = (await _scopeValidator.GetValidScopesForExternalClientAsync(requestedScopes, client.Flow)).ToList();
+                var allowedScope = client.AllowedScopes.Union(validScopes).Distinct().ToList();
+
+                var clientScope = string.Join(" ", allowedScope);
 
                 parameters.Remove(Constants.TokenRequest.Scope);
                 parameters.Add(Constants.TokenRequest.Scope, clientScope);

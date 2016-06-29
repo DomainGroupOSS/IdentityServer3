@@ -35,12 +35,14 @@ namespace IdentityServer3.Tests.Validation.AuthorizeRequest
         [Trait("Category", Category)]
         public async Task Mixed_IdToken_Request()
         {
-            var parameters = new NameValueCollection();
-            parameters.Add(Constants.AuthorizeRequest.ClientId, "implicitclient");
-            parameters.Add(Constants.AuthorizeRequest.Scope, "openid resource");
-            parameters.Add(Constants.AuthorizeRequest.RedirectUri, "oob://implicit/cb");
-            parameters.Add(Constants.AuthorizeRequest.ResponseType, Constants.ResponseTypes.IdToken);
-            parameters.Add(Constants.AuthorizeRequest.Nonce, "abc");
+            var parameters = new NameValueCollection
+            {
+                { Constants.AuthorizeRequest.ClientId, "implicitclient" },
+                { Constants.AuthorizeRequest.Scope, "openid resource" },
+                { Constants.AuthorizeRequest.RedirectUri, "oob://implicit/cb" },
+                { Constants.AuthorizeRequest.ResponseType, Constants.ResponseTypes.IdToken },
+                { Constants.AuthorizeRequest.Nonce, "abc" }
+            };
 
             var validator = Factory.CreateAuthorizeRequestValidator();
             var result = await validator.ValidateAsync(parameters);
