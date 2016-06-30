@@ -79,6 +79,13 @@ namespace IdentityServer3.Core.Validation
                 return clientResult;
             }
 
+            // state, response_type, response_mode
+            var mandatoryResult = ValidateCoreParameters(request);
+            if (mandatoryResult.IsError)
+            {
+                return mandatoryResult;
+            }
+
             if (request.Client.Claims.Any(c => c.Type == Constants.ClaimTypes.ExternalProviderClient && c.Value == bool.TrueString))
             {
                 var rawRequestedScopes = parameters.Get(Constants.TokenRequest.Scope);
@@ -92,20 +99,13 @@ namespace IdentityServer3.Core.Validation
                         .ToList();
                 }
 
-                var validScopes = (await _scopeValidator.GetValidScopesForExternalClientAsync(requestedScopes,request.Client.Flow)).ToList();
-                var allowedScope = request.Client.AllowedScopes.Union(validScopes).Distinct().ToList();
+                var scopeToValidate = request.Client.AllowedScopes.Union(requestedScopes).Distinct().ToList();
+                var validScopes = (await _scopeValidator.GetValidScopesForExternalClientAsync(scopeToValidate, request.Client.Flow, request.ResponseType)).ToList();
 
-                var clientScope = string.Join(" ", allowedScope);
+                var clientScope = string.Join(" ", validScopes);
 
                 parameters.Remove(Constants.TokenRequest.Scope);
                 parameters.Add(Constants.TokenRequest.Scope, clientScope);
-            }
-
-            // state, response_type, response_mode
-            var mandatoryResult = ValidateCoreParameters(request);
-            if (mandatoryResult.IsError)
-            {
-                return mandatoryResult;
             }
 
             // scope, scope restrictions and plausability
