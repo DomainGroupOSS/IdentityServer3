@@ -294,7 +294,7 @@ namespace IdentityServer3.Core.Validation
 
             if (token == null)
             {
-                LogError("Token handle not found");
+                LogInfo("Token handle not found");
                 return Invalid(Constants.ProtectedResourceErrors.InvalidToken);
             }
 
@@ -363,6 +363,12 @@ namespace IdentityServer3.Core.Validation
                 IsError = true,
                 Error = error
             };
+        }
+
+        private void LogInfo(string message)
+        {
+            var json = LogSerializer.Serialize(_log);
+            Logger.InfoFormat("{0}\n{1}", message, json);
         }
 
         private void LogError(string message)
