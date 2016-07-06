@@ -70,5 +70,23 @@ namespace IdentityServer3.Core.Events
         /// The subject identifier.
         /// </value>
         public string SubjectId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the browser (if any) which was used to make the request by looking at the UserAgent header
+        /// </summary>
+        /// <value>The browser.</value>
+        public string Browser { get; set; }
+
+        /// <summary>
+        /// Gets or sets the device (if any) which was used to make the request by looking at the UserAgent header
+        /// </summary>
+        /// <value>The device.</value>
+        public string Device { get; set; }
+
+        /// <summary>
+        /// Gets or sets the operating system which was used to make the request by looking at the UserAgent header
+        /// </summary>
+        /// <value>The device.</value>
+        public string OperatingSystem { get; set; }
     }
 }
