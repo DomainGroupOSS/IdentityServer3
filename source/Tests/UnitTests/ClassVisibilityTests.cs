@@ -32,7 +32,9 @@ namespace IdentityServer3.Tests
             _bannedAssemblies = new List<Assembly>();
             var excludedAssemblies = new[]
             {
-                "Owin"
+                "Owin",
+                "Microsoft.Owin",
+                "Microsoft.Owin.Security"
             };
             foreach (var referencedAssembly in typeof(Constants).Assembly.GetReferencedAssemblies())
             {

@@ -121,6 +121,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Tracing.5.2.3\lib\net45\System.Web.Http.Tracing.dll</HintPath>
     </Reference>
+    <Reference Include="UAParser, Version=2.1.0.0, Culture=neutral, PublicKeyToken=f7377bf021646069, processorArchitecture=MSIL">
+      <HintPath>..\packages\UAParser.2.1.0.0\lib\net40-Client\UAParser.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\VersionAssemblyInfo.cs">
@@ -244,6 +248,7 @@
     <Compile Include="Services\Default\DefaultCustomTokenResponseGenerator.cs" />
     <Compile Include="Services\Default\DefaultSigningKeyService.cs" />
     <Compile Include="Services\Default\DefaultTokenSigningService.cs" />
+    <Compile Include="Extensions\EventExtensions.cs" />
     <Compile Include="Services\IAuthenticationSessionValidator.cs" />
     <Compile Include="Services\ICustomTokenResponseGenerator.cs" />
     <Compile Include="Services\ISigningKeyService.cs" />

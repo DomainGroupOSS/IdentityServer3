@@ -37,7 +37,7 @@ namespace IdentityServer3.Core.Services.Default
         {
             this.options = options;
             this.context = new OwinContext(owinEnvironment.Environment);
-            this.inner = inner;
+            this.inner = inner;            
         }
 
         public Task RaiseAsync<T>(Event<T> evt)
@@ -80,7 +80,7 @@ namespace IdentityServer3.Core.Services.Default
                 ProcessId = Process.GetCurrentProcess().Id,
                 MachineName = Environment.MachineName,
                 RemoteIpAddress = context.Request.RemoteIpAddress,
-            };
+            };            
 
             var principal = context.Authentication.User;
             if (principal != null && principal.Identity != null)
@@ -91,6 +91,8 @@ namespace IdentityServer3.Core.Services.Default
                     evt.Context.SubjectId = subjectClaim.Value;
                 }
             }
+
+            evt.AddUserAgentDetails(this.context);
 
             return evt;
         }
