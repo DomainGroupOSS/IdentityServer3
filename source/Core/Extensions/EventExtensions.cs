@@ -13,12 +13,12 @@ namespace IdentityServer3.Core.Events
 
         public static void AddUserAgentDetails<T>(this Event<T> evt, OwinContext context)
         {
-            if (!context.Request.Headers.ContainsKey("User-Agent"))
-            {
-                return;
-            }
+            var userAgent = string.Empty;
 
-            var userAgent = context.Request.Headers.Get("User-Agent");
+            if (context.Request.Headers.ContainsKey("User-Agent"))
+            {
+                userAgent = context.Request.Headers.Get("User-Agent");
+            }
 
             if (context.Request.Headers.ContainsKey("X-Forwarded-User-Agent"))
             {
