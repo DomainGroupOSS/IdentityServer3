@@ -42,7 +42,7 @@ namespace IdentityServer3.Core.Events
                 evt.Context.Device = device;
 
                 var osVersion = client.OS.Major + (client.OS.Minor.IsPresent() ? "." + client.OS.Minor : string.Empty);
-                evt.Context.OperatingSystem = string.Format("{0} {1}", client.OS.Family, osVersion);
+                evt.Context.OperatingSystem = string.Format("{0}{1}", client.OS.Family, osVersion.IsPresent() ? " " + osVersion : string.Empty);
 
             }
             catch (Exception ex)
