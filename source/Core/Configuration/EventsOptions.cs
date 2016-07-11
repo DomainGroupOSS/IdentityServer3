@@ -21,6 +21,19 @@ namespace IdentityServer3.Core.Configuration
     /// </summary>
     public class EventsOptions
     {
+        public EventsOptions()
+        {
+            UseCustomEventService = false;
+        }
+
+        /// <summary>
+        /// Allows registration of a custom IEventService without registering the Event Service Decorator.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if [use custom event service]; otherwise, <c>false</c>.
+        /// </value>
+        public bool UseCustomEventService { get; set; }
+
         /// <summary>
         /// Gets or sets a value indicating whether to raise success events.
         /// </summary>

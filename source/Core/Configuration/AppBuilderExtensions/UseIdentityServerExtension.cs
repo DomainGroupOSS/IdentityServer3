@@ -110,12 +110,15 @@ namespace Owin
             app.UseAutofacWebApi(httpConfig);
             app.UseWebApi(httpConfig);
 
-            using (var child = container.CreateScopeWithEmptyOwinContext())
-            {
-                var eventSvc = child.Resolve<IEventService>();
-                // TODO -- perhaps use AsyncHelper instead?
-                DoStartupDiagnosticsAsync(options, eventSvc).Wait();
-            }
+            //DEVNOTE: This seems to cause issues with registering dependencies as per lifetime scope.
+            // Commenting this out because of this, we're also performing the same checks in our 
+            // health endpoint so that we receive alerts on such notifications
+            //using (var child = container.CreateScopeWithEmptyOwinContext())
+            //{
+            //    var eventSvc = child.Resolve<IEventService>();
+            //    // TODO -- perhaps use AsyncHelper instead?
+            //    DoStartupDiagnosticsAsync(options, eventSvc).Wait();
+            //}
             
             return app;
         }

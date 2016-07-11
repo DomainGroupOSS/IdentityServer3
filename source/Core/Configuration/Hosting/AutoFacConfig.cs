@@ -83,7 +83,12 @@ namespace IdentityServer3.Core.Configuration.Hosting
             }
 
             builder.RegisterDefaultType<ISigningKeyService, DefaultSigningKeyService>(fact.SigningKeyService);
-            builder.RegisterDecoratorDefaultType<IEventService, EventServiceDecorator, DefaultEventService>(fact.EventService);
+
+
+            if (!options.EventsOptions.UseCustomEventService)
+            {
+                builder.RegisterDecoratorDefaultType<IEventService, EventServiceDecorator, DefaultEventService>(fact.EventService);
+            }            
 
             builder.RegisterDefaultType<IRedirectUriValidator, DefaultRedirectUriValidator>(fact.RedirectUriValidator);
             builder.RegisterDefaultType<ILocalizationService, DefaultLocalizationService>(fact.LocalizationService);
