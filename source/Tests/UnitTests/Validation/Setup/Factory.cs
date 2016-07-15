@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using IdentityServer3.Core.Configuration;
 using IdentityServer3.Core.Configuration.Hosting;
 using IdentityServer3.Core.Models;
@@ -159,11 +160,18 @@ namespace IdentityServer3.Tests.Validation
                 scopeValidator = new ScopeValidator(scopes);
             }
 
+            var twoFactoSessionHelper = AuthenticatedTwoFactorTwoFactorSessionHelper.Instance(options.AuthenticationOptions.CookieOptions.TwoFactorSessionKey);
+
             var mockSessionCookie = new Mock<SessionCookie>((IOwinContext)null, (IdentityServerOptions)null);
             mockSessionCookie.CallBase = false;
             mockSessionCookie.Setup(x => x.GetSessionId()).Returns((string)null);
 
-            return new AuthorizeRequestValidator(options, clients, customValidator, uriValidator, scopeValidator, mockSessionCookie.Object);
+            var mockTwoFactorCookie = new Mock<TwoFactorCookie>((IOwinContext)null, (IdentityServerOptions)null, twoFactoSessionHelper);
+            mockTwoFactorCookie.CallBase = false;
+            mockTwoFactorCookie.Setup(x => x.IsValid(It.IsAny<string>())).Returns(true);
+            mockTwoFactorCookie.Setup(x => x.IssueTwoFactorSession(It.IsAny<bool?>(), It.IsAny<string>(), It.IsAny<DateTimeOffset?>()));
+
+            return new AuthorizeRequestValidator(options, clients, customValidator, uriValidator, scopeValidator, mockSessionCookie.Object, mockTwoFactorCookie.Object);
 
         }
 

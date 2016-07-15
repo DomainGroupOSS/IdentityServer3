@@ -46,7 +46,7 @@ namespace IdentityServer3.Core.Configuration.Hosting
                 CreateCookieOptions(rememberDevice, expires));
         }
 
-        public bool IsValid(string subjectId)
+        public virtual bool IsValid(string subjectId)
         {
             var incomingToken = _context.Request.Cookies[GetCookieName()];
 

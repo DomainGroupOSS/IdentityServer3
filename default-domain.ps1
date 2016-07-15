@@ -5,7 +5,7 @@ properties {
 	$dist_directory = "$base_directory\distribution"
 	$sln_file = "$src_directory\IdentityServer3.sln"
 	$target_config = "Release"
-	$framework_version = "v4.5"
+	$framework_version = "v4.5.2"
 	$xunit_path = "$src_directory\packages\xunit.runner.console.2.0.0\tools\xunit.console.exe"
 	$ilmerge_path = "$src_directory\packages\ILMerge.2.14.1208\tools\ILMerge.exe"
 	$nuget_path = "$src_directory\.nuget\nuget.exe"
@@ -25,7 +25,7 @@ task Clean {
 }
 
 task Compile -depends UpdateVersion {
-	exec { msbuild /nologo /verbosity:q $sln_file /p:Configuration=$target_config /p:TargetFrameworkVersion=v4.5 }
+	exec { msbuild /nologo /verbosity:q $sln_file /p:Configuration=$target_config /p:TargetFrameworkVersion=v4.5.2 }
 
 	if ($LastExitCode -ne 0) {
         exit $LastExitCode
@@ -65,6 +65,7 @@ task ILMerge -depends Compile {
 			# Exclude IdentityServer3.dll as that will be the primary assembly
 			if ("$_" -ne "IdentityServer3.dll" -and
 			     "$_" -ne "Owin.dll" -and
+				 "$_" -ne "Kentor.OwinCookieSaver.dll" -and
 				 "$_" -ne "Microsoft.Owin.dll" -and
 				 "$_" -ne "Microsoft.Owin.Security.dll") {
 				$input_dlls = "$input_dlls $output_directory\$_"

@@ -23,6 +23,6 @@ Import-Module .\source\packages\psake.4.4.1\tools\psake.psm1
 
 "Build number $buildNumber"
 
-Invoke-Psake .\default-domain.ps1 $task -framework "4.0x64" -properties @{ buildNumber=$buildNumber; preRelease=$preRelease }
+Invoke-Psake .\default-domain.ps1 $task -properties @{ buildNumber=$buildNumber; preRelease=$preRelease }
 
 Remove-Module psake
