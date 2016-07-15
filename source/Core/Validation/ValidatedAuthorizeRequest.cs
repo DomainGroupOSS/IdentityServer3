@@ -193,6 +193,14 @@ namespace IdentityServer3.Core.Validation
         public string CodeChallengeMethod { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether a two factor challenge is required.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if [require two factor challenge]; otherwise, <c>false</c>.
+        /// </value>
+        public bool RequireTwoFactorChallenge { get; set; }
+
+        /// <summary>
         /// Gets a value indicating whether an access token was requested.
         /// </summary>
         /// <value>
@@ -217,6 +225,7 @@ namespace IdentityServer3.Core.Validation
         {
             RequestedScopes = new List<string>();
             AuthenticationContextReferenceClasses = new List<string>();
+            RequireTwoFactorChallenge = false;
         }
     }
 }

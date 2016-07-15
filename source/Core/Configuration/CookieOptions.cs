@@ -122,6 +122,14 @@ namespace IdentityServer3.Core.Configuration
         public TimeSpan TwoFactorRememberThisDeviceDuration { get; set; }
 
         /// <summary>
+        /// Gets or sets the two factor session key.
+        /// </summary>
+        /// <value>
+        /// The two factor session key.
+        /// </value>
+        public string TwoFactorSessionKey { get; set; }
+
+        /// <summary>
         /// Gets or sets the mode for issuing the secure flag on the cookies issued. Defaults to SameAsRequest.
         /// </summary>
         /// <value>

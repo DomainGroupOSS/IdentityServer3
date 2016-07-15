@@ -157,6 +157,21 @@ namespace IdentityServer3.Core.Extensions
             return null;
         }
 
+        public static string AddBase64Padding(this string base64String)
+        {
+            var remainder = base64String.Length % 4;
+
+            switch (remainder)
+            {
+                case 2:
+                    return base64String + "==";
+                case 3:
+                    return base64String + "=";
+                default:
+                    return base64String;
+            }
+        }
+
         public static Stream ToStream(this string s)
         {
             if (s == null) throw new ArgumentNullException("s");

@@ -168,8 +168,12 @@ namespace IdentityServer3.Core.Configuration.Hosting
             builder.RegisterApiControllers(typeof(AuthorizeEndpointController).Assembly);
 
             // other internal
+            builder.Register(c => AuthenticatedTwoFactorTwoFactorSessionHelper.Instance(options.AuthenticationOptions.CookieOptions.TwoFactorSessionKey))
+                .As<IAuthenticatedTwoFactorSessionHelper>()
+                .SingleInstance();
             builder.Register(c => new OwinEnvironmentService(c.Resolve<IOwinContext>()));
             builder.Register(c => new SessionCookie(c.Resolve<IOwinContext>(), c.Resolve<IdentityServerOptions>()));
+            builder.Register(c => new TwoFactorCookie(c.Resolve<IOwinContext>(), c.Resolve<IdentityServerOptions>(), c.Resolve<IAuthenticatedTwoFactorSessionHelper>()));
             builder.Register(c => new MessageCookie<SignInMessage>(c.Resolve<IOwinContext>(), c.Resolve<IdentityServerOptions>()));
             builder.Register(c => new MessageCookie<SignOutMessage>(c.Resolve<IOwinContext>(), c.Resolve<IdentityServerOptions>()));
             builder.Register(c => new LastUserNameCookie(c.Resolve<IOwinContext>(), c.Resolve<IdentityServerOptions>()));

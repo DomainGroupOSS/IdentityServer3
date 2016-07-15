@@ -23,8 +23,13 @@ using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.DataHandler;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Owin;
+using CookieOptions = IdentityServer3.Core.Configuration.CookieOptions;
 
 namespace Owin
 {
@@ -40,6 +45,8 @@ namespace Owin
             {
                 options.Prefix += ".";
             }
+
+            app.UseKentorOwinCookieSaver();
 
             var primary = new CookieAuthenticationOptions
             {
@@ -63,32 +70,8 @@ namespace Owin
                     }
                 }
             };
-            app.UseCookieAuthentication(primary);
 
-            var secondary = new CookieAuthenticationOptions
-            {
-                AuthenticationMode = AuthenticationMode.Passive,
-                AuthenticationType = Constants.SecondaryAuthenticationType,
-                CookieName = Constants.SecondaryAuthenticationType,
-                ExpireTimeSpan = options.TwoFactorExpireTimeSpan,
-                SlidingExpiration = options.TwoFactorSlidingExpiration,
-                CookieSecure = GetCookieSecure(options.SecureMode),
-                TicketDataFormat = new TicketDataFormat(new DataProtectorAdapter(dataProtector, options.Prefix + Constants.SecondaryAuthenticationType)),
-                SessionStore = GetSessionStore(options.SessionStoreProvider),
-                Provider = new CookieAuthenticationProvider
-                {
-                    OnValidateIdentity = async cookieCtx =>
-                    {
-                        var validator = cookieCtx.OwinContext.Environment.ResolveDependency<IAuthenticationSessionValidator>();
-                        var isValid = await validator.IsAuthenticationSessionValidAsync(new ClaimsPrincipal(cookieCtx.Identity));
-                        if (isValid == false)
-                        {
-                            cookieCtx.RejectIdentity();
-                        }
-                    }
-                }
-            };
-            app.UseCookieAuthentication(secondary);
+            app.UseCookieAuthentication(primary);
 
             var external = new CookieAuthenticationOptions
             {
@@ -100,6 +83,7 @@ namespace Owin
                 CookieSecure = GetCookieSecure(options.SecureMode),
                 TicketDataFormat = new TicketDataFormat(new DataProtectorAdapter(dataProtector, options.Prefix + Constants.ExternalAuthenticationType))
             };
+
             app.UseCookieAuthentication(external);
 
             if (customCookieAuthentication != null)
@@ -124,7 +108,6 @@ namespace Owin
                 if (!String.IsNullOrWhiteSpace(path))
                 {
                     primary.CookiePath = external.CookiePath = path;
-                    secondary.CookiePath = external.CookiePath = path;
                     partial.CookiePath = path;
                 }
             };

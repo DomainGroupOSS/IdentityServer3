@@ -32,12 +32,10 @@ namespace IdentityServer3.Core
         public const string PrimaryAuthenticationType       = "idsrv";
         public const string ExternalAuthenticationType      = "idsrv.external";
         public const string PartialSignInAuthenticationType = "idsrv.partial";
-        public static string SecondaryAuthenticationType = "idsrv.secondary";
 
         internal static readonly string[] IdentityServerAuthenticationTypes = new string[]
         {
             PrimaryAuthenticationType,
-            SecondaryAuthenticationType,
             ExternalAuthenticationType,
             PartialSignInAuthenticationType
         };
@@ -578,6 +576,7 @@ namespace IdentityServer3.Core
             public const string AuthorizationReturnUrl = "authorization_return_url";
             public const string PartialLoginRestartUrl = "partial_login_restart_url";
             public const string PartialLoginReturnUrl = "partial_login_return_url";
+            public const string TwoFactorRememberDevice = "2fa_remembered";
 
             // internal claim types
             // claim type to identify external user from external provider

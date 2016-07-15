@@ -40,11 +40,12 @@ namespace IdentityServer3.Core.Validation
         private readonly IRedirectUriValidator _uriValidator;
         private readonly ScopeValidator _scopeValidator;
         private readonly SessionCookie _sessionCookie;
+        private readonly TwoFactorCookie _twoFactorCookie;
 
         private readonly ResponseTypeEqualityComparer
             _responseTypeEqualityComparer = new ResponseTypeEqualityComparer();
 
-        public AuthorizeRequestValidator(IdentityServerOptions options, IClientStore clients, ICustomRequestValidator customValidator, IRedirectUriValidator uriValidator, ScopeValidator scopeValidator, SessionCookie sessionCookie)
+        public AuthorizeRequestValidator(IdentityServerOptions options, IClientStore clients, ICustomRequestValidator customValidator, IRedirectUriValidator uriValidator, ScopeValidator scopeValidator, SessionCookie sessionCookie, TwoFactorCookie twoFactorCookie)
         {
             _options = options;
             _clients = clients;
@@ -52,6 +53,7 @@ namespace IdentityServer3.Core.Validation
             _uriValidator = uriValidator;
             _scopeValidator = scopeValidator;
             _sessionCookie = sessionCookie;
+            _twoFactorCookie = twoFactorCookie;
         }
 
         public async Task<AuthorizeRequestValidationResult> ValidateAsync(NameValueCollection parameters, ClaimsPrincipal subject = null)
@@ -554,6 +556,16 @@ namespace IdentityServer3.Core.Validation
                 {
                     LogError("Check session endpoint enabled, but SessionId is missing", request);
                 }
+            }
+
+            if (request.Subject.Identity.IsAuthenticated && 
+            request.Subject.Claims.Any(c => c.Type == Constants.ClaimTypes.AuthenticationMethod && c.Value == Constants.AuthenticationMethods.TwoFactorAuthentication))
+            {
+                if (!_twoFactorCookie.IsValid(request.Subject.GetSubjectId()))
+                {
+                    request.RequireTwoFactorChallenge = true;
+                }
+
             }
 
             return Valid(request);

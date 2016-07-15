@@ -58,6 +58,10 @@
     <Reference Include="IdentityModel">
       <HintPath>..\packages\IdentityModel.1.9.2\lib\net45\IdentityModel.dll</HintPath>
     </Reference>
+    <Reference Include="Kentor.OwinCookieSaver, Version=1.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\domain-auth\Packages\Kentor.OwinCookieSaver.1.1.1\lib\net452\Kentor.OwinCookieSaver.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -141,7 +145,11 @@
     <Compile Include="Configuration\CookieSecureMode.cs" />
     <Compile Include="Configuration\DiscoveryOptions.cs" />
     <Compile Include="Configuration\EventsOptions.cs" />
+    <Compile Include="Services\IAuthenticatedTwoFactorSessionHelper.cs" />
+    <Compile Include="Services\Default\AuthenticatedTwoFactorSessionHelper.cs" />
     <Compile Include="Configuration\Hosting\ClientListCookie.cs" />
+    <Compile Include="Internal\CryptoLibrary\KbkdfHmacSha256Ctr.cs" />
+    <Compile Include="Configuration\Hosting\TwoFactorCookie.cs" />
     <Compile Include="Configuration\InputLengthRestrictions.cs" />
     <Compile Include="Configuration\IAuthenticationSessionStoreProvider.cs" />
     <Compile Include="Configuration\X509CertificateDataProtector.cs" />

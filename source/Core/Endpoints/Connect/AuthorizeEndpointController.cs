@@ -58,6 +58,7 @@ namespace IdentityServer3.Core.Endpoints
         private readonly IEventService _events;
         private readonly AntiForgeryToken _antiForgeryToken;
         private readonly ClientListCookie _clientListCookie;
+        private readonly TwoFactorCookie _twoFactorCookie;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthorizeEndpointController" /> class.
@@ -71,7 +72,7 @@ namespace IdentityServer3.Core.Endpoints
         /// <param name="events">The event service.</param>
         /// <param name="antiForgeryToken">The anti forgery token.</param>
         /// <param name="clientListCookie">The client list cookie.</param>
-        /// <param name="twoFactorSessionCookie"></param>
+        /// <param name="twoFactorCookie">The two factor cookie.</param>
         public AuthorizeEndpointController(
             IViewService viewService,
             AuthorizeRequestValidator validator,
@@ -81,7 +82,8 @@ namespace IdentityServer3.Core.Endpoints
             ILocalizationService localizationService,
             IEventService events,
             AntiForgeryToken antiForgeryToken,
-            ClientListCookie clientListCookie)
+            ClientListCookie clientListCookie,
+            TwoFactorCookie twoFactorCookie)
         {
             _viewService = viewService;
             _options = options;
@@ -93,6 +95,7 @@ namespace IdentityServer3.Core.Endpoints
             _events = events;
             _antiForgeryToken = antiForgeryToken;
             _clientListCookie = clientListCookie;
+            _twoFactorCookie = twoFactorCookie;
         }
 
         /// <summary>
@@ -159,13 +162,7 @@ namespace IdentityServer3.Core.Endpoints
 
             var context = Request.GetOwinContext();
 
-            var twoFactorAuthResult = await context.Authentication.AuthenticateAsync(Constants.SecondaryAuthenticationType);
-
-            var claimsIdentity = User.Identity as ClaimsIdentity;
-
-            var amrClaim = claimsIdentity.Claims.FirstOrDefault(c => c.Type == Constants.ClaimTypes.AuthenticationMethod);
-
-            if (twoFactorAuthResult == null && amrClaim != null && amrClaim.Value == Constants.AuthenticationMethods.TwoFactorAuthentication)
+            if (request.RequireTwoFactorChallenge)
             {
                 var twoFactorInteraction = await _interactionGenerator.ProcessTwoFactorAsync(request, twoFactorChallenge);
 
@@ -186,9 +183,9 @@ namespace IdentityServer3.Core.Endpoints
                 }
                 else
                 {
-                    IssueTwoFactorAuthCookie(context, context.Authentication.User.GetSubjectId(), twoFactorChallenge == null ? null : (bool?)twoFactorChallenge.RememberThisDevice);
+                    _twoFactorCookie.IssueTwoFactorSession(twoFactorChallenge.RememberThisDevice, context.Authentication.User.GetSubjectId());
                 }
-            }           
+            }
 
             var consentInteraction = await _interactionGenerator.ProcessConsentAsync(request, consent);
 
@@ -261,23 +258,6 @@ namespace IdentityServer3.Core.Endpoints
 
             Logger.Error("Unsupported response mode. Aborting.");
             throw new InvalidOperationException("Unsupported response mode");
-        }
-
-        private void IssueTwoFactorAuthCookie(IOwinContext context, string subject, bool? rememberThisDevice)
-        {
-            var props = new AuthenticationProperties();
-            var id = new ClaimsIdentity(Constants.SecondaryAuthenticationType, Constants.ClaimTypes.Name, Constants.ClaimTypes.Role);
-
-            id.AddClaim(new Claim(Constants.ClaimTypes.Subject, subject));
-
-            if (rememberThisDevice == true)
-            {
-                props.IsPersistent = true;
-                var expires = DateTimeHelper.UtcNow.Add(_options.AuthenticationOptions.CookieOptions.TwoFactorRememberThisDeviceDuration);
-                props.ExpiresUtc = new DateTimeOffset(expires);
-            }
-
-            context.Authentication.SignIn(props, id);
         }
 
         private IHttpActionResult CreateTwoFactorChallengeResult(

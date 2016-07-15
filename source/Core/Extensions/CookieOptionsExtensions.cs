@@ -24,10 +24,16 @@ namespace IdentityServer3.Core.Configuration
         }
 
         const string SessionCookieName = "idsvr.session";
+        const string TwoFactorCookieName = "idsvr.twofactor";
 
         public static string GetSessionCookieName(this CookieOptions options)
         {
             return options.GetCookieName(SessionCookieName);
+        }
+
+        public static string GetTwoFactorCookieName(this CookieOptions options)
+        {
+            return options.GetCookieName(TwoFactorCookieName);
         }
 
         internal static bool? CalculateRememberMeFromUserInput(this CookieOptions options, bool? userInput)

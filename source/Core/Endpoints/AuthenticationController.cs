@@ -34,6 +34,8 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Microsoft.Owin.Security;
+using AuthenticateResult = IdentityServer3.Core.Models.AuthenticateResult;
 
 namespace IdentityServer3.Core.Endpoints
 {
@@ -56,6 +58,7 @@ namespace IdentityServer3.Core.Endpoints
         private readonly IEventService eventService;
         private readonly ILocalizationService localizationService;
         private readonly SessionCookie sessionCookie;
+        private readonly TwoFactorCookie twoFactorCookie;
         private readonly MessageCookie<SignInMessage> signInMessageCookie;
         private readonly MessageCookie<SignOutMessage> signOutMessageCookie;
         private readonly LastUserNameCookie lastUserNameCookie;
@@ -70,6 +73,7 @@ namespace IdentityServer3.Core.Endpoints
             IEventService eventService,
             ILocalizationService localizationService,
             SessionCookie sessionCookie,
+            TwoFactorCookie twoFactorCookie,
             MessageCookie<SignInMessage> signInMessageCookie,
             MessageCookie<SignOutMessage> signOutMessageCookie,
             LastUserNameCookie lastUsernameCookie,
@@ -83,6 +87,7 @@ namespace IdentityServer3.Core.Endpoints
             this.eventService = eventService;
             this.localizationService = localizationService;
             this.sessionCookie = sessionCookie;
+            this.twoFactorCookie = twoFactorCookie;
             this.signInMessageCookie = signInMessageCookie;
             this.signOutMessageCookie = signOutMessageCookie;
             this.lastUserNameCookie = lastUsernameCookie;
@@ -779,6 +784,14 @@ namespace IdentityServer3.Core.Endpoints
             {
                 signInMessageCookie.Clear(signInMessageId);
                 sessionCookie.IssueSessionId(rememberMe);
+
+                var twoFactorAmr = id.FindFirst(c => c.Type == Constants.ClaimTypes.AuthenticationMethod);
+                if (twoFactorAmr != null && twoFactorAmr.Value == Constants.AuthenticationMethods.TwoFactorAuthentication)
+                {
+                    var twoFactorAmrRemember = id.FindFirst(c => c.Type == Constants.ClaimTypes.TwoFactorRememberDevice);
+                    var remember = twoFactorAmrRemember != null && bool.Parse(twoFactorAmrRemember.Value);
+                    twoFactorCookie.IssueTwoFactorSession(remember, authResult.User.GetSubjectId());
+                }
             }
 
             if (!authResult.IsPartialSignIn)
