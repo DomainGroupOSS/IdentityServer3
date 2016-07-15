@@ -61,7 +61,14 @@ namespace IdentityServer3.Tests.Conformance
                 Factory = factory,
                 DataProtector = new NoDataProtector(),
                 SiteName = "IdentityServer3 Host",
-                SigningCertificate = SigningCertificate
+                SigningCertificate = SigningCertificate,
+                AuthenticationOptions = new AuthenticationOptions
+                {
+                    CookieOptions = new CookieOptions
+                    {
+                        TwoFactorSessionKey = "9F797F9585E55F2DBE7B5C5F77C6D23216AD8E1679EB38F17E7B83330BCF0452BBE29C6D2F8EC97747057DA4207D33240592E65EBAA8EB9DC4A6736137D9C0C7"
+                    }
+                }
             };
         }
 
