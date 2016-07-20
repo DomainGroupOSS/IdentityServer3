@@ -181,10 +181,6 @@ namespace IdentityServer3.Core.Endpoints
                     return CreateTwoFactorChallengeResult(request, twoFactorChallenge, request.Raw,
                         twoFactorInteraction.TwoFactorChallengeError, twoFactorInteraction.TwoFactorChallengeInfo);
                 }
-                else
-                {
-                    _twoFactorCookie.IssueTwoFactorSession(twoFactorChallenge.RememberThisDevice, context.Authentication.User.GetSubjectId());
-                }
             }
 
             var consentInteraction = await _interactionGenerator.ProcessConsentAsync(request, consent);

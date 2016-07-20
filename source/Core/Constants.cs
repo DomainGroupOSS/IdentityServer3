@@ -584,6 +584,8 @@ namespace IdentityServer3.Core
             public const string PartialLoginResumeId = PartialLoginResumeClaimPrefix + "{0}";
 
             public const string ExternalProviderClient = "external_provider_client";
+
+            public const string Bypass2Fa = "bypass_2fa";
         }
 
         public const string PartialLoginResumeClaimPrefix = "partial_login_resume_id:";
