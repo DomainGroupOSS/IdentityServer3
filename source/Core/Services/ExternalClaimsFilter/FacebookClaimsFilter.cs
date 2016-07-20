@@ -50,15 +50,30 @@ namespace IdentityServer3.Core.Services.Default
         protected override IEnumerable<Claim> TransformClaims(IEnumerable<Claim> claims)
         {
             var nameClaim = claims.FirstOrDefault(x => x.Type == "urn:facebook:name");
+            var firstNameClaim = claims.FirstOrDefault(x => x.Type == "urn:facebook:first_name");
+            var lastNameClaim = claims.FirstOrDefault(x => x.Type == "urn:facebook:last_name");
+
+            var list = claims.ToList();
+
             if (nameClaim != null)
             {
-                var list = claims.ToList();
                 list.Remove(nameClaim);
                 list.RemoveAll(x => x.Type == Constants.ClaimTypes.Name);
                 list.Add(new Claim(Constants.ClaimTypes.Name, nameClaim.Value));
-                return list;
             }
-            return claims;
+            if (firstNameClaim != null)
+            {
+                list.Remove(firstNameClaim);
+                list.RemoveAll(x => x.Type == Constants.ClaimTypes.GivenName);
+                list.Add(new Claim(Constants.ClaimTypes.GivenName, firstNameClaim.Value));
+            }
+            if (lastNameClaim != null)
+            {
+                list.Remove(lastNameClaim);
+                list.RemoveAll(x => x.Type == Constants.ClaimTypes.FamilyName);
+                list.Add(new Claim(Constants.ClaimTypes.FamilyName, lastNameClaim.Value));
+            }
+            return list;
         }
     }
 }
