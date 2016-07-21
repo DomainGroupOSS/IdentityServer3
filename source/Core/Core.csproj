@@ -144,6 +144,7 @@
     <Compile Include="Configuration\CookieSecureMode.cs" />
     <Compile Include="Configuration\DiscoveryOptions.cs" />
     <Compile Include="Configuration\EventsOptions.cs" />
+    <Compile Include="Services\ExternalClaimsFilter\MicrosoftClaimsFilter.cs" />
     <Compile Include="Services\IAuthenticatedTwoFactorSessionHelper.cs" />
     <Compile Include="Services\Default\AuthenticatedTwoFactorSessionHelper.cs" />
     <Compile Include="Configuration\Hosting\ClientListCookie.cs" />
