@@ -36,6 +36,7 @@ namespace IdentityServer3.Core.Configuration
             TwoFactorRememberThisDeviceDuration = Constants.DefaultRememberTwoFactorDuration;
             TwoFactorExpireTimeSpan = Constants.DefaultTwoFactorCookieTimeSpan;
             SecureMode = CookieSecureMode.SameAsRequest;
+            SecurityStampValidationInterval = TimeSpan.FromMinutes(30);
         }
 
         /// <summary>
@@ -136,6 +137,14 @@ namespace IdentityServer3.Core.Configuration
         /// The secure.
         /// </value>
         public CookieSecureMode SecureMode { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="TimeSpan"/> after which security stamps are re-validated.
+        /// </summary>
+        /// <value>
+        /// The <see cref="TimeSpan"/> after which security stamps are re-validated.
+        /// </value>
+        public TimeSpan SecurityStampValidationInterval { get; set; }
 
         /// <summary>
         /// An optional container in which to store the identity across requests. When used, only a session identifier is sent

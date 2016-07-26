@@ -85,7 +85,7 @@ namespace IdentityServer3.Tests.Connect.Endpoints
             resp.AssertPage("consent");
         }
 
-        [Fact]
+        [Fact(Skip = "Validator only runs on given interval now")]
         public void GetAuthorize_UserLoggedIn_ValidatorReturnsFalse_ReturnsLogin()
         {
             _stubValidator.Response = false;

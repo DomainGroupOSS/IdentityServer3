@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 
+using System;
 using IdentityServer3.Core;
 using IdentityServer3.Core.Configuration;
 using IdentityServer3.Core.Configuration.Hosting;
 using IdentityServer3.Core.Extensions;
-using IdentityServer3.Core.Services;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.DataHandler;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Reflection;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.Owin;
-using CookieOptions = IdentityServer3.Core.Configuration.CookieOptions;
 
 namespace Owin
 {
     internal static class UseCookieAuthenticationExtension
     {
-        public static IAppBuilder ConfigureCookieAuthentication(this IAppBuilder app, CookieOptions options, IDataProtector dataProtector, 
+        public static IAppBuilder ConfigureCookieAuthentication(this IAppBuilder app, CookieOptions options, IDataProtector dataProtector,
             Action<IAppBuilder, CookieOptions, IDataProtector> customCookieAuthentication)
         {
             if (options == null) throw new ArgumentNullException("options");
@@ -59,15 +51,7 @@ namespace Owin
                 SessionStore = GetSessionStore(options.SessionStoreProvider),
                 Provider = new CookieAuthenticationProvider
                 {
-                    OnValidateIdentity = async cookieCtx =>
-                    {
-                        var validator = cookieCtx.OwinContext.Environment.ResolveDependency<IAuthenticationSessionValidator>();
-                        var isValid = await validator.IsAuthenticationSessionValidAsync(new ClaimsPrincipal(cookieCtx.Identity));
-                        if (isValid == false)
-                        {
-                            cookieCtx.RejectIdentity();
-                        }
-                    }
+                    OnValidateIdentity = cookieCtx => SecurityStampValidator.ValidatePrincipalAsync(cookieCtx, options)
                 }
             };
 
@@ -111,7 +95,7 @@ namespace Owin
                     partial.CookiePath = path;
                 }
             };
-            
+
             if (String.IsNullOrWhiteSpace(options.Path))
             {
                 app.Use(async (ctx, next) =>

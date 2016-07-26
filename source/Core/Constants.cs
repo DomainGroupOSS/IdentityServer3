@@ -563,7 +563,12 @@ namespace IdentityServer3.Core
 
             /// <summary>OAuth 2.0 Client Identifier valid at the Authorization Server.</summary>
             public const string ClientId         = "client_id";
-            
+
+            /// <summary>
+            /// Gets or sets the ClaimType used for the security stamp claim..
+            /// </summary>
+            public const string SecurityStamp = "security_stamp";
+
             /// <summary>OpenID Connect requests MUST contain the "openid" scope value. If the openid scope value is not present, the behavior is entirely unspecified. Other scope values MAY be present. Scope values used that are not understood by an implementation SHOULD be ignored.</summary>
             public const string Scope            = "scope";
             public const string Id               = "id";
