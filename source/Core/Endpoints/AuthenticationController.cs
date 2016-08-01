@@ -322,7 +322,7 @@ namespace IdentityServer3.Core.Endpoints
 
             var authProp = new Microsoft.Owin.Security.AuthenticationProperties
             {
-                RedirectUri = new Uri(options.PublicOrigin + Url.Route(Constants.RouteNames.LoginExternalCallback, null)).ToString()
+                RedirectUri = options.PublicOrigin.IsPresent() ? new Uri(options.PublicOrigin + Url.Route(Constants.RouteNames.LoginExternalCallback, null)).ToString() : Url.Route(Constants.RouteNames.LoginExternalCallback, null)
             };
 
             Logger.Info("Triggering challenge for external identity provider");
