@@ -24,6 +24,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Microsoft.Owin;
 
 namespace IdentityServer3.Core.Results
 {
@@ -33,14 +34,18 @@ namespace IdentityServer3.Core.Results
 
         private readonly IDictionary<string, object> env;
         private readonly SignInMessage message;
+        private readonly string resumeUrl;
+        private readonly AuthenticateResult authResult;
 
-        public LoginResult(IDictionary<string, object> env, SignInMessage message)
+        public LoginResult(IDictionary<string, object> env, SignInMessage message, string resumeUrl = null, AuthenticateResult authResult = null)
         {
             if (env == null) throw new ArgumentNullException("env");
             if (message == null) throw new ArgumentNullException("message");
 
             this.env = env;
             this.message = message;
+            this.resumeUrl = resumeUrl;
+            this.authResult = authResult;
         }
 
         public Task<HttpResponseMessage> ExecuteAsync(CancellationToken cancellationToken)
@@ -50,13 +55,19 @@ namespace IdentityServer3.Core.Results
 
         private HttpResponseMessage Execute()
         {
-            Logger.Info("Redirecting to login page");
+            Logger.Info("Redirecting to login page or partial login");
 
             var response = new HttpResponseMessage(HttpStatusCode.Redirect);
+            var signinId = string.Empty;
+            var url = this.env.CreateSignInRequest(this.message, out signinId, resumeUrl);
 
-            var url = this.env.CreateSignInRequest(this.message);
+            if (!string.IsNullOrWhiteSpace(resumeUrl) && !string.IsNullOrWhiteSpace(signinId))
+            {
+                var ctx = new OwinContext(env);
+                ctx.IssuePartialLoginCookie(authResult, resumeUrl, signinId);
+            }
+
             response.Headers.Location = new Uri(url);
-
             return response;
         }
     }

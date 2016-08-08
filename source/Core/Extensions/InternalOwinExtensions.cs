@@ -303,11 +303,12 @@ namespace IdentityServer3.Core.Extensions
             return null;
         }
 
+        //todo : MD=> we can safely remove this, not used anywhere
         public static string CreateSignInRequest(this IOwinContext context, SignInMessage message)
         {
             if (context == null) throw new ArgumentNullException("context");
-
-            return context.Environment.CreateSignInRequest(message);
+            string singinId;
+            return context.Environment.CreateSignInRequest(message,out singinId);
         }
 
         public static bool IsFormData(this IOwinRequest request)

@@ -582,6 +582,7 @@ namespace IdentityServer3.Core
             public const string PartialLoginRestartUrl = "partial_login_restart_url";
             public const string PartialLoginReturnUrl = "partial_login_return_url";
             public const string TwoFactorRememberDevice = "2fa_remembered";
+            public const string MobileDevice = "mobile";
 
             // internal claim types
             // claim type to identify external user from external provider

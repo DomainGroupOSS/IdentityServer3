@@ -26,12 +26,15 @@ using IdentityServer3.Core.Services;
 using IdentityServer3.Core.Validation;
 using IdentityServer3.Core.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Results;
 using Microsoft.Owin;
 using Microsoft.Owin.Security;
 
@@ -59,6 +62,7 @@ namespace IdentityServer3.Core.Endpoints
         private readonly AntiForgeryToken _antiForgeryToken;
         private readonly ClientListCookie _clientListCookie;
         private readonly TwoFactorCookie _twoFactorCookie;
+        private readonly IUserService _userService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthorizeEndpointController" /> class.
@@ -70,6 +74,7 @@ namespace IdentityServer3.Core.Endpoints
         /// <param name="options">The options.</param>
         /// <param name="localizationService">The localization service.</param>
         /// <param name="events">The event service.</param>
+        /// <param name="userService"></param>
         /// <param name="antiForgeryToken">The anti forgery token.</param>
         /// <param name="clientListCookie">The client list cookie.</param>
         /// <param name="twoFactorCookie">The two factor cookie.</param>
@@ -81,6 +86,7 @@ namespace IdentityServer3.Core.Endpoints
             IdentityServerOptions options,
             ILocalizationService localizationService,
             IEventService events,
+            IUserService userService,
             AntiForgeryToken antiForgeryToken,
             ClientListCookie clientListCookie,
             TwoFactorCookie twoFactorCookie)
@@ -93,6 +99,7 @@ namespace IdentityServer3.Core.Endpoints
             _validator = validator;
             _localizationService = localizationService;
             _events = events;
+            _userService = userService;
             _antiForgeryToken = antiForgeryToken;
             _clientListCookie = clientListCookie;
             _twoFactorCookie = twoFactorCookie;
@@ -140,9 +147,50 @@ namespace IdentityServer3.Core.Endpoints
                     null,
                     request);
             }
+
+            var context = Request.GetOwinContext();
+
             if (loginInteraction.IsLogin)
             {
-                return this.RedirectToLogin(loginInteraction.SignInMessage, request.Raw);
+                if (request.Client.Claims.Any(c => c.Type == Constants.ClaimTypes.MobileDevice && c.Value == bool.TrueString))
+                {
+                    IEnumerable<string> userName, password;
+
+                    if (!Request.Headers.TryGetValues(Constants.TokenRequest.UserName, out userName))
+                    {
+                        return new StatusCodeResult(HttpStatusCode.Unauthorized, Request);
+                    }
+
+                    if (!Request.Headers.TryGetValues(Constants.TokenRequest.Password, out password))
+                    {
+                        return new StatusCodeResult(HttpStatusCode.Unauthorized, Request);
+                    }
+
+                    var localAuthenticationContext = new LocalAuthenticationContext
+                    {
+                        UserName = userName.Single(),
+                        Password = password.Single(),
+                        SignInMessage = loginInteraction.SignInMessage
+                    };
+
+                    await _userService.AuthenticateLocalAsync(localAuthenticationContext);
+                    if (!localAuthenticationContext.AuthenticateResult.IsPartialSignIn)
+                    {
+                        context.Authentication.SignIn(localAuthenticationContext.AuthenticateResult.User.Identities.ToArray());
+                        User = localAuthenticationContext.AuthenticateResult.User;
+                    }
+                    else
+                    {
+                        if (parameters.Get("connect") == Constants.ClaimTypes.MobileDevice) 
+                            return this.RedirectToLogin(loginInteraction.SignInMessage, request.Raw,
+                                localAuthenticationContext.AuthenticateResult.PartialSignInRedirectPath, localAuthenticationContext.AuthenticateResult);
+                        return new StatusCodeResult(HttpStatusCode.Forbidden, Request);
+                    }
+                }
+                else
+                {
+                    return this.RedirectToLogin(loginInteraction.SignInMessage, request.Raw);
+                }
             }
 
             // user must be authenticated at this point
@@ -159,9 +207,7 @@ namespace IdentityServer3.Core.Endpoints
             {
                 return this.RedirectToLogin(loginInteraction.SignInMessage, request.Raw);
             }
-
-            var context = Request.GetOwinContext();
-
+            
             if (request.RequireTwoFactorChallenge)
             {
                 var twoFactorInteraction = await _interactionGenerator.ProcessTwoFactorAsync(request, twoFactorChallenge);
@@ -325,7 +371,7 @@ namespace IdentityServer3.Core.Endpoints
             return new ConsentActionResult(_viewService, consentModel, validatedRequest);
         }
 
-        IHttpActionResult RedirectToLogin(SignInMessage message, NameValueCollection parameters)
+        IHttpActionResult RedirectToLogin(SignInMessage message, NameValueCollection parameters, string resumeUrl = null, Models.AuthenticateResult authenticateResult = null)
         {
             message = message ?? new SignInMessage();
 
@@ -334,7 +380,19 @@ namespace IdentityServer3.Core.Endpoints
             var url = new Uri(host, path);
             message.ReturnUrl = url.AbsoluteUri;
 
-            return new LoginResult(Request.GetOwinContext().Environment, message);
+            if (!string.IsNullOrWhiteSpace(resumeUrl))
+            {
+                if (resumeUrl.StartsWith("~/"))
+                {
+                    resumeUrl = resumeUrl.Substring(1);
+                }
+                if (resumeUrl.StartsWith("/"))
+                {
+                    resumeUrl = resumeUrl.RemoveTrailingSlash();
+                }
+            }
+
+            return new LoginResult(Request.GetOwinContext().Environment, message, resumeUrl, authenticateResult);
         }
 
         async Task<IHttpActionResult> AuthorizeErrorAsync(ErrorTypes errorType, string error, string errorDescription, ValidatedAuthorizeRequest request)
