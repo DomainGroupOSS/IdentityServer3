@@ -42,6 +42,7 @@ namespace IdentityServer3.Core.Configuration
                 var aggregateFilter = new AggregateExternalClaimsFilter(
                     new NormalizingClaimsFilter(),
                     new FacebookClaimsFilter(),
+                    new GoogleClaimsFilter(),
                     new TwitterClaimsFilter(),
                     new MicrosoftClaimsFilter()
                 );
