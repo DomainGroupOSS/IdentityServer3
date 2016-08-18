@@ -63,6 +63,7 @@ namespace IdentityServer3.Core.Endpoints
         private readonly MessageCookie<SignOutMessage> signOutMessageCookie;
         private readonly LastUserNameCookie lastUserNameCookie;
         private readonly AntiForgeryToken antiForgeryToken;
+        private readonly ProfileImageCookie profileImageCookie;
 
         public AuthenticationController(
             OwinEnvironmentService owin,
@@ -77,7 +78,8 @@ namespace IdentityServer3.Core.Endpoints
             MessageCookie<SignInMessage> signInMessageCookie,
             MessageCookie<SignOutMessage> signOutMessageCookie,
             LastUserNameCookie lastUsernameCookie,
-            AntiForgeryToken antiForgeryToken)
+            AntiForgeryToken antiForgeryToken,
+            ProfileImageCookie profileImageCookie)
         {
             this.context = new OwinContext(owin.Environment);
             this.viewService = viewService;
@@ -92,6 +94,7 @@ namespace IdentityServer3.Core.Endpoints
             this.signOutMessageCookie = signOutMessageCookie;
             this.lastUserNameCookie = lastUsernameCookie;
             this.antiForgeryToken = antiForgeryToken;
+            this.profileImageCookie = profileImageCookie;
         }
 
         [Route(Constants.RoutePaths.Login, Name = Constants.RouteNames.Login)]
@@ -185,7 +188,7 @@ namespace IdentityServer3.Core.Endpoints
                 Logger.Error("Signin parameter passed was larger than max length");
                 return RenderErrorPage();
             }
-            
+
             var signInMessage = signInMessageCookie.Read(signin);
             if (signInMessage == null)
             {
@@ -209,7 +212,7 @@ namespace IdentityServer3.Core.Endpoints
             {
                 ModelState.AddModelError("Username", localizationService.GetMessage(MessageIds.UsernameRequired));
             }
-            
+
             if (String.IsNullOrWhiteSpace(model.Password))
             {
                 ModelState.AddModelError("Password", localizationService.GetMessage(MessageIds.PasswordRequired));
@@ -237,15 +240,15 @@ namespace IdentityServer3.Core.Endpoints
             };
 
             await userService.AuthenticateLocalAsync(authenticationContext);
-            
+
             var authResult = authenticationContext.AuthenticateResult;
             if (authResult == null)
             {
                 Logger.WarnFormat("user service indicated incorrect username or password for username: {0}", model.Username);
-                
+
                 var errorMessage = localizationService.GetMessage(MessageIds.InvalidUsernameOrPassword);
                 await eventService.RaiseLocalLoginFailureEventAsync(model.Username, signin, signInMessage, errorMessage);
-                
+
                 return await RenderLoginPage(signInMessage, signin, errorMessage, model.Username, model.RememberMe == true);
             }
 
@@ -254,7 +257,7 @@ namespace IdentityServer3.Core.Endpoints
                 Logger.WarnFormat("user service returned an error message: {0}", authResult.ErrorMessage);
 
                 await eventService.RaiseLocalLoginFailureEventAsync(model.Username, signin, signInMessage, authResult.ErrorMessage);
-                
+
                 return await RenderLoginPage(signInMessage, signin, authResult.ErrorMessage, model.Username, model.RememberMe == true);
             }
 
@@ -311,7 +314,7 @@ namespace IdentityServer3.Core.Endpoints
                 await eventService.RaiseFailureEndpointEventAsync(EventConstants.EndpointNames.Authenticate, msg);
                 return RenderErrorPage();
             }
-            
+
             if (context.IsValidExternalAuthenticationProvider(provider) == false)
             {
                 var msg = String.Format("External login error: provider requested {0} is not a configured external provider", provider);
@@ -331,7 +334,7 @@ namespace IdentityServer3.Core.Endpoints
             authProp.Dictionary.Add(Constants.Authentication.SigninId, signin);
             authProp.Dictionary.Add(Constants.Authentication.KatanaAuthenticationType, provider);
             context.Authentication.Challenge(authProp, provider);
-            
+
             return Unauthorized();
         }
 
@@ -340,7 +343,7 @@ namespace IdentityServer3.Core.Endpoints
         public async Task<IHttpActionResult> LoginExternalCallback(string error = null)
         {
             Logger.Info("Callback invoked from external identity provider");
-            
+
             if (error.IsPresent())
             {
                 if (error.Length > options.InputLengthRestrictions.ExternalError) error = error.Substring(0, options.InputLengthRestrictions.ExternalError);
@@ -388,15 +391,15 @@ namespace IdentityServer3.Core.Endpoints
             };
 
             await userService.AuthenticateExternalAsync(externalContext);
-            
+
             var authResult = externalContext.AuthenticateResult;
             if (authResult == null)
             {
                 Logger.Warn("user service failed to authenticate external identity");
-                
+
                 var msg = localizationService.GetMessage(MessageIds.NoMatchingExternalAccount);
                 await eventService.RaiseExternalLoginFailureEventAsync(externalIdentity, signInId, signInMessage, msg);
-                
+
                 return await RenderLoginPage(signInMessage, signInId, msg);
             }
 
@@ -405,7 +408,7 @@ namespace IdentityServer3.Core.Endpoints
                 Logger.WarnFormat("user service returned error message: {0}", authResult.ErrorMessage);
 
                 await eventService.RaiseExternalLoginFailureEventAsync(externalIdentity, signInId, signInMessage, authResult.ErrorMessage);
-                
+
                 return await RenderLoginPage(signInMessage, signInId, authResult.ErrorMessage);
             }
 
@@ -413,6 +416,13 @@ namespace IdentityServer3.Core.Endpoints
 
             await eventService.RaiseExternalLoginSuccessEventAsync(externalIdentity, signInId, signInMessage, authResult);
 
+            string picturePath = null;
+            if (externalContext.AuthenticateResult.User.Claims.Any(p => p.Type == Constants.ClaimTypes.Picture))
+            {
+                picturePath = externalContext.AuthenticateResult.User.Claims.First(p => p.Type == Constants.ClaimTypes.Picture).Value;
+                profileImageCookie.SetValue(picturePath);
+            }
+            
             return await SignInAndRedirectAsync(signInMessage, signInId, authResult);
         }
 
@@ -621,7 +631,7 @@ namespace IdentityServer3.Core.Endpoints
                 Logger.Error("id param is longer than allowed length");
                 return RenderErrorPage();
             }
-            
+
             var user = (ClaimsPrincipal)User;
             if (user != null && user.Identity.IsAuthenticated)
             {
@@ -674,7 +684,7 @@ namespace IdentityServer3.Core.Endpoints
 
             return Redirect(url);
         }
-        
+
         private async Task<IHttpActionResult> SignInAndRedirectAsync(SignInMessage signInMessage, string signInMessageId, AuthenticateResult authResult, bool? rememberMe = null)
         {
             var postAuthenActionResult = await PostAuthenticateAsync(signInMessage, authResult);
@@ -692,9 +702,9 @@ namespace IdentityServer3.Core.Endpoints
             }
 
             // check to see if idp used to signin matches 
-            if (signInMessage.IdP.IsPresent() && 
-                authResult.IsPartialSignIn == false && 
-                authResult.HasSubject && 
+            if (signInMessage.IdP.IsPresent() &&
+                authResult.IsPartialSignIn == false &&
+                authResult.HasSubject &&
                 authResult.User.GetIdentityProvider() != signInMessage.IdP)
             {
                 // this is an error -- the user service did not set the idp to the one requested
@@ -727,7 +737,7 @@ namespace IdentityServer3.Core.Endpoints
                 if (authResult == null)
                 {
                     Logger.Error("user service PostAuthenticateAsync returned a null AuthenticateResult");
-                    return new Tuple<IHttpActionResult,AuthenticateResult>(RenderErrorPage(), null);
+                    return new Tuple<IHttpActionResult, AuthenticateResult>(RenderErrorPage(), null);
                 }
 
                 if (authResult.IsError)
@@ -742,7 +752,7 @@ namespace IdentityServer3.Core.Endpoints
                     Logger.Info("user service PostAuthenticateAsync returned a different AuthenticateResult");
                 }
             }
-            
+
             return new Tuple<IHttpActionResult, AuthenticateResult>(null, result);
         }
 
@@ -882,6 +892,13 @@ namespace IdentityServer3.Core.Endpoints
             if (message == null) throw new ArgumentNullException("message");
 
             username = GetUserNameForLoginPage(message, username);
+            string profileImage = string.Empty;
+
+            var profileImageCookieValue = profileImageCookie.GetValue();
+            if (profileImageCookieValue.IsPresent())
+            {
+                profileImage = profileImageCookieValue;
+            }
 
             var isLocalLoginAllowedForClient = await IsLocalLoginAllowedForClient(message);
             var isLocalLoginAllowed = isLocalLoginAllowedForClient && options.AuthenticationOptions.EnableLocalLogin;
@@ -954,6 +971,7 @@ namespace IdentityServer3.Core.Endpoints
                 LogoutUrl = context.GetIdentityServerLogoutUrl(),
                 AntiForgery = antiForgeryToken.GetAntiForgeryToken(),
                 Username = username,
+                ProfileImage = profileImage,
                 ClientName = client != null ? client.ClientName : null,
                 ClientUrl = client != null ? client.ClientUri : null,
                 ClientLogoUrl = client != null ? client.LogoUri : null
@@ -1017,7 +1035,7 @@ namespace IdentityServer3.Core.Endpoints
             var message = signOutMessageCookie.Read(id);
             var redirectUrl = message != null ? message.ReturnUrl : null;
             var clientName = await clientStore.GetClientName(message);
-            
+
             var loggedOutModel = new LoggedOutViewModel
             {
                 SiteName = options.SiteName,
