@@ -647,6 +647,7 @@ namespace IdentityServer3.Core
                 public const string Reason = "partial_reason";
                 public const string Connect = "connect";
                 public const string ConnectSms = "sms";
+                public const string ConnectWebView = "webview";
                 public const string ConnectSessionCode = "connect_session";
             }
         }

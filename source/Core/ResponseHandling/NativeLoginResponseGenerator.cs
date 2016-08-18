@@ -301,6 +301,9 @@ namespace IdentityServer3.Core.ResponseHandling
             if (request.PartialReason == Constants.NativeLoginPartialReasons.TwoFactorChallengeRequired)
             {
                 claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.ClaimTypes.Partial.ConnectSms));
+            }else if (request.PartialReason.IsPresent())
+            {
+                claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.ClaimTypes.Partial.ConnectWebView));
             }
 
             var identityToken = await _tokenService.CreatePartialAuthNIdentityTokenAsync(tokenRequest, claims).ConfigureAwait(false);
