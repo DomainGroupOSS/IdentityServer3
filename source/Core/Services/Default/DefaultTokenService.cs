@@ -182,6 +182,71 @@ namespace IdentityServer3.Core.Services.Default
         }
 
         /// <summary>
+        /// Creates an identity token for partially authenticated users.
+        /// </summary>
+        /// <param name="request">The token creation request.</param>
+        /// <returns>
+        /// An identity token
+        /// </returns>
+        public virtual async Task<Token> CreatePartialAuthNIdentityTokenAsync(TokenCreationRequest request, IEnumerable<Claim> partialClaims)
+        {
+            Logger.Debug("Creating identity token");
+            request.Validate();
+
+            // host provided claims
+            var claims = new List<Claim>();
+
+            claims.AddRange(partialClaims);
+
+            // if nonce was sent, must be mirrored in id token
+            if (request.Nonce.IsPresent())
+            {
+                claims.Add(new Claim(Constants.ClaimTypes.Nonce, request.Nonce));
+            }
+
+            // add iat claim
+            claims.Add(new Claim(Constants.ClaimTypes.IssuedAt, DateTimeOffsetHelper.UtcNow.ToEpochTime().ToString(), ClaimValueTypes.Integer));
+
+            // add at_hash claim
+            if (request.AccessTokenToHash.IsPresent())
+            {
+                claims.Add(new Claim(Constants.ClaimTypes.AccessTokenHash, HashAdditionalData(request.AccessTokenToHash)));
+            }
+
+            // add c_hash claim
+            if (request.AuthorizationCodeToHash.IsPresent())
+            {
+                claims.Add(new Claim(Constants.ClaimTypes.AuthorizationCodeHash, HashAdditionalData(request.AuthorizationCodeToHash)));
+            }
+
+            // add sid if present
+            if (request.ValidatedRequest.SessionId.IsPresent())
+            {
+                claims.Add(new Claim(Constants.ClaimTypes.SessionId, request.ValidatedRequest.SessionId));
+            }
+
+            claims.AddRange(await _claimsProvider.GetIdentityTokenClaimsAsync(
+                request.Subject,
+                request.Client,
+                request.Scopes,
+                request.IncludeAllIdentityClaims,
+                request.ValidatedRequest));
+
+            var isPartial = claims.Find(c => c.Type == Constants.ClaimTypes.Partial.Reason) != null;
+
+            var token = new Token(Constants.TokenTypes.IdentityToken)
+            {
+                Audience = request.Client.ClientId,
+                Issuer = IssuerUri,
+                Lifetime = isPartial ? request.Client.AuthorizationCodeLifetime : request.Client.IdentityTokenLifetime, 
+                Claims = claims.Distinct(new ClaimComparer()).ToList(),
+                Client = request.Client
+            };
+
+            return token;
+        }
+
+        /// <summary>
         /// Creates an access token.
         /// </summary>
         /// <param name="request">The token creation request.</param>

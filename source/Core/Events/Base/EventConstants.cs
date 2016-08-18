@@ -35,6 +35,7 @@ namespace IdentityServer3.Core.Events
             public const string Authenticate = "authenticate";
             public const string Authorize = "authorize";
             public const string Token = "token";
+            public const string NativeLogin = "nativelogin";
             public const string Revocation = "revocation";
             public const string UserInfo = "userinfo";
             public const string EndSession = "endsession";
@@ -63,6 +64,7 @@ namespace IdentityServer3.Core.Events
 
             public const int LocalLoginSuccess = AuthenticationEventsStart + 10;
             public const int LocalLoginFailure = AuthenticationEventsStart + 11;
+            public const int NativeLoginSuccess = AuthenticationEventsStart + 12;
 
             public const int ExternalLoginSuccess = AuthenticationEventsStart + 20;
             public const int ExternalLoginFailure = AuthenticationEventsStart + 21;
@@ -72,12 +74,18 @@ namespace IdentityServer3.Core.Events
 
             public const int PartialLogin = AuthenticationEventsStart + 40;
             public const int PartialLoginComplete = AuthenticationEventsStart + 41;
+            public const int DomainNativePartialLoginComplete = AuthenticationEventsStart + 42;
+            
 
             public const int ResourceOwnerFlowLoginSuccess = AuthenticationEventsStart + 50;
             public const int ResourceOwnerFlowLoginFailure = AuthenticationEventsStart + 51;
 
             public const int ClientAuthenticationSuccess = AuthenticationEventsStart + 60;
-            public const int ClientAuthenticationFailure = AuthenticationEventsStart + 51;
+            public const int ClientAuthenticationFailure = AuthenticationEventsStart + 61;
+
+            public const int DomainNativeFlowLoginFailure = AuthenticationEventsStart + 71;
+
+            
 
             ///////////////////////////
             /// Token service related events

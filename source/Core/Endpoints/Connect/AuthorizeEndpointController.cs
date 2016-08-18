@@ -78,6 +78,7 @@ namespace IdentityServer3.Core.Endpoints
         /// <param name="antiForgeryToken">The anti forgery token.</param>
         /// <param name="clientListCookie">The client list cookie.</param>
         /// <param name="twoFactorCookie">The two factor cookie.</param>
+        /// <param name="twoFactorService"></param>
         public AuthorizeEndpointController(
             IViewService viewService,
             AuthorizeRequestValidator validator,
@@ -152,39 +153,40 @@ namespace IdentityServer3.Core.Endpoints
 
             if (loginInteraction.IsLogin)
             {
-                if (request.Client.Claims.Any(c => c.Type == Constants.ClaimTypes.MobileDevice && c.Value == bool.TrueString))
+                if (request.Client.AllowedCustomGrantTypes.Any(g => g == Constants.GrantTypes.DomainNative))
                 {
-                    IEnumerable<string> userName, password;
-
-                    if (!Request.Headers.TryGetValues(Constants.TokenRequest.UserName, out userName))
-                    {
-                        return new StatusCodeResult(HttpStatusCode.Unauthorized, Request);
-                    }
-
-                    if (!Request.Headers.TryGetValues(Constants.TokenRequest.Password, out password))
-                    {
-                        return new StatusCodeResult(HttpStatusCode.Unauthorized, Request);
-                    }
+                    var connectSessionCode = parameters.Get(Constants.NativeLoginRequest.ConnectSessionCode);
 
                     var localAuthenticationContext = new LocalAuthenticationContext
                     {
-                        UserName = userName.Single(),
-                        Password = password.Single(),
+                        PasswordlessConnectType = Constants.NativeLoginRequest.ConnectTypes.NativeLogin,
+                        PasswordlessConnectCode = connectSessionCode,
                         SignInMessage = loginInteraction.SignInMessage
                     };
 
                     await _userService.AuthenticateLocalAsync(localAuthenticationContext);
-                    if (!localAuthenticationContext.AuthenticateResult.IsPartialSignIn)
+
+                    if (!localAuthenticationContext.AuthenticateResult.IsPartialSignIn && localAuthenticationContext.AuthenticateResult.HasSubject)
                     {
                         context.Authentication.SignIn(localAuthenticationContext.AuthenticateResult.User.Identities.ToArray());
                         User = localAuthenticationContext.AuthenticateResult.User;
+
+                        var connectType = parameters.Get(Constants.NativeLoginRequest.Connect);
+
+                        if (connectType == Constants.NativeLoginRequest.ConnectTypes.NativeLogin && User.Identity.IsAuthenticated)
+                        {
+                            await _events.RaiseNativeSuccessEventAsync(localAuthenticationContext.UserName, localAuthenticationContext.SignInMessage, localAuthenticationContext.AuthenticateResult);
+                        }
                     }
-                    else
+                    else if (localAuthenticationContext.AuthenticateResult.IsPartialSignIn)
                     {
-                        if (parameters.Get("connect") == Constants.ClaimTypes.MobileDevice) 
+                        if (connectSessionCode.IsPresent())
+                        {
                             return this.RedirectToLogin(loginInteraction.SignInMessage, request.Raw,
-                                localAuthenticationContext.AuthenticateResult.PartialSignInRedirectPath, localAuthenticationContext.AuthenticateResult);
-                        return new StatusCodeResult(HttpStatusCode.Forbidden, Request);
+                                localAuthenticationContext.AuthenticateResult.PartialSignInRedirectPath,
+                                localAuthenticationContext.AuthenticateResult);
+                        }
+                        throw new InvalidOperationException("User is not authenticated");
                     }
                 }
                 else

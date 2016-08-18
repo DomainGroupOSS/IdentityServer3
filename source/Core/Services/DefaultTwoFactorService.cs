@@ -8,6 +8,11 @@ namespace IdentityServer3.Core.Services
 {
     public class DefaultTwoFactorService : ITwoFactorService
     {
+        public Task RequestCodeAsync(Client client, ClaimsPrincipal subject)
+        {
+            return Task.FromResult(0);
+        }
+
         public Task ReSendCodeAsync(Client client, ClaimsPrincipal subject)
         {
             return Task.FromResult(0);

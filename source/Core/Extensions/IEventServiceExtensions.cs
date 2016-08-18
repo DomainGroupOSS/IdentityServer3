@@ -63,6 +63,27 @@ namespace IdentityServer3.Core.Extensions
             await events.RaiseEventAsync(evt);
         }
 
+
+        public static async Task RaiseNativeSuccessEventAsync(this IEventService events,
+            string username, SignInMessage signInMessage, AuthenticateResult authResult)
+        {
+            var evt = new Event<LocalLoginDetails>(
+                EventConstants.Categories.Authentication,
+                Resources.Events.DomainNativeFlowLoginSuccess,
+                EventTypes.Success,
+                EventConstants.Ids.NativeLoginSuccess,
+                new LocalLoginDetails
+                {
+                    SubjectId = authResult.HasSubject ? authResult.User.GetSubjectId() : null,
+                    Name = authResult.User.Identity.Name,
+                    SignInMessage = signInMessage,
+                    PartialLogin = authResult.IsPartialSignIn,
+                    LoginUserName = username
+                });
+
+            await events.RaiseEventAsync(evt);
+        }
+
         public static async Task RaiseLocalLoginSuccessEventAsync(this IEventService events, 
             string username, string signInMessageId, SignInMessage signInMessage, AuthenticateResult authResult)
         {
@@ -189,6 +210,42 @@ namespace IdentityServer3.Core.Extensions
                     LoginUserName = userName
                 },
                 error);
+
+            await events.RaiseEventAsync(evt);
+        }
+
+        public static async Task RaiseFailedDomainNativeFlowAuthenticationEventAsync(this IEventService events,
+            string userName, SignInMessage message, string error)
+        {
+            var evt = new Event<LocalLoginDetails>(
+                EventConstants.Categories.Authentication,
+                Resources.Events.DomainNativeFlowLoginFailure,
+                EventTypes.Failure,
+                EventConstants.Ids.DomainNativeFlowLoginFailure,
+                new LocalLoginDetails
+                {
+                    SignInMessage = message,
+                    LoginUserName = userName
+                },
+                error);
+
+            await events.RaiseEventAsync(evt);
+        }
+
+        public static async Task RaiseNativePartialLoginSuccessEventAsync(this IEventService events,
+            ClaimsIdentity subject, SignInMessage signInMessage)
+        {
+            var evt = new Event<LoginDetails>(
+                EventConstants.Categories.Authentication,
+                Resources.Events.DomainNativePartialLoginComplete,
+                EventTypes.Information,
+                EventConstants.Ids.DomainNativePartialLoginComplete,
+                new LoginDetails
+                {
+                    SubjectId = subject.GetSubjectId(),
+                    Name = subject.Name,
+                    SignInMessage = signInMessage
+                });
 
             await events.RaiseEventAsync(evt);
         }

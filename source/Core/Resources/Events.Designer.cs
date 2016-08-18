@@ -79,6 +79,33 @@ namespace IdentityServer3.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Domain Native Flow Login Failed.
+        /// </summary>
+        public static string DomainNativeFlowLoginFailure {
+            get {
+                return ResourceManager.GetString("DomainNativeFlowLoginFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Domain Native Flow Login Success.
+        /// </summary>
+        public static string DomainNativeFlowLoginSuccess {
+            get {
+                return ResourceManager.GetString("DomainNativeFlowLoginSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Domain Native Partial Login Complete.
+        /// </summary>
+        public static string DomainNativePartialLoginComplete {
+            get {
+                return ResourceManager.GetString("DomainNativePartialLoginComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to External Login Error.
         /// </summary>
         public static string ExternalLoginError {

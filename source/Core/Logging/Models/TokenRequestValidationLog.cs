@@ -81,4 +81,65 @@ namespace IdentityServer3.Core.Logging
             UserName = request.UserName;
         }
     }
+
+    internal class NativeLoginRequestValidationLog
+    {
+        public string ClientId { get; set; }
+        public string ClientName { get; set; }
+        public string GrantType { get; set; }
+        public string Scopes { get; set; }
+
+        public string AuthorizationCode { get; set; }
+        public string RefreshToken { get; set; }
+
+        public string UserName { get; set; }
+        public IEnumerable<string> AuthenticationContextReferenceClasses { get; set; }
+        public string Tenant { get; set; }
+        public string IdP { get; set; }
+
+        public Dictionary<string, string> Raw { get; set; }
+
+        private static IReadOnlyCollection<string> SensitiveData = new List<string>()
+            {
+                Constants.TokenRequest.Password,
+                Constants.TokenRequest.Assertion,
+                Constants.TokenRequest.ClientSecret,
+                Constants.TokenRequest.ClientAssertion
+            };
+
+        public NativeLoginRequestValidationLog(ValidatedNativeLoginRequest request)
+        {
+            const string scrubValue = "******";
+
+            Raw = request.Raw.ToDictionary();
+
+            foreach (var field in SensitiveData.Where(field => Raw.ContainsKey(field)))
+            {
+                Raw[field] = scrubValue;
+            }
+
+            if (request.Client != null)
+            {
+                ClientId = request.Client.ClientId;
+                ClientName = request.Client.ClientName;
+            }
+
+            if (request.Scopes != null)
+            {
+                Scopes = request.Scopes.ToSpaceSeparatedString();
+            }
+
+            if (request.SignInMessage != null)
+            {
+                IdP = request.SignInMessage.IdP;
+                Tenant = request.SignInMessage.Tenant;
+                AuthenticationContextReferenceClasses = request.SignInMessage.AcrValues;
+            }
+
+            GrantType = request.GrantType;
+            AuthorizationCode = request.AuthorizationCodeHandle;
+            RefreshToken = request.RefreshTokenHandle;
+            UserName = request.UserName;
+        }
+    }
 }

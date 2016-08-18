@@ -27,6 +27,11 @@ namespace IdentityServer3.Core.Extensions
             return new TokenResult(response);
         }
 
+        public static IHttpActionResult NativeLoginResponse(this ApiController controller, NativeLoginResponse response)
+        {
+            return new NativeLoginResult(response);
+        }
+
         public static IHttpActionResult TokenErrorResponse(this ApiController controller, string error)
         {
             return new TokenErrorResult(error);
@@ -35,6 +40,21 @@ namespace IdentityServer3.Core.Extensions
         public static IHttpActionResult TokenErrorResponse(this ApiController controller, string error, string errorDescription)
         {
             return new TokenErrorResult(error, errorDescription);
+        }
+
+        public static IHttpActionResult NativeLoginErrorResponse(this ApiController controller, string error)
+        {
+            return new NativeLoginErrorResult(error);
+        }
+
+        public static IHttpActionResult NativeLoginErrorResponse(this ApiController controller, string error, string errorDescription)
+        {
+            return new NativeLoginErrorResult(error, errorDescription);
+        }
+
+        public static IHttpActionResult NativeLoginUnauthorizedResponse(this ApiController controller, string reason, string reasonDescription)
+        {
+            return new NativeLoginUnauthorizedResult(reason, reasonDescription);
         }
     }
 }

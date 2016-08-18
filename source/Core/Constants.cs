@@ -99,6 +99,31 @@ namespace IdentityServer3.Core
             public const string Key                 = "key";
         }
 
+        public static class NativeLoginRequest
+        {
+            /// <summary>
+            /// The user provided code to authenticate e.g. sms code, totp code
+            /// </summary>
+            public const string ConnectChallenge = "connect_challenge";
+            /// <summary>
+            /// The way the user is authenticated, e.g. sms, passwordless link, totp
+            /// </summary>
+            public const string Connect = "connect";
+            /// <summary>
+            /// The session id used between native login requests. This value is persisted across
+            /// requests as an authorization code
+            /// </summary>
+            public const string ConnectSessionCode = "connect_session";
+
+            public static class ConnectTypes
+            {
+                public const string Sms = "sms";
+                public const string Totp = "totp";
+                public const string NativeLogin = "native";
+            }
+
+        }
+
         public static class EndSessionRequest
         {
             public const string IdTokenHint           = "id_token_hint";
@@ -149,6 +174,10 @@ namespace IdentityServer3.Core
             // assertion grants
             public const string Saml2Bearer = "urn:ietf:params:oauth:grant-type:saml2-bearer";
             public const string JwtBearer   = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+
+            // domain custom grants
+            public const string Passwordless = "passwordless";
+            public static string DomainNative = "domain_native";
         }
 
         public static class ClientAssertionTypes
@@ -361,6 +390,29 @@ namespace IdentityServer3.Core
             public const string UnsupportedGrantType    = "unsupported_grant_type";
             public const string UnsupportedResponseType = "unsupported_response_type";
             public const string InvalidScope            = "invalid_scope";
+        }
+
+        public static class NativeLoginErrors
+        {
+            public const string InvalidRequest = "invalid_request";
+            public const string InvalidClient = "invalid_client";
+            public const string InvalidGrant = "invalid_grant";
+            public const string InvalidConnectChallenge = "invalid_connect_challenge";
+            public const string InvalidConnectType = "invalid_connect";
+            public const string UnauthorizedClient = "unauthorized_client";
+            public const string UnsupportedGrantType = "unsupported_grant_type";
+            public const string UnsupportedResponseType = "unsupported_response_type";
+            public const string InvalidScope = "invalid_scope";
+        }
+
+        public static class NativeLoginPartialReasons
+        {
+            public const string TwoFactorChallengeRequired = "second_factor_challenge_required";
+            public const string PartialFlowRequired = "partial_flow_required";
+            public const string PopulateEmailRequired = "populate_email_required";
+            public const string EmailVerificationRequired = "email_verification_required";
+            public const string RequiresPasswordReset = "requires_password_reset";
+            public const string LoginInstructionSteps = "login_instructions";
         }
 
         public static class ProtectedResourceErrors
@@ -582,7 +634,6 @@ namespace IdentityServer3.Core
             public const string PartialLoginRestartUrl = "partial_login_restart_url";
             public const string PartialLoginReturnUrl = "partial_login_return_url";
             public const string TwoFactorRememberDevice = "2fa_remembered";
-            public const string MobileDevice = "mobile";
 
             // internal claim types
             // claim type to identify external user from external provider
@@ -590,6 +641,14 @@ namespace IdentityServer3.Core
             public const string PartialLoginResumeId = PartialLoginResumeClaimPrefix + "{0}";
 
             public const string ExternalProviderClient = "external_provider_client";
+
+            public static class Partial
+            {
+                public const string Reason = "partial_reason";
+                public const string Connect = "connect";
+                public const string ConnectSms = "sms";
+                public const string ConnectSessionCode = "connect_session";
+            }
         }
 
         public const string PartialLoginResumeClaimPrefix = "partial_login_resume_id:";
@@ -648,6 +707,7 @@ namespace IdentityServer3.Core
             public const string Certificate             = "certificate";
             public const string Password                = "password";
             public const string TwoFactorAuthentication = "2fa";
+            public const string Passwordless = "passwordless";
             public const string External                = "external";
         }
 
@@ -708,13 +768,18 @@ namespace IdentityServer3.Core
         public static class RoutePaths
         {
             public const string Welcome = "";
-            public const string Login = "login";
+            public const string Login = "login";            
             public const string LoginExternal = "external";
             public const string LoginExternalCallback = "callback";
             public const string Logout = "logout";
             public const string ResumeLoginFromRedirect = "return";
             public const string CspReport = "csp/report";
             public const string ClientPermissions = "permissions";
+
+            public static class DomainOidc
+            {
+                public const string LoginNative = "connect/native";
+            }
 
             public static class Oidc
             {

@@ -1,35 +1,21 @@
-﻿/*
- * Copyright 2014, 2015 Dominick Baier, Brock Allen
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Linq;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
 using IdentityModel;
 using IdentityServer3.Core.Configuration;
 using IdentityServer3.Core.Extensions;
 using IdentityServer3.Core.Logging;
 using IdentityServer3.Core.Models;
 using IdentityServer3.Core.Services;
-using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IdentityServer3.Core.Validation
 {
-    internal class TokenRequestValidator
+    internal class NativeLoginRequestValidator
     {
         private readonly static ILog Logger = LogProvider.GetCurrentClassLogger();
 
@@ -37,14 +23,29 @@ namespace IdentityServer3.Core.Validation
         private readonly IAuthorizationCodeStore _authorizationCodes;
         private readonly IUserService _users;
         private readonly CustomGrantValidator _customGrantValidator;
-        private readonly ICustomRequestValidator _customRequestValidator;
         private readonly IRefreshTokenStore _refreshTokens;
         private readonly ScopeValidator _scopeValidator;
         private readonly IEventService _events;
+        private readonly ITwoFactorService _twoFactorService;
 
-        private ValidatedTokenRequest _validatedRequest;
+        private static readonly IEnumerable<string> AllowedGrantTypes = new[]
+        {
+            Constants.GrantTypes.AuthorizationCode,
+            Constants.GrantTypes.RefreshToken,
+            Constants.GrantTypes.Password,
+            Constants.GrantTypes.Passwordless
+        };
 
-        public ValidatedTokenRequest ValidatedRequest
+        public static readonly IEnumerable<string> AllowedConnectTypes = new[]
+        {
+            Constants.NativeLoginRequest.ConnectTypes.Sms,
+            Constants.NativeLoginRequest.ConnectTypes.Totp,
+            Constants.NativeLoginRequest.ConnectTypes.NativeLogin,
+        };
+
+        private ValidatedNativeLoginRequest _validatedRequest;
+
+        public ValidatedNativeLoginRequest ValidatedRequest
         {
             get
             {
@@ -52,23 +53,29 @@ namespace IdentityServer3.Core.Validation
             }
         }
 
-        public TokenRequestValidator(IdentityServerOptions options, IAuthorizationCodeStore authorizationCodes, IRefreshTokenStore refreshTokens, IUserService users, CustomGrantValidator customGrantValidator, ICustomRequestValidator customRequestValidator, ScopeValidator scopeValidator, IEventService events)
+        public NativeLoginRequestValidator(IdentityServerOptions options, 
+            IAuthorizationCodeStore authorizationCodes, 
+            IRefreshTokenStore refreshTokens, IUserService users, 
+            CustomGrantValidator customGrantValidator, 
+            ScopeValidator scopeValidator, 
+            IEventService events, 
+            ITwoFactorService twoFactorService)
         {
             _options = options;
             _authorizationCodes = authorizationCodes;
             _refreshTokens = refreshTokens;
             _users = users;
             _customGrantValidator = customGrantValidator;
-            _customRequestValidator = customRequestValidator;
             _scopeValidator = scopeValidator;
             _events = events;
+            _twoFactorService = twoFactorService;
         }
 
-        public async Task<TokenRequestValidationResult> ValidateRequestAsync(NameValueCollection parameters, Client client)
+        public async Task<NativeLoginRequestValidationResult> ValidateRequestAsync(NameValueCollection parameters, Client client)
         {
             Logger.Info("Start token request validation");
 
-            _validatedRequest = new ValidatedTokenRequest();
+            _validatedRequest = new ValidatedNativeLoginRequest();
 
             if (client == null)
             {
@@ -78,28 +85,6 @@ namespace IdentityServer3.Core.Validation
             if (parameters == null)
             {
                 throw new ArgumentNullException("parameters");
-            }
-
-            if (client.Claims.Any(c => c.Type == Constants.ClaimTypes.ExternalProviderClient && c.Value == bool.TrueString))
-            {
-                var rawRequestedScopes = parameters.Get(Constants.TokenRequest.Scope);
-                var requestedScopes = new List<string>();
-
-                if (!string.IsNullOrWhiteSpace(rawRequestedScopes))
-                {
-                    requestedScopes = rawRequestedScopes.Trim()
-                        .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Distinct()
-                        .ToList();
-                }
-
-                var validScopes = (await _scopeValidator.GetValidScopesForExternalClientAsync(requestedScopes, client.Flow)).ToList();
-                var allowedScope = client.AllowedScopes.Union(validScopes).Distinct().ToList();
-
-                var clientScope = string.Join(" ", allowedScope);
-
-                parameters.Remove(Constants.TokenRequest.Scope);
-                parameters.Add(Constants.TokenRequest.Scope, clientScope);
             }
 
             _validatedRequest.Raw = parameters;
@@ -113,88 +98,61 @@ namespace IdentityServer3.Core.Validation
             if (grantType.IsMissing())
             {
                 LogError("Grant type is missing.");
-                return Invalid(Constants.TokenErrors.UnsupportedGrantType);
+                return Invalid(Constants.NativeLoginErrors.UnsupportedGrantType);
             }
 
             if (grantType.Length > _options.InputLengthRestrictions.GrantType)
             {
                 LogError("Grant type is too long.");
-                return Invalid(Constants.TokenErrors.UnsupportedGrantType);
+                return Invalid(Constants.NativeLoginErrors.UnsupportedGrantType);
             }
 
-            _validatedRequest.GrantType = grantType;
+            if (_validatedRequest.Client.AllowedCustomGrantTypes.All(g => !AllowedGrantTypes.Contains(g)))
+            {
+                _validatedRequest.GrantType = grantType;
+            }
 
-            // standard grant types
             switch (grantType)
             {
                 case Constants.GrantTypes.AuthorizationCode:
                     return await RunValidationAsync(ValidateAuthorizationCodeRequestAsync, parameters);
-                case Constants.GrantTypes.ClientCredentials:
-                    return await RunValidationAsync(ValidateClientCredentialsRequestAsync, parameters);
                 case Constants.GrantTypes.Password:
                     return await RunValidationAsync(ValidateResourceOwnerCredentialRequestAsync, parameters);
                 case Constants.GrantTypes.RefreshToken:
                     return await RunValidationAsync(ValidateRefreshTokenRequestAsync, parameters);
+                case Constants.GrantTypes.Passwordless:
+                    return await RunValidationAsync(ValidatePasswordlessRequestAsync, parameters);
             }
 
-            // custom grant type
-            var result = await RunValidationAsync(ValidateCustomGrantRequestAsync, parameters);
-
-            if (result.IsError)
-            {
-                if (result.Error.IsPresent())
-                {
-                    return result;
-                }
-
-                LogError("Unsupported grant_type: " + grantType);
-                return Invalid(Constants.TokenErrors.UnsupportedGrantType);
-            }
-
-            return result;
+            LogError("Unsupported grant_type: " + grantType);
+            return Invalid(Constants.NativeLoginErrors.UnsupportedGrantType);
         }
 
-        async Task<TokenRequestValidationResult> RunValidationAsync(Func<NameValueCollection, Task<TokenRequestValidationResult>> validationFunc, NameValueCollection parameters)
+        async Task<NativeLoginRequestValidationResult> RunValidationAsync(Func<NameValueCollection, Task<NativeLoginRequestValidationResult>> validationFunc, NameValueCollection parameters)
         {
             // run standard validation
             var result = await validationFunc(parameters);
             if (result.IsError)
             {
                 return result;
-            }
-
-            // run custom validation
-            var customResult = await _customRequestValidator.ValidateTokenRequestAsync(_validatedRequest);
-
-            if (customResult.IsError)
-            {
-                var message = "Custom token request validator error";
-
-                if (customResult.Error.IsPresent())
-                {
-                    message += ": " + customResult.Error;
-                }
-
-                LogError(message);
-                return customResult;
-            }
+            }          
 
             LogSuccess();
-            return customResult;
+            return result;
         }
 
-        private async Task<TokenRequestValidationResult> ValidateAuthorizationCodeRequestAsync(NameValueCollection parameters)
+        private async Task<NativeLoginRequestValidationResult> ValidateAuthorizationCodeRequestAsync(NameValueCollection parameters)
         {
             Logger.Info("Start validation of authorization code token request");
 
             /////////////////////////////////////////////
             // check if client is authorized for grant type
             /////////////////////////////////////////////
-            if (Constants.AllowedFlowsForAuthorizationCodeGrantType.Contains(_validatedRequest.Client.Flow) == false &&
-                !_validatedRequest.Client.AllowedCustomGrantTypes.Contains(Constants.GrantTypes.DomainNative))
+
+            if (!_validatedRequest.Client.AllowedCustomGrantTypes.Contains(Constants.GrantTypes.DomainNative))
             {
                 LogError("Client not authorized for code flow");
-                return Invalid(Constants.TokenErrors.UnauthorizedClient);
+                return Invalid(Constants.NativeLoginErrors.UnauthorizedClient);
             }
 
             /////////////////////////////////////////////
@@ -207,7 +165,7 @@ namespace IdentityServer3.Core.Validation
                 LogError(error);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(null, error);
 
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             if (code.Length > _options.InputLengthRestrictions.AuthorizationCode)
@@ -216,7 +174,7 @@ namespace IdentityServer3.Core.Validation
                 LogError(error);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(null, error);
 
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             _validatedRequest.AuthorizationCodeHandle = code;
@@ -227,7 +185,7 @@ namespace IdentityServer3.Core.Validation
                 LogError("Invalid authorization code: " + code);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, "Invalid handle");
 
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             await _authorizationCodes.RemoveAsync(code);
@@ -248,7 +206,7 @@ namespace IdentityServer3.Core.Validation
                 LogError(string.Format("Client {0} is trying to use a code from client {1}", _validatedRequest.Client.ClientId, authZcode.Client.ClientId));
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, "Invalid client binding");
 
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             /////////////////////////////////////////////
@@ -256,8 +214,7 @@ namespace IdentityServer3.Core.Validation
             /////////////////////////////////////////////
             var codeVerifier = parameters.Get(Constants.TokenRequest.CodeVerifier);
             if (authZcode.Client.Flow == Flows.AuthorizationCodeWithProofKey ||
-                authZcode.Client.Flow == Flows.HybridWithProofKey ||
-                (authZcode.Client.Flow == Flows.Custom && authZcode.Client.AllowedCustomGrantTypes.Any(g => g == Constants.GrantTypes.DomainNative)))
+                authZcode.Client.Flow == Flows.HybridWithProofKey)
             {
                 var proofKeyResult = ValidateAuthorizationCodeWithProofKeyParameters(codeVerifier, authZcode);
                 if (proofKeyResult.IsError)
@@ -272,7 +229,7 @@ namespace IdentityServer3.Core.Validation
                 if (codeVerifier.IsPresent())
                 {
                     LogError("Unexpected code_verifier with Flow " + authZcode.Client.Flow.ToString());
-                    return Invalid(Constants.TokenErrors.InvalidGrant);
+                    return Invalid(Constants.NativeLoginErrors.InvalidGrant);
                 }
             }
 
@@ -303,13 +260,16 @@ namespace IdentityServer3.Core.Validation
                 return Invalid(Constants.TokenErrors.UnauthorizedClient);
             }
 
-            if (redirectUri.Equals(_validatedRequest.AuthorizationCode.RedirectUri, StringComparison.Ordinal) == false)
+            if (_validatedRequest.Client.AllowedCustomGrantTypes.All(g => !AllowedGrantTypes.Contains(g)))
             {
-                var error = "Invalid redirect_uri: " + redirectUri;
-                LogError(error);
-                await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, error);
+                if (redirectUri.Equals(_validatedRequest.AuthorizationCode.RedirectUri, StringComparison.Ordinal) == false)
+                {
+                    var error = "Invalid redirect_uri: " + redirectUri;
+                    LogError(error);
+                    await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, error);
 
-                return Invalid(Constants.TokenErrors.UnauthorizedClient);
+                    return Invalid(Constants.TokenErrors.UnauthorizedClient);
+                }
             }
 
             /////////////////////////////////////////////
@@ -367,48 +327,7 @@ namespace IdentityServer3.Core.Validation
             return Valid();
         }
 
-        private async Task<TokenRequestValidationResult> ValidateClientCredentialsRequestAsync(NameValueCollection parameters)
-        {
-            Logger.Info("Start client credentials token request validation");
-
-            /////////////////////////////////////////////
-            // check if client is authorized for grant type
-            /////////////////////////////////////////////
-            if (_validatedRequest.Client.Flow != Flows.ClientCredentials)
-            {
-                if (_validatedRequest.Client.AllowClientCredentialsOnly == false)
-                {
-                    LogError("Client not authorized for client credentials flow");
-                    return Invalid(Constants.TokenErrors.UnauthorizedClient);
-                }
-            }
-
-            /////////////////////////////////////////////
-            // check if client is allowed to request scopes
-            /////////////////////////////////////////////
-            if (!(await ValidateRequestedScopesAsync(parameters)))
-            {
-                LogError("Invalid scopes.");
-                return Invalid(Constants.TokenErrors.InvalidScope);
-            }
-
-            if (_validatedRequest.ValidatedScopes.ContainsOpenIdScopes)
-            {
-                LogError("Client cannot request OpenID scopes in client credentials flow");
-                return Invalid(Constants.TokenErrors.InvalidScope);
-            }
-
-            if (_validatedRequest.ValidatedScopes.ContainsOfflineAccessScope)
-            {
-                LogError("Client cannot request a refresh token in client credentials flow");
-                return Invalid(Constants.TokenErrors.InvalidScope);
-            }
-
-            Logger.Info("Client credentials token request validation success");
-            return Valid();
-        }
-
-        private async Task<TokenRequestValidationResult> ValidateResourceOwnerCredentialRequestAsync(NameValueCollection parameters)
+        private async Task<NativeLoginRequestValidationResult> ValidateResourceOwnerCredentialRequestAsync(NameValueCollection parameters)
         {
             Logger.Info("Start password token request validation");
 
@@ -417,16 +336,16 @@ namespace IdentityServer3.Core.Validation
                 _validatedRequest.Client.EnableLocalLogin == false)
             {
                 LogError("EnableLocalLogin is disabled, failing with UnsupportedGrantType");
-                return Invalid(Constants.TokenErrors.UnsupportedGrantType);
+                return Invalid(Constants.NativeLoginErrors.UnsupportedGrantType);
             }
 
             /////////////////////////////////////////////
             // check if client is authorized for grant type
             /////////////////////////////////////////////
-            if (_validatedRequest.Client.Flow != Flows.ResourceOwner)
+            if (!_validatedRequest.Client.AllowedCustomGrantTypes.Contains(Constants.GrantTypes.DomainNative))
             {
                 LogError("Client not authorized for resource owner flow");
-                return Invalid(Constants.TokenErrors.UnauthorizedClient);
+                return Invalid(Constants.NativeLoginErrors.UnauthorizedClient);
             }
 
             /////////////////////////////////////////////
@@ -435,7 +354,7 @@ namespace IdentityServer3.Core.Validation
             if (!(await ValidateRequestedScopesAsync(parameters)))
             {
                 LogError("Invalid scopes.");
-                return Invalid(Constants.TokenErrors.InvalidScope);
+                return Invalid(Constants.NativeLoginErrors.InvalidScope);
             }
 
             /////////////////////////////////////////////
@@ -447,14 +366,14 @@ namespace IdentityServer3.Core.Validation
             if (userName.IsMissing() || password.IsMissing())
             {
                 LogError("Username or password missing.");
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             if (userName.Length > _options.InputLengthRestrictions.UserName ||
                 password.Length > _options.InputLengthRestrictions.Password)
             {
                 LogError("Username or password too long.");
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             _validatedRequest.UserName = userName;
@@ -474,7 +393,7 @@ namespace IdentityServer3.Core.Validation
                 if (acr.Length > _options.InputLengthRestrictions.AcrValues)
                 {
                     LogError("Acr values too long.");
-                    return Invalid(Constants.TokenErrors.InvalidRequest);
+                    return Invalid(Constants.NativeLoginErrors.InvalidRequest);
                 }
 
                 var acrValues = acr.FromSpaceSeparatedString().Distinct().ToList();
@@ -515,39 +434,234 @@ namespace IdentityServer3.Core.Validation
             };
 
             await _users.AuthenticateLocalAsync(authenticationContext);
-            var authnResult = authenticationContext.AuthenticateResult;
+            var authnResult = authenticationContext.AuthenticateResult;         
 
-            if (authnResult == null || authnResult.IsError || authnResult.IsPartialSignIn)
+            if (authnResult == null || authnResult.IsError)
             {
                 var error = Resources.Messages.InvalidUsernameOrPassword;
                 if (authnResult != null && authnResult.IsError)
                 {
-                    error = authnResult.ErrorMessage;
+                    LogError("User authentication failed: " + authnResult.ErrorMessage);
+                    await RaiseFailedResourceOwnerAuthenticationEventAsync(userName, signInMessage, authnResult.ErrorMessage);
                 }
-                if (authnResult != null && authnResult.IsPartialSignIn)
-                {
-                    error = "Partial signin returned from AuthenticateLocalAsync";
-                }
-                LogError("User authentication failed: " + error);
-                await RaiseFailedResourceOwnerAuthenticationEventAsync(userName, signInMessage, error);
-
+               
                 if (authnResult != null)
                 {
-                    return Invalid(Constants.TokenErrors.InvalidGrant, authnResult.ErrorMessage);
+                    return Invalid(error, authnResult.ErrorMessage);
                 }
 
                 return Invalid(Constants.TokenErrors.InvalidGrant);
             }
 
+            _validatedRequest.IsPartiallyAuthenticated = authnResult.IsPartialSignIn;
             _validatedRequest.UserName = userName;
             _validatedRequest.Subject = authnResult.User;
+                                   
+
+            if (authnResult.IsPartialSignIn)
+            {
+                _validatedRequest.PartialReason = authnResult.PartialSignInReason;
+
+                Logger.InfoFormat("Native login partial signin reason: {0}", authnResult.PartialSignInReason);
+
+
+                if (authnResult.PartialSignInReason == Constants.NativeLoginPartialReasons.TwoFactorChallengeRequired)
+                {
+                    Logger.InfoFormat("Request two-factor code for subject: {0}", authnResult.User.GetSubjectId());
+
+                    await _twoFactorService.RequestCodeAsync(_validatedRequest.Client, authnResult.User);
+                }
+
+                return Partial(authnResult.PartialSignInReason);
+            }
 
             await RaiseSuccessfulResourceOwnerAuthenticationEventAsync(userName, authnResult.User.GetSubjectId(), signInMessage);
-            Logger.Info("Password token request validation success.");
+            Logger.Info("Password native log request validation success.");
+
             return Valid();
         }
 
-        private async Task<TokenRequestValidationResult> ValidateRefreshTokenRequestAsync(NameValueCollection parameters)
+        private async Task<NativeLoginRequestValidationResult> ValidatePasswordlessRequestAsync(NameValueCollection parameters)
+        {
+            Logger.Info("Start passwordless token request validation");
+
+            // if we've disabled local authentication, then fail
+            if (_options.AuthenticationOptions.EnableLocalLogin == false ||
+                _validatedRequest.Client.EnableLocalLogin == false)
+            {
+                LogError("EnableLocalLogin is disabled, failing with UnsupportedGrantType");
+                return Invalid(Constants.NativeLoginErrors.UnsupportedGrantType);
+            }
+
+            /////////////////////////////////////////////
+            // check if client is authorized for grant type
+            /////////////////////////////////////////////
+            if (!_validatedRequest.Client.AllowedCustomGrantTypes.Contains(Constants.GrantTypes.DomainNative))
+            {
+                LogError("Client not authorized for domain native flow");
+                return Invalid(Constants.NativeLoginErrors.UnauthorizedClient);
+            }
+
+            /////////////////////////////////////////////
+            // check if client is allowed to request scopes
+            /////////////////////////////////////////////
+            if (!await ValidateRequestedScopesAsync(parameters))
+            {
+                LogError("Invalid scopes.");
+                return Invalid(Constants.NativeLoginErrors.InvalidScope);
+            }
+
+            var connectCode = parameters.Get(Constants.NativeLoginRequest.ConnectChallenge);
+            var connectType = parameters.Get(Constants.NativeLoginRequest.Connect);
+            var connectSessionCode = parameters.Get(Constants.NativeLoginRequest.ConnectSessionCode);
+
+            if (connectType.IsMissing())
+            {
+                LogError("connect is missing.");
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
+            }
+
+            if (AllowedConnectTypes.All(c => c != connectType))
+            {
+                LogError("connect type is invalid.");
+                return Invalid(Constants.NativeLoginErrors.InvalidConnectType);
+            }
+
+            if (connectSessionCode.IsMissing())
+            {
+                LogError("auth code is missing.");
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
+            }
+
+            if (connectSessionCode.Length > _options.InputLengthRestrictions.AuthorizationCode)
+            {
+                LogError("auth code too long.");
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
+            }
+
+            if (connectCode.IsMissing())
+            { 
+                LogError("connect code missing.");
+                return Invalid(Constants.NativeLoginErrors.InvalidConnectChallenge);
+            }
+
+            _validatedRequest.PasswordlessConnect = connectType;
+            _validatedRequest.PasswordlessConnectCode = connectCode;
+            _validatedRequest.PasswordlessOtp = connectSessionCode;
+
+            /////////////////////////////////////////////
+            // check optional parameters and populate SignInMessage
+            /////////////////////////////////////////////
+            var signInMessage = new SignInMessage();
+
+            // pass through client_id
+            signInMessage.ClientId = _validatedRequest.Client.ClientId;
+
+            // process acr values
+            var acr = parameters.Get(Constants.AuthorizeRequest.AcrValues);
+            if (acr.IsPresent())
+            {
+                if (acr.Length > _options.InputLengthRestrictions.AcrValues)
+                {
+                    LogError("Acr values too long.");
+                    return Invalid(Constants.NativeLoginErrors.InvalidRequest);
+                }
+
+                var acrValues = acr.FromSpaceSeparatedString().Distinct().ToList();
+
+                // look for well-known acr value -- idp
+                var idp = acrValues.FirstOrDefault(x => x.StartsWith(Constants.KnownAcrValues.HomeRealm));
+                if (idp.IsPresent())
+                {
+                    signInMessage.IdP = idp.Substring(Constants.KnownAcrValues.HomeRealm.Length);
+                    acrValues.Remove(idp);
+                }
+
+                // look for well-known acr value -- tenant
+                var tenant = acrValues.FirstOrDefault(x => x.StartsWith(Constants.KnownAcrValues.Tenant));
+                if (tenant.IsPresent())
+                {
+                    signInMessage.Tenant = tenant.Substring(Constants.KnownAcrValues.Tenant.Length);
+                    acrValues.Remove(tenant);
+                }
+
+                // pass through any remaining acr values
+                if (acrValues.Any())
+                {
+                    signInMessage.AcrValues = acrValues;
+                }
+            }
+
+            _validatedRequest.SignInMessage = signInMessage;
+
+            /////////////////////////////////////////////
+            // authenticate user
+            /////////////////////////////////////////////
+            var authenticationContext = new LocalAuthenticationContext
+            {
+                PasswordlessConnectType = connectType,
+                PasswordlessConnectCode = connectCode,           
+                PasswordlessSessionCode = connectSessionCode,
+                SignInMessage = signInMessage
+            };
+
+            await _users.AuthenticateLocalAsync(authenticationContext);
+            var authnResult = authenticationContext.AuthenticateResult;
+
+            var error = Resources.Messages.InvalidPasswordlessCodes;
+
+            if (authnResult != null && authnResult.FailedAuthentication)
+            {
+                LogError("User authentication failed: " + authnResult.ErrorMessage);
+
+                if (authnResult.HasSubject)
+                {
+                    await RaiseFailedDomainNativeAuthenticationEventAsync(authnResult.User.GetSubjectId(), signInMessage, authnResult.ErrorMessage);
+                }
+
+                return Unauthorized(authnResult.ErrorMessage);
+            }
+
+            if (authnResult == null || authnResult.IsError)
+            {
+                if (authnResult != null && authnResult.IsError)
+                {
+                    LogError("User authentication failed: " + authnResult.ErrorMessage);
+                    if (authnResult.HasSubject)
+                    {
+                        await RaiseFailedDomainNativeAuthenticationEventAsync(authnResult.User.GetSubjectId(), signInMessage, authnResult.ErrorMessage);
+                    }
+                }
+
+                if (authnResult != null)
+                {
+                    return Invalid(error, authnResult.ErrorMessage);
+                }
+
+                return Invalid(Constants.TokenErrors.InvalidGrant);
+            }
+
+            _validatedRequest.IsPartiallyAuthenticated = authnResult.IsPartialSignIn;
+            _validatedRequest.Subject = authnResult.User;
+
+
+            Logger.Info("Password native log request validation success.");
+
+            if (authnResult.IsPartialSignIn)
+            {
+                _validatedRequest.PartialReason = authnResult.PartialSignInReason;
+
+                await RaiseNativePartialLoginSuccessEventAsync(authnResult.User.Identities.First(), signInMessage);
+
+                return Partial(authnResult.PartialSignInReason);
+            }
+
+            await RaiseNativeLoginSuccessEventAsync(_validatedRequest.UserName, signInMessage, authnResult);
+
+            return Valid();
+        }
+
+        private async Task<NativeLoginRequestValidationResult> ValidateRefreshTokenRequestAsync(NameValueCollection parameters)
         {
             Logger.Info("Start validation of refresh token request");
 
@@ -558,7 +672,7 @@ namespace IdentityServer3.Core.Validation
                 LogError(error);
                 await RaiseRefreshTokenRefreshFailureEventAsync(null, error);
 
-                return Invalid(Constants.TokenErrors.InvalidRequest);
+                return Invalid(Constants.NativeLoginErrors.InvalidRequest);
             }
 
             if (refreshTokenHandle.Length > _options.InputLengthRestrictions.RefreshToken)
@@ -567,7 +681,7 @@ namespace IdentityServer3.Core.Validation
                 LogError(error);
                 await RaiseRefreshTokenRefreshFailureEventAsync(null, error);
 
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             _validatedRequest.RefreshTokenHandle = refreshTokenHandle;
@@ -582,7 +696,7 @@ namespace IdentityServer3.Core.Validation
                 LogWarn(error);
                 await RaiseRefreshTokenRefreshFailureEventAsync(refreshTokenHandle, error);
 
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             /////////////////////////////////////////////
@@ -595,7 +709,7 @@ namespace IdentityServer3.Core.Validation
                 await RaiseRefreshTokenRefreshFailureEventAsync(refreshTokenHandle, error);
 
                 await _refreshTokens.RemoveAsync(refreshTokenHandle);
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             /////////////////////////////////////////////
@@ -606,7 +720,7 @@ namespace IdentityServer3.Core.Validation
                 LogError(string.Format("Client {0} tries to refresh token belonging to client {1}", _validatedRequest.Client.ClientId, refreshToken.ClientId));
                 await RaiseRefreshTokenRefreshFailureEventAsync(refreshTokenHandle, "Invalid client binding");
 
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             /////////////////////////////////////////////
@@ -620,7 +734,7 @@ namespace IdentityServer3.Core.Validation
                     LogError(error);
                     await RaiseRefreshTokenRefreshFailureEventAsync(refreshTokenHandle, error);
 
-                    return Invalid(Constants.TokenErrors.InvalidGrant);
+                    return Invalid(Constants.NativeLoginErrors.InvalidGrant);
                 }
             }
 
@@ -638,7 +752,7 @@ namespace IdentityServer3.Core.Validation
                         LogError(error);
                         await RaiseRefreshTokenRefreshFailureEventAsync(refreshTokenHandle, error);
 
-                        return Invalid(Constants.TokenErrors.InvalidGrant);
+                        return Invalid(Constants.NativeLoginErrors.InvalidGrant);
                     }
                 }
             }
@@ -649,7 +763,7 @@ namespace IdentityServer3.Core.Validation
             // make sure user is enabled
             /////////////////////////////////////////////
             var principal = IdentityServerPrincipal.FromSubjectId(_validatedRequest.RefreshToken.SubjectId, refreshToken.AccessToken.Claims);
-            
+
             var isActiveCtx = new IsActiveContext(principal, _validatedRequest.Client);
             await _users.IsActiveAsync(isActiveCtx);
 
@@ -659,7 +773,7 @@ namespace IdentityServer3.Core.Validation
                 LogError(error);
                 await RaiseRefreshTokenRefreshFailureEventAsync(refreshTokenHandle, error);
 
-                return Invalid(Constants.TokenErrors.InvalidRequest);
+                return Invalid(Constants.NativeLoginErrors.InvalidRequest);
             }
 
             /////////////////////////////////////////////
@@ -685,84 +799,7 @@ namespace IdentityServer3.Core.Validation
 
             Logger.Info("Validation of refresh token request success");
             return Valid();
-        }
-
-        private async Task<TokenRequestValidationResult> ValidateCustomGrantRequestAsync(NameValueCollection parameters)
-        {
-            Logger.Info("Start validation of custom grant token request");
-
-            /////////////////////////////////////////////
-            // check if client is authorized for custom grant type
-            /////////////////////////////////////////////
-            if (_validatedRequest.Client.Flow != Flows.Custom)
-            {
-                LogError("Client not registered for custom grant type");
-                return Invalid(Constants.TokenErrors.UnsupportedGrantType);
-            }
-
-            /////////////////////////////////////////////
-            // check if client is allowed grant type
-            /////////////////////////////////////////////
-            if (_validatedRequest.Client.AllowAccessToAllCustomGrantTypes == false)
-            {
-                if (!_validatedRequest.Client.AllowedCustomGrantTypes.Contains(_validatedRequest.GrantType))
-                {
-                    LogError("Client does not have the custom grant type in the allowed list, therefore requested grant is not allowed.");
-                    return Invalid(Constants.TokenErrors.UnsupportedGrantType);
-                }
-            }
-
-            /////////////////////////////////////////////
-            // check if a validator is registered for the grant type
-            /////////////////////////////////////////////
-            if (!_customGrantValidator.GetAvailableGrantTypes().Contains(_validatedRequest.GrantType, StringComparer.Ordinal))
-            {
-                LogError("No validator is registered for the grant type.");
-                return Invalid(Constants.TokenErrors.UnsupportedGrantType);
-            }
-
-            /////////////////////////////////////////////
-            // check if client is allowed to request scopes
-            /////////////////////////////////////////////
-            if (!(await ValidateRequestedScopesAsync(parameters)))
-            {
-                LogError("Invalid scopes.");
-                return Invalid(Constants.TokenErrors.InvalidScope);
-            }
-
-            /////////////////////////////////////////////
-            // validate custom grant type
-            /////////////////////////////////////////////
-            var result = await _customGrantValidator.ValidateAsync(_validatedRequest);
-
-            if (result == null)
-            {
-                LogError("Invalid custom grant.");
-                return Invalid(Constants.TokenErrors.InvalidGrant);
-            }
-
-            if (result.IsError)
-            {
-                if (result.Error.IsPresent())
-                {
-                    LogError("Invalid custom grant: " + result.Error);
-                    return Invalid(result.Error);
-                }
-                else
-                {
-                    LogError("Invalid custom grant.");
-                    return Invalid(Constants.TokenErrors.InvalidGrant);
-                }
-            }
-            
-            if (result.Principal != null)
-            {
-                _validatedRequest.Subject = result.Principal;
-            }
-
-            Logger.Info("Validation of custom grant token request success");
-            return Valid();
-        }
+        }        
 
         private async Task<bool> ValidateRequestedScopesAsync(NameValueCollection parameters)
         {
@@ -795,37 +832,37 @@ namespace IdentityServer3.Core.Validation
             return true;
         }
 
-        private TokenRequestValidationResult ValidateAuthorizationCodeWithProofKeyParameters(string codeVerifier, AuthorizationCode authZcode)
+        private NativeLoginRequestValidationResult ValidateAuthorizationCodeWithProofKeyParameters(string codeVerifier, AuthorizationCode authZcode)
         {
             if (authZcode.CodeChallenge.IsMissing() || authZcode.CodeChallengeMethod.IsMissing())
             {
                 LogError("Client uses AuthorizationCodeWithProofKey flow but missing code challenge or code challenge method in authZ code");
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             if (codeVerifier.IsMissing())
             {
                 LogError("Missing code_verifier");
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             if (codeVerifier.Length < _options.InputLengthRestrictions.CodeVerifierMinLength ||
                 codeVerifier.Length > _options.InputLengthRestrictions.CodeVerifierMaxLength)
             {
                 LogError("code_verifier is too short or too long.");
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             if (Constants.SupportedCodeChallengeMethods.Contains(authZcode.CodeChallengeMethod) == false)
             {
                 LogError("Unsupported code challenge method: " + authZcode.CodeChallengeMethod);
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             if (ValidateCodeVerifierAgainstCodeChallenge(codeVerifier, authZcode.CodeChallenge, authZcode.CodeChallengeMethod) == false)
             {
                 LogError("Transformed code verifier does not match code challenge");
-                return Invalid(Constants.TokenErrors.InvalidGrant);
+                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
             return Valid();
@@ -845,12 +882,12 @@ namespace IdentityServer3.Core.Validation
             return TimeConstantComparer.IsEqual(transformedCodeVerifier.Sha256(), codeChallenge);
         }
 
-        private TokenRequestValidationResult ValidatePopParameters(NameValueCollection parameters)
+        private NativeLoginRequestValidationResult ValidatePopParameters(NameValueCollection parameters)
         {
-            var invalid = new TokenRequestValidationResult
+            var invalid = new NativeLoginRequestValidationResult
             {
                 IsError = true,
-                Error = Constants.TokenErrors.InvalidRequest
+                Error = Constants.NativeLoginErrors.InvalidRequest
             };
 
             // check optional alg
@@ -866,7 +903,7 @@ namespace IdentityServer3.Core.Validation
 
                 _validatedRequest.ProofKeyAlgorithm = alg;
             }
-            
+
             // key is required - for now we only support client generated keys
             var key = parameters.Get(Constants.TokenRequest.Key);
             if (key == null)
@@ -884,29 +921,46 @@ namespace IdentityServer3.Core.Validation
             var jwk = string.Format("{{ \"jwk\":{0} }}", Encoding.UTF8.GetString(Base64Url.Decode(key)));
             _validatedRequest.ProofKey = jwk;
 
-            return new TokenRequestValidationResult { IsError = false };
+            return new NativeLoginRequestValidationResult { IsError = false };
         }
 
-        private TokenRequestValidationResult Valid()
+        private NativeLoginRequestValidationResult Valid()
         {
-            return new TokenRequestValidationResult
+            return new NativeLoginRequestValidationResult
             {
                 IsError = false
             };
         }
 
-        private TokenRequestValidationResult Invalid(string error)
+        private NativeLoginRequestValidationResult Partial(string reason)
         {
-            return new TokenRequestValidationResult
+            return new NativeLoginRequestValidationResult
+            {
+                IsError = false,
+                PartialReason = reason
+            };
+        }
+
+        private NativeLoginRequestValidationResult Invalid(string error)
+        {
+            return new NativeLoginRequestValidationResult
             {
                 IsError = true,
                 Error = error
             };
         }
 
-        private TokenRequestValidationResult Invalid(string error, string errorDescription)
+        private NativeLoginRequestValidationResult Unauthorized(string error)
         {
-            return new TokenRequestValidationResult
+            return new NativeLoginRequestValidationResult
+            {
+                UnauthorizedReason = error,                
+            };
+        }
+
+        private NativeLoginRequestValidationResult Invalid(string error, string errorDescription)
+        {
+            return new NativeLoginRequestValidationResult
             {
                 IsError = true,
                 Error = error,
@@ -917,6 +971,11 @@ namespace IdentityServer3.Core.Validation
         private void LogError(string message)
         {
             Logger.Error(LogEvent(message));
+        }
+
+        private void LogInfo(string message)
+        {
+            Logger.Info(LogEvent(message));
         }
 
         private void LogWarn(string message)
@@ -933,7 +992,7 @@ namespace IdentityServer3.Core.Validation
         {
             return () =>
             {
-                var validationLog = new TokenRequestValidationLog(_validatedRequest);
+                var validationLog = new NativeLoginRequestValidationLog(_validatedRequest);
                 var json = LogSerializer.Serialize(validationLog);
 
                 return string.Format("{0}\n {1}", message, json);
@@ -948,6 +1007,21 @@ namespace IdentityServer3.Core.Validation
         private async Task RaiseFailedResourceOwnerAuthenticationEventAsync(string userName, SignInMessage signInMessage, string error)
         {
             await _events.RaiseFailedResourceOwnerFlowAuthenticationEventAsync(userName, signInMessage, error);
+        }
+
+        private async Task RaiseFailedDomainNativeAuthenticationEventAsync(string userName, SignInMessage signInMessage, string error)
+        {
+            await _events.RaiseFailedDomainNativeFlowAuthenticationEventAsync(userName, signInMessage, error);
+        }
+
+        private async Task RaiseNativeLoginSuccessEventAsync(string userName, SignInMessage signInMessage, AuthenticateResult result)
+        {
+            await _events.RaiseNativeSuccessEventAsync(userName, signInMessage, result);
+        }
+
+        private async Task RaiseNativePartialLoginSuccessEventAsync(ClaimsIdentity subject, SignInMessage signInMessage)
+        {
+            await _events.RaiseNativePartialLoginSuccessEventAsync(subject, signInMessage);
         }
 
         private async Task RaiseFailedAuthorizationCodeRedeemedEventAsync(string handle, string error)

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using System.Security.Claims;
 using IdentityServer3.Core.Models;
 using System.Threading.Tasks;
 
@@ -37,6 +39,14 @@ namespace IdentityServer3.Core.Services
         /// <param name="request">The token creation request.</param>
         /// <returns>An access token</returns>
         Task<Token> CreateAccessTokenAsync(TokenCreationRequest request);
+
+        /// <summary>
+        /// Creates the partial authentication n identity token asynchronous.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="partialClaims">The partial claims.</param>
+        /// <returns></returns>
+        Task<Token> CreatePartialAuthNIdentityTokenAsync(TokenCreationRequest request, IEnumerable<Claim> partialClaims);
 
         /// <summary>
         /// Creates a serialized and protected security token.

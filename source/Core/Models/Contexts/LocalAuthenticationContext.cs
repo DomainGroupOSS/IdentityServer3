@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using IdentityServer3.Core.Extensions;
+
 namespace IdentityServer3.Core.Models
 {
     /// <summary>
@@ -52,5 +54,44 @@ namespace IdentityServer3.Core.Models
         /// The authenticate result.
         /// </value>
         public AuthenticateResult AuthenticateResult { get; set; }
+
+        /// <summary>
+        /// Gets or sets the passworless connect code.
+        /// </summary>
+        /// <value>
+        /// The passworless connect code.
+        /// </value>
+        public string PasswordlessConnectCode { get; set; }
+
+        /// <summary>
+        /// Gets or sets the type of the passwordless connect.
+        /// </summary>
+        /// <value>
+        /// The type of the passwordless connect.
+        /// </value>
+        public string PasswordlessConnectType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the passwordless session code.
+        /// </summary>
+        /// <value>
+        /// The passwordless session code.
+        /// </value>
+        public string PasswordlessSessionCode { get; set; }
+
+        /// <summary>
+        /// Gets a value indicating whether this instance is passwordless.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if this instance is passwordless; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsPasswordless
+        {
+            get
+            {
+                return Password.IsMissing() && UserName.IsMissing() && 
+                    PasswordlessConnectType.IsPresent();
+            }
+        }
     }
 }
