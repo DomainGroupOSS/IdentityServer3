@@ -556,7 +556,7 @@ namespace IdentityServer3.Core.Validation
                 }
                 else
                 {
-                    LogError("Check session endpoint enabled, but SessionId is missing", request);
+                    Logger.InfoFormat("Check session endpoint enabled, but SessionId is missing", request);
                 }
             }
 
