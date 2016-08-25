@@ -169,7 +169,7 @@
     <value>The external login provider was not provided.</value>
   </data>
   <data name="ExternalProviderError" xml:space="preserve">
-    <value>There was an error logging into the external provider. The error message is: {0}</value>
+    <value>There was an error logging into the external provider. The Reason message is: {0}</value>
   </data>
   <data name="invalid_request" xml:space="preserve">
     <value>The client application made an invalid request.</value>
@@ -182,5 +182,35 @@
   </data>
   <data name="TwoFactorCodeResent" xml:space="preserve">
     <value>The code has been resent, please enter the new code</value>
+  </data>
+  <data name="AccountClosed" xml:space="preserve">
+    <value>Account is closed</value>
+  </data>
+  <data name="AccountNotConfiguredWithAuthenticator" xml:space="preserve">
+    <value>Authenticator needs to be configured for this account</value>
+  </data>
+  <data name="AccountNotConfiguredWithCertificates" xml:space="preserve">
+    <value>A certificate needs to be configured for this account</value>
+  </data>
+  <data name="AccountNotConfiguredWithMobilePhone" xml:space="preserve">
+    <value>A mobile phone number needs to be configured for this account</value>
+  </data>
+  <data name="AccountNotVerified" xml:space="preserve">
+    <value>Account needs to be verified</value>
+  </data>
+  <data name="AccountRequiresSecondFactorToAuthenticate" xml:space="preserve">
+    <value>Accounts requires a form of two factor authentication to be configured</value>
+  </data>
+  <data name="FailedLoginAttemptsExceeded" xml:space="preserve">
+    <value>Exceeded failed login attempts</value>
+  </data>
+  <data name="LoginNotAllowed" xml:space="preserve">
+    <value>Not allowed to signin to this application</value>
+  </data>
+  <data name="InvalidPasswordlessCodes" xml:space="preserve">
+    <value>Challenge code or session code is invalid</value>
+  </data>
+  <data name="PasswordlessCodeOrSessionNotFound" xml:space="preserve">
+    <value>The challenge or session code is not valid, expired or does not exist</value>
   </data>
 </root>

@@ -123,6 +123,15 @@
   <data name="CspReport" xml:space="preserve">
     <value>Content Security Policy (CSP) Report</value>
   </data>
+  <data name="DomainNativeFlowLoginFailure" xml:space="preserve">
+    <value>Domain Native Flow Login Failed</value>
+  </data>
+  <data name="DomainNativeFlowLoginSuccess" xml:space="preserve">
+    <value>Domain Native Flow Login Success</value>
+  </data>
+  <data name="DomainNativePartialLoginComplete" xml:space="preserve">
+    <value>Domain Native Partial Login Complete</value>
+  </data>
   <data name="ExternalLoginError" xml:space="preserve">
     <value>External Login Error</value>
   </data>

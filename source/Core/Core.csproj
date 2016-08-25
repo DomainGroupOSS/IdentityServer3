@@ -145,7 +145,15 @@
     <Compile Include="Configuration\CookieSecureMode.cs" />
     <Compile Include="Configuration\DiscoveryOptions.cs" />
     <Compile Include="Configuration\EventsOptions.cs" />
+    <Compile Include="Endpoints\Models\NativeLoginResponse.cs" />
+    <Compile Include="Endpoints\NativeAuthenticationController.cs" />
+    <Compile Include="Models\AuthenticationFailedCode.cs" />
+    <Compile Include="Models\RequiresTwoFactorChallengeContext.cs" />
     <Compile Include="Models\LastUserNameCookieMessage.cs" />
+    <Compile Include="ResponseHandling\NativeLoginResponseGenerator.cs" />
+    <Compile Include="Results\NativeLoginErrorResult.cs" />
+    <Compile Include="Results\NativeLoginResult.cs" />
+    <Compile Include="Results\NativeLoginUnauthorizedResult.cs" />
     <Compile Include="Services\ExternalClaimsFilter\FacebookClaimsFilter.cs" />
     <Compile Include="Services\ExternalClaimsFilter\MicrosoftClaimsFilter.cs" />
     <Compile Include="Services\IAuthenticatedTwoFactorSessionHelper.cs" />
@@ -267,6 +275,8 @@
     <Compile Include="Validation\BasicAuthenticationSecretParser.cs" />
     <Compile Include="Validation\IntrospectionRequestValidationResult.cs" />
     <Compile Include="Validation\IntrospectionRequestValidator.cs" />
+    <Compile Include="Validation\NativeLoginRequestValidationResult.cs" />
+    <Compile Include="Validation\NativeLoginRequestValidator.cs" />
     <Compile Include="Validation\RequestedTokenTypes.cs" />
     <Compile Include="Validation\ResponseTypeEqualityComparer.cs" />
     <Compile Include="Validation\ScopeSecretValidationResult.cs" />
@@ -287,6 +297,7 @@
     <Compile Include="Services\Default\UserServiceBase.cs" />
     <Compile Include="Validation\SecretParser.cs" />
     <Compile Include="Validation\SecretValidator.cs" />
+    <Compile Include="Validation\ValidatedNativeLoginRequest.cs" />
     <Compile Include="Validation\X509CertificateThumbprintSecretValidator.cs" />
     <Compile Include="Services\ICache.cs" />
     <Compile Include="Services\ICorsPolicyService.cs" />
@@ -518,10 +529,12 @@
     <EmbeddedResource Include="Resources\Events.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Events.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Messages.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Messages.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <None Include="..\default.licenseheader">
       <Link>default.licenseheader</Link>

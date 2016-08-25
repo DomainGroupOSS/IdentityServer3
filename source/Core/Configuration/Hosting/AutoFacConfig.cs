@@ -152,6 +152,7 @@ namespace IdentityServer3.Core.Configuration.Hosting
             builder.RegisterType<IntrospectionRequestValidator>();
             builder.RegisterType<ScopeSecretValidator>();
             builder.RegisterType<ClientSecretValidator>();
+            builder.RegisterType<NativeLoginRequestValidator>();
 
             // processors
             builder.RegisterType<TokenResponseGenerator>();
@@ -159,6 +160,7 @@ namespace IdentityServer3.Core.Configuration.Hosting
             builder.RegisterType<UserInfoResponseGenerator>();
             builder.RegisterType<EndSessionResponseGenerator>();
             builder.RegisterType<IntrospectionResponseGenerator>();
+            builder.RegisterType<NativeLoginResponseGenerator>();
 
             // for authentication
             var authenticationOptions = options.AuthenticationOptions ?? new AuthenticationOptions();

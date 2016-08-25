@@ -17,6 +17,7 @@
 using IdentityServer3.Core.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Security.Claims;
 
@@ -28,6 +29,21 @@ namespace IdentityServer3.Core.Models
     /// </summary>
     public class AuthenticateResult
     {
+        private static readonly IDictionary<AuthenticationFailedCode, string> AuthFailureReasonMessages = new ReadOnlyDictionary<AuthenticationFailedCode, string>(new Dictionary<AuthenticationFailedCode, string>
+        {
+            { AuthenticationFailedCode.InvalidCredentials, Resources.Messages.InvalidUsernameOrPassword },
+            { AuthenticationFailedCode.InvalidPasswordlessCodes, Resources.Messages.InvalidPasswordlessCodes },
+            { AuthenticationFailedCode.AccountClosed, Resources.Messages.AccountClosed },
+            { AuthenticationFailedCode.AccountNotConfiguredWithAuthenticator, Resources.Messages.AccountNotConfiguredWithAuthenticator},
+            { AuthenticationFailedCode.AccountNotConfiguredWithCertificates, Resources.Messages.AccountNotConfiguredWithCertificates},
+            { AuthenticationFailedCode.AccountNotConfiguredWithMobilePhone, Resources.Messages.AccountNotConfiguredWithMobilePhone },
+            { AuthenticationFailedCode.AccountNotVerified, Resources.Messages.AccountNotVerified },
+            { AuthenticationFailedCode.AccountRequiresSecondFactorToAuthenticate, Resources.Messages.AccountRequiresSecondFactorToAuthenticate },
+            { AuthenticationFailedCode.FailedLoginAttemptsExceeded, Resources.Messages.FailedLoginAttemptsExceeded },
+            { AuthenticationFailedCode.LoginNotAllowed, Resources.Messages.LoginNotAllowed },
+            { AuthenticationFailedCode.PasswordlessCodeOrSessionNotFound, Resources.Messages.PasswordlessCodeOrSessionNotFound }
+        });
+
         /// <summary>
         /// The user created from the authentication.
         /// </summary>
@@ -55,18 +71,33 @@ namespace IdentityServer3.Core.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthenticateResult"/> class.
         /// </summary>
+        /// <param name="authenticationFailureCode">The authentication failure code.</param>
+        public AuthenticateResult(AuthenticationFailedCode authenticationFailureCode)
+        {
+            if (authenticationFailureCode != AuthenticationFailedCode.None)
+            {
+                ErrorMessage = AuthFailureReasonMessages[authenticationFailureCode];
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AuthenticateResult" /> class.
+        /// </summary>
         /// <param name="errorMessage">The error message.</param>
+        /// <param name="authenticationFailureCode">The authorization failed reason.</param>
         /// <exception cref="System.ArgumentNullException">errorMessage</exception>
-        public AuthenticateResult(string errorMessage)
+        public AuthenticateResult(string errorMessage, AuthenticationFailedCode authenticationFailureCode = AuthenticationFailedCode.None)
         {
             if (errorMessage.IsMissing()) throw new ArgumentNullException("errorMessage");
             ErrorMessage = errorMessage;
+            AuthenticationFailureCode = authenticationFailureCode;
         }
-        
+
         internal AuthenticateResult(ClaimsPrincipal user)
         {
             if (user == null) throw new ArgumentNullException("user");
             this.User = IdentityServerPrincipal.CreateFromPrincipal(user, Constants.PrimaryAuthenticationType);
+            AuthenticationFailureCode = AuthenticationFailedCode.None;
         }
 
         void Init(string subject, string name,
@@ -241,6 +272,25 @@ namespace IdentityServer3.Core.Models
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether [failed authorization].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [failed authorization]; otherwise, <c>false</c>.
+        /// </value>
+        public AuthenticationFailedCode AuthenticationFailureCode { get; set; }
+
+        /// <summary>
+        /// Gets a value indicating whether [failed authorization].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [failed authorization]; otherwise, <c>false</c>.
+        /// </value>
+        public bool FailedAuthentication
+        {
+            get { return AuthenticationFailureCode != AuthenticationFailedCode.None; }
+        }
+
+        /// <summary>
         /// Gets a value indicating whether the authentication resulted in a partial sign in.
         /// </summary>
         /// <value>
@@ -250,7 +300,7 @@ namespace IdentityServer3.Core.Models
         {
             get
             {
-                return !String.IsNullOrWhiteSpace(PartialSignInRedirectPath);
+                return !string.IsNullOrWhiteSpace(PartialSignInRedirectPath);
             }
         }
 
@@ -267,5 +317,29 @@ namespace IdentityServer3.Core.Models
                 return User != null && User.HasClaim(c => c.Type == Constants.ClaimTypes.Subject);
             }
         }
+
+        /// <summary>
+        /// Gets a value indicating whether this instance has security stamp claim.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if this instance has security stamp; otherwise, <c>false</c>.
+        /// </value>
+        public bool HasSecurityStamp
+        {
+            get
+            {
+                return User != null && User.HasClaim(c => c.Type == Constants.ClaimTypes.SecurityStamp);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the partial sign in reason.
+        /// </summary>
+        /// <value>
+        /// The partial sign in reason.
+        /// </value>
+        public string PartialSignInReason { get; set; }
+
+
     }
 }

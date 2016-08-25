@@ -94,6 +94,33 @@ namespace IdentityServer3.Core.Extensions
         }
 
         /// <summary>
+        /// Gets the security stamp.
+        /// </summary>
+        /// <param name="principal">The principal.</param>
+        /// <returns></returns>
+        [DebuggerStepThrough]
+        public static string GetSecurityStamp(this IPrincipal principal)
+        {
+            return principal.Identity.GetSecurityStamp();
+        }
+
+        /// <summary>
+        /// Gets the security stamp.
+        /// </summary>
+        /// <param name="identity">The identity.</param>
+        /// <returns></returns>
+        /// <exception cref="System.InvalidOperationException">security stamp claim is missing</exception>
+        [DebuggerStepThrough]
+        public static string GetSecurityStamp(this IIdentity identity)
+        {
+            var id = identity as ClaimsIdentity;
+            var claim = id.FindFirst(Constants.ClaimTypes.SecurityStamp);
+
+            if (claim == null) throw new InvalidOperationException("security stamp claim is missing");
+            return claim.Value;
+        }
+
+        /// <summary>
         /// Gets the name.
         /// </summary>
         /// <param name="principal">The principal.</param>

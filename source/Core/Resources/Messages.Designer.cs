@@ -61,6 +61,60 @@ namespace IdentityServer3.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Account is closed.
+        /// </summary>
+        public static string AccountClosed {
+            get {
+                return ResourceManager.GetString("AccountClosed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Authenticator needs to be configured for this account.
+        /// </summary>
+        public static string AccountNotConfiguredWithAuthenticator {
+            get {
+                return ResourceManager.GetString("AccountNotConfiguredWithAuthenticator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A certificate needs to be configured for this account.
+        /// </summary>
+        public static string AccountNotConfiguredWithCertificates {
+            get {
+                return ResourceManager.GetString("AccountNotConfiguredWithCertificates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A mobile phone number needs to be configured for this account.
+        /// </summary>
+        public static string AccountNotConfiguredWithMobilePhone {
+            get {
+                return ResourceManager.GetString("AccountNotConfiguredWithMobilePhone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Account needs to be verified.
+        /// </summary>
+        public static string AccountNotVerified {
+            get {
+                return ResourceManager.GetString("AccountNotVerified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accounts requires a form of two factor authentication to be configured.
+        /// </summary>
+        public static string AccountRequiresSecondFactorToAuthenticate {
+            get {
+                return ResourceManager.GetString("AccountRequiresSecondFactorToAuthenticate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Client identifier is required.
         /// </summary>
         public static string ClientIdRequired {
@@ -70,11 +124,20 @@ namespace IdentityServer3.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error logging into the external provider. The error message is: {0}.
+        ///   Looks up a localized string similar to There was an error logging into the external provider. The Reason message is: {0}.
         /// </summary>
         public static string ExternalProviderError {
             get {
                 return ResourceManager.GetString("ExternalProviderError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exceeded failed login attempts.
+        /// </summary>
+        public static string FailedLoginAttemptsExceeded {
+            get {
+                return ResourceManager.GetString("FailedLoginAttemptsExceeded", resourceCulture);
             }
         }
         
@@ -97,11 +160,29 @@ namespace IdentityServer3.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Challenge code or session code is invalid.
+        /// </summary>
+        public static string InvalidPasswordlessCodes {
+            get {
+                return ResourceManager.GetString("InvalidPasswordlessCodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid username or password.
         /// </summary>
         public static string InvalidUsernameOrPassword {
             get {
                 return ResourceManager.GetString("InvalidUsernameOrPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not allowed to signin to this application.
+        /// </summary>
+        public static string LoginNotAllowed {
+            get {
+                return ResourceManager.GetString("LoginNotAllowed", resourceCulture);
             }
         }
         
@@ -165,6 +246,15 @@ namespace IdentityServer3.Core.Resources {
         public static string NoSubjectFromExternalProvider {
             get {
                 return ResourceManager.GetString("NoSubjectFromExternalProvider", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The challenge or session code is not valid, expired or does not exist.
+        /// </summary>
+        public static string PasswordlessCodeOrSessionNotFound {
+            get {
+                return ResourceManager.GetString("PasswordlessCodeOrSessionNotFound", resourceCulture);
             }
         }
         

@@ -14,6 +14,8 @@ namespace IdentityServer3.Core.Services
 
         Task SendCodeAsync(Client client, ClaimsPrincipal subject);
 
+        Task RequestCodeAsync(Client client, ClaimsPrincipal subject);
+
         Task ReSendCodeAsync(Client client, ClaimsPrincipal subject);
 
         Task<bool> VerifyCodeAsync(Client client, ClaimsPrincipal subject, string code);

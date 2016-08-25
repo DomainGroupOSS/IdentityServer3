@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using IdentityModel;
 
 namespace IdentityServer3.Core.Extensions
 {
@@ -95,25 +96,27 @@ namespace IdentityServer3.Core.Extensions
         /// or
         /// message
         /// </exception>
+        //todo: MD=> we can safely remove this, never used
         public static string CreateSignInRequest(this IDictionary<string, object> env)
         {
             if (env == null) throw new ArgumentNullException("env");
-
-            return env.CreateSignInRequest(new SignInMessage());
+            string signinId;
+            return env.CreateSignInRequest(new SignInMessage(), out signinId);
         }
-        
+
         /// <summary>
         /// Creates and writes the signin cookie to the response and returns the associated URL to the login page.
         /// </summary>
         /// <param name="env">The OWIN environment.</param>
         /// <param name="message">The signin message.</param>
+        /// <param name="signinId"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// env
         /// or
         /// message
         /// </exception>
-        public static string CreateSignInRequest(this IDictionary<string, object> env, SignInMessage message)
+        public static string CreateSignInRequest(this IDictionary<string, object> env, SignInMessage message, out string signinId, string resumeUrl = null)
         {
             if (env == null) throw new ArgumentNullException("env");
             if (message == null) throw new ArgumentNullException("message");
@@ -137,10 +140,45 @@ namespace IdentityServer3.Core.Extensions
             var cookie = new MessageCookie<SignInMessage>(env, options);
             var id = cookie.Write(message);
 
-            var url = env.GetIdentityServerBaseUrl() + Constants.RoutePaths.Login;
-            var uri = new Uri(url.AddQueryString("signin=" + id));
-
+            var url = env.GetIdentityServerBaseUrl() + (resumeUrl ?? Constants.RoutePaths.Login);
+            var uri = string.IsNullOrWhiteSpace(resumeUrl) ? new Uri(url.AddQueryString("signin=" + id)) : new Uri(string.Format("{0}{1}",url,id));
+            signinId = id;
             return uri.AbsoluteUri;
+        }
+
+        /// <summary>
+        /// Issues the login cookie for IdentityServer.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="authResult">Authentication result</param>
+        /// <param name="resumeUrl">Next partial page to hit</param>
+        /// <param name="signinId">Current Signin Id</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// env
+        /// or
+        /// login
+        /// </exception>
+        public static void IssuePartialLoginCookie(this IOwinContext context, Models.AuthenticateResult authResult, string resumeUrl, string signinId)
+        {
+            if (context == null) throw new ArgumentNullException("context");
+            if (authResult == null) throw new ArgumentNullException("authResult");
+            if (string.IsNullOrWhiteSpace(signinId)) throw new ArgumentNullException("signinId");
+
+
+            var props = new AuthenticationProperties();
+            var id = authResult.User.Identities.First();
+
+            // add claim so partial redirect can return here to continue login
+            // we need a random ID to resume, and this will be the query string
+            // to match a claim added. the claim added will be the original 
+            // signIn ID. 
+            var resumeId = CryptoRandom.CreateUniqueId();
+            var resumeLoginUrl = context.GetPartialLoginResumeUrl(resumeId);
+            var resumeLoginClaim = new Claim(Constants.ClaimTypes.PartialLoginReturnUrl, resumeLoginUrl);
+            id.AddClaim(resumeLoginClaim);
+            id.AddClaim(new Claim(String.Format(Constants.ClaimTypes.PartialLoginResumeId, resumeId), signinId));
+
+            context.Authentication.SignIn(props, id);
         }
 
         /// <summary>

@@ -242,8 +242,13 @@ namespace IdentityServer3.Core.Services.Default
             {
                 new Claim(Constants.ClaimTypes.Subject, subject.GetSubjectId()),
                 new Claim(Constants.ClaimTypes.AuthenticationTime, subject.GetAuthenticationTimeEpoch().ToString(), ClaimValueTypes.Integer),
-                new Claim(Constants.ClaimTypes.IdentityProvider, subject.GetIdentityProvider()),
+                new Claim(Constants.ClaimTypes.IdentityProvider, subject.GetIdentityProvider())                
             };
+
+            if (subject.HasClaim(c => c.Type == Constants.ClaimTypes.SecurityStamp))
+            {
+                claims.Add(new Claim(Constants.ClaimTypes.SecurityStamp, subject.GetSecurityStamp()));
+            }
 
             claims.AddRange(subject.GetAuthenticationMethods());
 

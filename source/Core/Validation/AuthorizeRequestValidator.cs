@@ -251,7 +251,8 @@ namespace IdentityServer3.Core.Validation
                     return proofKeyResult;
                 }
 
-                request.Flow = request.Client.Flow;
+                request.Flow = request.Client.AllowedCustomGrantTypes.Any(g => g == Constants.GrantTypes.DomainNative) 
+                    ? Flows.HybridWithProofKey : request.Client.Flow;
             }
             else
             {
@@ -306,7 +307,7 @@ namespace IdentityServer3.Core.Validation
             //////////////////////////////////////////////////////////
             // check if flow is allowed for client
             //////////////////////////////////////////////////////////
-            if (request.Flow != request.Client.Flow)
+            if ((request.Flow != request.Client.Flow) && !request.Client.AllowedCustomGrantTypes.Contains(Constants.GrantTypes.DomainNative))
             {
                 LogError("Invalid flow for client: " + request.Flow, request);
                 return Invalid(request, ErrorTypes.User, Constants.AuthorizeErrors.UnauthorizedClient);
@@ -428,7 +429,8 @@ namespace IdentityServer3.Core.Validation
             else
             {
                 if (request.Flow == Flows.Implicit ||
-                    request.Flow == Flows.Hybrid)
+                    request.Flow == Flows.Hybrid ||
+                    (request.Flow == Flows.Custom && request.Client.AllowedCustomGrantTypes.Any(g => g == Constants.GrantTypes.DomainNative)))
                 {
                     // only openid requests require nonce
                     if (request.IsOpenIdRequest)
@@ -554,7 +556,7 @@ namespace IdentityServer3.Core.Validation
                 }
                 else
                 {
-                    LogError("Check session endpoint enabled, but SessionId is missing", request);
+                    Logger.InfoFormat("Check session endpoint enabled, but SessionId is missing", request);
                 }
             }
 
@@ -613,8 +615,11 @@ namespace IdentityServer3.Core.Validation
 
         private bool RequestMatchesProofKeyFlow(ValidatedAuthorizeRequest request)
         {
+            var flow = request.Client.AllowedCustomGrantTypes.Any(g => g == Constants.GrantTypes.DomainNative)
+                ? Flows.HybridWithProofKey
+                : request.Client.Flow;
             return Constants.ProofKeyFlowToResponseTypesMapping.Any(x =>
-                request.Client.Flow == x.Key &&
+                flow == x.Key &&
                 x.Value.Contains(request.ResponseType));
         }
 
