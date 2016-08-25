@@ -179,7 +179,6 @@ namespace IdentityServer3.Core.Configuration.Hosting
             builder.Register(c => new LastUserNameCookie(c.Resolve<IOwinContext>(), c.Resolve<IdentityServerOptions>()));
             builder.Register(c => new AntiForgeryToken(c.Resolve<IOwinContext>(), c.Resolve<IdentityServerOptions>()));
             builder.Register(c => new ClientListCookie(c.Resolve<IOwinContext>(), c.Resolve<IdentityServerOptions>()));
-            builder.Register(c => new ProfileImageCookie(c.Resolve<IOwinContext>(), c.Resolve<IdentityServerOptions>()));
 
             // add any additional dependencies from hosting application
             foreach (var registration in fact.Registrations)

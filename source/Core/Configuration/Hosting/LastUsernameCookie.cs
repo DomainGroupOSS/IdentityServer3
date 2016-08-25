@@ -22,6 +22,8 @@ using System;
 using System.ComponentModel;
 using System.Security.Cryptography;
 using System.Text;
+using IdentityServer3.Core.Models;
+using Newtonsoft.Json;
 
 
 #pragma warning disable 1591
@@ -31,9 +33,15 @@ namespace IdentityServer3.Core.Configuration.Hosting
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class LastUserNameCookie
     {
+        const string LastUsernameCookieName = "idsvr.username";
+
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
 
-        const string LastUsernameCookieName = "idsvr.username";
+        static readonly JsonSerializerSettings settings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+        };
 
         readonly IOwinContext ctx;
         readonly IdentityServerOptions options;
@@ -47,7 +55,7 @@ namespace IdentityServer3.Core.Configuration.Hosting
             this.options = options;
         }
 
-        internal string GetValue()
+        public LastUserNameCookieMessage GetValue()
         {
             if (options.AuthenticationOptions.RememberLastUsername)
             {
@@ -56,19 +64,16 @@ namespace IdentityServer3.Core.Configuration.Hosting
                     var cookieName = options.AuthenticationOptions.CookieOptions.Prefix + LastUsernameCookieName;
                     var value = ctx.Request.Cookies[cookieName];
 
-                    var bytes = Base64Url.Decode(value);
                     try
                     {
-                        bytes = options.DataProtector.Unprotect(bytes, cookieName);
+                        var json = options.DataProtector.Unprotect(value, cookieName);
+                       return JsonConvert.DeserializeObject<LastUserNameCookieMessage>(json);
                     }
                     catch(CryptographicException)
                     {
                         SetValue(null);
                         return null;
                     }
-                    value = Encoding.UTF8.GetString(bytes);
-
-                    return value;
                 }
                 catch
                 {
@@ -78,7 +83,7 @@ namespace IdentityServer3.Core.Configuration.Hosting
             return null;
         }
 
-        internal void SetValue(string username)
+        public void SetValue(LastUserNameCookieMessage lastUserNameCookieMessage)
         {
             if (options.AuthenticationOptions.RememberLastUsername)
             {
@@ -95,20 +100,19 @@ namespace IdentityServer3.Core.Configuration.Hosting
                     Path = path
                 };
 
-                if (!String.IsNullOrWhiteSpace(username))
+                var json = JsonConvert.SerializeObject(lastUserNameCookieMessage, settings);
+
+                if (!String.IsNullOrWhiteSpace(json))
                 {
-                    var bytes = Encoding.UTF8.GetBytes(username);
-                    bytes = options.DataProtector.Protect(bytes, cookieName);
-                    username = Base64Url.Encode(bytes);
+                    json = options.DataProtector.Protect(json, cookieName);     
                     cookieOptions.Expires = DateTimeHelper.UtcNow.AddYears(1);
                 }
                 else
                 {
-                    username = ".";
                     cookieOptions.Expires = DateTimeHelper.UtcNow.AddYears(-1);
                 }
 
-                ctx.Response.Cookies.Append(cookieName, username, cookieOptions);
+                ctx.Response.Cookies.Append(cookieName, json, cookieOptions);
             }
         }
     }

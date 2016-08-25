@@ -53,7 +53,7 @@ namespace IdentityServer3.Core.Services.Default
             var nameClaim = claims.FirstOrDefault(x => x.Type == "urn:google:name");
             var firstNameClaim = claims.FirstOrDefault(x => x.Type == "urn:google:given_name");
             var lastNameClaim = claims.FirstOrDefault(x => x.Type == "urn:google:surname");
-            var imageClaim = claims.FirstOrDefault(x => x.Type == "urn:google:image");
+            var imageClaim = claims.FirstOrDefault(x => x.Type == "urn:google:picture");
 
             var list = claims.ToList();
 
@@ -82,10 +82,7 @@ namespace IdentityServer3.Core.Services.Default
             {
                 if (list.All(c => c.Type != Constants.ClaimTypes.Picture))
                 {
-                    var imagePath = JObject.Parse(imageClaim.Value);
-                    JToken image;
-                    imagePath.TryGetValue("url", out image);
-                    list.Add(new Claim(Constants.ClaimTypes.Picture, image.Value<string>()));
+                    list.Add(new Claim(Constants.ClaimTypes.Picture, imageClaim.Value));
                 }
             }
 

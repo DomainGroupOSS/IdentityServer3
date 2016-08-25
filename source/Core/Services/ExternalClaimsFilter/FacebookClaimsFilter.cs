@@ -66,10 +66,7 @@ namespace IdentityServer3.Core.Services.Default
             {
                 if (list.All(c => c.Type != Constants.ClaimTypes.Picture))
                 {
-                    var imagePath = JObject.Parse(profileImageClaim.Value);
-                    JToken image;
-                    imagePath.TryGetValue("data", out image);
-                    list.Add(new Claim(Constants.ClaimTypes.Picture, image["url"].Value<string>()));
+                    list.Add(new Claim(Constants.ClaimTypes.Picture, profileImageClaim.Value));
                 }
             }
 

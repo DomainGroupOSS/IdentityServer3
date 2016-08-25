@@ -61,10 +61,8 @@ namespace IdentityServer3.Core.Endpoints
         private readonly TwoFactorCookie twoFactorCookie;
         private readonly MessageCookie<SignInMessage> signInMessageCookie;
         private readonly MessageCookie<SignOutMessage> signOutMessageCookie;
-        private readonly LastUserNameCookie lastUserNameCookie;
         private readonly AntiForgeryToken antiForgeryToken;
-        private readonly ProfileImageCookie profileImageCookie;
-
+        
         public AuthenticationController(
             OwinEnvironmentService owin,
             IViewService viewService,
@@ -77,9 +75,7 @@ namespace IdentityServer3.Core.Endpoints
             TwoFactorCookie twoFactorCookie,
             MessageCookie<SignInMessage> signInMessageCookie,
             MessageCookie<SignOutMessage> signOutMessageCookie,
-            LastUserNameCookie lastUsernameCookie,
-            AntiForgeryToken antiForgeryToken,
-            ProfileImageCookie profileImageCookie)
+            AntiForgeryToken antiForgeryToken)
         {
             this.context = new OwinContext(owin.Environment);
             this.viewService = viewService;
@@ -92,9 +88,7 @@ namespace IdentityServer3.Core.Endpoints
             this.twoFactorCookie = twoFactorCookie;
             this.signInMessageCookie = signInMessageCookie;
             this.signOutMessageCookie = signOutMessageCookie;
-            this.lastUserNameCookie = lastUsernameCookie;
             this.antiForgeryToken = antiForgeryToken;
-            this.profileImageCookie = profileImageCookie;
         }
 
         [Route(Constants.RoutePaths.Login, Name = Constants.RouteNames.Login)]
@@ -265,8 +259,6 @@ namespace IdentityServer3.Core.Endpoints
 
             await eventService.RaiseLocalLoginSuccessEventAsync(model.Username, signin, signInMessage, authResult);
 
-            lastUserNameCookie.SetValue(model.Username);
-
             return await SignInAndRedirectAsync(signInMessage, signin, authResult, model.RememberMe);
         }
 
@@ -415,14 +407,9 @@ namespace IdentityServer3.Core.Endpoints
             Logger.Info("External identity successfully validated by user service");
 
             await eventService.RaiseExternalLoginSuccessEventAsync(externalIdentity, signInId, signInMessage, authResult);
-
-            string picturePath = null;
-            if (externalContext.AuthenticateResult.User.Claims.Any(p => p.Type == Constants.ClaimTypes.Picture))
-            {
-                picturePath = externalContext.AuthenticateResult.User.Claims.First(p => p.Type == Constants.ClaimTypes.Picture).Value;
-                profileImageCookie.SetValue(picturePath);
-            }
             
+
+          
             return await SignInAndRedirectAsync(signInMessage, signInId, authResult);
         }
 
@@ -802,6 +789,7 @@ namespace IdentityServer3.Core.Endpoints
                     var remember = twoFactorAmrRemember != null && bool.Parse(twoFactorAmrRemember.Value);
                     twoFactorCookie.IssueTwoFactorSession(remember, authResult.User.GetSubjectId());
                 }
+          
             }
 
             if (!authResult.IsPartialSignIn)
@@ -891,15 +879,9 @@ namespace IdentityServer3.Core.Endpoints
         {
             if (message == null) throw new ArgumentNullException("message");
 
-            username = GetUserNameForLoginPage(message, username);
-            string profileImage = string.Empty;
-
-            var profileImageCookieValue = profileImageCookie.GetValue();
-            if (profileImageCookieValue.IsPresent())
-            {
-                profileImage = profileImageCookieValue;
-            }
-
+            var userInfo = GetUserInfoForLoginPage(message, username);
+            username = userInfo.UserName;
+            
             var isLocalLoginAllowedForClient = await IsLocalLoginAllowedForClient(message);
             var isLocalLoginAllowed = isLocalLoginAllowedForClient && options.AuthenticationOptions.EnableLocalLogin;
 
@@ -971,7 +953,6 @@ namespace IdentityServer3.Core.Endpoints
                 LogoutUrl = context.GetIdentityServerLogoutUrl(),
                 AntiForgery = antiForgeryToken.GetAntiForgeryToken(),
                 Username = username,
-                ProfileImage = profileImage,
                 ClientName = client != null ? client.ClientName : null,
                 ClientUrl = client != null ? client.ClientUri : null,
                 ClientLogoUrl = client != null ? client.LogoUri : null
@@ -980,28 +961,26 @@ namespace IdentityServer3.Core.Endpoints
             return new LoginActionResult(viewService, loginModel, message);
         }
 
-        private string GetUserNameForLoginPage(SignInMessage message, string username)
+        private LastUserNameCookieMessage GetUserInfoForLoginPage(SignInMessage message, string username)
         {
             if (username.IsMissing() && message.LoginHint.IsPresent())
             {
                 if (options.AuthenticationOptions.EnableLoginHint)
                 {
                     Logger.InfoFormat("Using LoginHint for username: {0}", message.LoginHint);
-                    username = message.LoginHint;
-                }
-                else
-                {
-                    Logger.Warn("Not using LoginHint because EnableLoginHint is false");
-                }
-            }
 
-            var lastUsernameCookieValue = lastUserNameCookie.GetValue();
-            if (username.IsMissing() && lastUsernameCookieValue.IsPresent())
-            {
-                Logger.InfoFormat("Using LastUserNameCookie value for username: {0}", lastUsernameCookieValue);
-                username = lastUsernameCookieValue;
+                    return new LastUserNameCookieMessage
+                    {
+                        UserName = message.LoginHint
+                    };
+                }
+                Logger.Warn("Not using LoginHint because EnableLoginHint is false");
             }
-            return username;
+            
+            return new LastUserNameCookieMessage
+            {
+                UserName = username
+            }; 
         }
 
         private IHttpActionResult RenderLogoutPromptPage(string id)
