@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using Newtonsoft.Json.Linq;
 
 namespace IdentityServer3.Core.Services.Default
 {
@@ -52,6 +53,7 @@ namespace IdentityServer3.Core.Services.Default
             var nameClaim = claims.FirstOrDefault(x => x.Type == "urn:google:name");
             var firstNameClaim = claims.FirstOrDefault(x => x.Type == "urn:google:given_name");
             var lastNameClaim = claims.FirstOrDefault(x => x.Type == "urn:google:surname");
+            var imageClaim = claims.FirstOrDefault(x => x.Type == "urn:google:picture");
 
             var list = claims.ToList();
 
@@ -76,6 +78,14 @@ namespace IdentityServer3.Core.Services.Default
                     list.Add(new Claim(Constants.ClaimTypes.FamilyName, lastNameClaim.Value));
                 }
             }
+            if (imageClaim != null)
+            {
+                if (list.All(c => c.Type != Constants.ClaimTypes.Picture))
+                {
+                    list.Add(new Claim(Constants.ClaimTypes.Picture, imageClaim.Value));
+                }
+            }
+
             return list;
         }
     }

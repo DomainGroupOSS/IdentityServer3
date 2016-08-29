@@ -66,6 +66,22 @@ namespace IdentityServer3.Core.ViewModels
         public string Username { get; set; }
 
         /// <summary>
+        /// The value to populate the profile image field.
+        /// </summary>
+        /// <value>
+        /// The profile image.
+        /// </value>
+        public string ProfileImage { get; set; }
+
+        /// <summary>
+        /// The value to populate the profile image field.
+        /// </summary>
+        /// <value>
+        /// The profile image.
+        /// </value>
+        public string LastSignInDate { get; set; }
+
+        /// <summary>
         /// List of external providers to display for home realm discover (HRD). 
         /// </summary>
         /// <value>
