@@ -80,7 +80,7 @@ namespace IdentityServer3.Core.Endpoints
                 id_token_signing_alg_values_supported = new[] { Constants.SigningAlgorithms.RSA_SHA_256 },
                 code_challenge_methods_supported = new[] { Constants.CodeChallengeMethods.Plain, Constants.CodeChallengeMethods.SHA_256 }
             };
-            
+
             // scopes
             if (_options.DiscoveryOptions.ShowIdentityScopes)
             {
@@ -194,10 +194,7 @@ namespace IdentityServer3.Core.Endpoints
 
             if (_options.DiscoveryOptions.ShowKeySet)
             {
-                if (_options.SigningCertificate != null)
-                {
-                    dto.jwks_uri = baseUrl + Constants.RoutePaths.Oidc.DiscoveryWebKeys;
-                }
+                dto.jwks_uri = baseUrl + Constants.RoutePaths.Oidc.DiscoveryWebKeys;
             }
 
             var jobject = JObject.FromObject(dto, Serializer);
@@ -213,7 +210,14 @@ namespace IdentityServer3.Core.Endpoints
                         throw new Exception("Item does already exist - cannot add it via a custom entry: " + item.Key);
                     }
 
-                    jobject.Add(new JProperty(item.Key, item.Value));
+                    if (item.Value.GetType().IsClass)
+                    {
+                        jobject.Add(new JProperty(item.Key, JToken.FromObject(item.Value)));
+                    }
+                    else
+                    {
+                        jobject.Add(new JProperty(item.Key, item.Value));
+                    }
                 }
             }
 
