@@ -118,6 +118,7 @@ namespace IdentityServer3.Core
             public static class ConnectTypes
             {
                 public const string Sms = "sms";
+                public const string Otp = "otp";
                 public const string Totp = "totp";
                 public const string NativeLogin = "native";
             }

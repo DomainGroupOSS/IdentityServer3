@@ -40,6 +40,7 @@ namespace IdentityServer3.Core.Validation
         {
             Constants.NativeLoginRequest.ConnectTypes.Sms,
             Constants.NativeLoginRequest.ConnectTypes.Totp,
+            Constants.NativeLoginRequest.ConnectTypes.Otp,
             Constants.NativeLoginRequest.ConnectTypes.NativeLogin,
         };
 
@@ -539,7 +540,7 @@ namespace IdentityServer3.Core.Validation
                 return Invalid(Constants.NativeLoginErrors.InvalidGrant);
             }
 
-            if (connectCode.IsMissing())
+            if (connectCode.IsMissing() && connectType != Constants.NativeLoginRequest.ConnectTypes.Otp)
             { 
                 LogError("connect code missing.");
                 return Invalid(Constants.NativeLoginErrors.InvalidConnectChallenge);
