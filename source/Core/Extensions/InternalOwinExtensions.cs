@@ -108,7 +108,7 @@ namespace IdentityServer3.Core.Extensions
                 return types.Select(p => new LoginPageLink
                 {
                     Type = p.AuthenticationType,
-                    Text = p.Caption,
+                    Text = context.GetExternalProviderLinkTextFromContext(p.Caption),
                     Href = context.GetExternalProviderLoginUrl(p.AuthenticationType, signInMessageId)
                 });
             }
@@ -533,6 +533,14 @@ namespace IdentityServer3.Core.Extensions
                     await userService.SignOutAsync(signOutContext);
                 }
             }
+        }
+
+        private static string GetExternalProviderLinkTextFromContext(this IOwinContext context, string caption)
+        {
+            if (context.Request.Path.HasValue && context.Request.Path.Value.EndsWith(Constants.RoutePaths.SignUp))
+                return caption.Replace("Login", "Sign up");
+
+            return caption;
         }
     }
 }

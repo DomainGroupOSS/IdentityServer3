@@ -62,6 +62,9 @@ namespace IdentityServer3.Core.ResponseHandling
         {
             // let the login page know the client requesting authorization
             _signIn.ClientId = request.ClientId;
+
+            //used to determine sign up or login page
+            _signIn.IsSignUp = request.IsSignUp;
             
             // pass through display mode to signin service
             if (request.DisplayMode.IsPresent())
@@ -98,6 +101,13 @@ namespace IdentityServer3.Core.ResponseHandling
             {
                 _signIn.Tenant = tenant.Substring(Constants.KnownAcrValues.Tenant.Length);
                 acrValues.Remove(tenant);
+            }
+
+            var signup = acrValues.FirstOrDefault(x => x.StartsWith(Constants.KnownAcrValues.Signup));
+            if (signup.IsPresent())
+            {
+                _signIn.IsSignUp =  String.Equals(signup.Substring(Constants.KnownAcrValues.Signup.Length), bool.TrueString, StringComparison.CurrentCultureIgnoreCase);
+				acrValues.Remove(signup);
             }
 
             // pass through any remaining acr values

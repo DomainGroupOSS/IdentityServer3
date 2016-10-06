@@ -16,6 +16,8 @@
 
 using IdentityServer3.Core.Models;
 using System;
+using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace IdentityServer3.Core.Services.Default
@@ -63,6 +65,12 @@ namespace IdentityServer3.Core.Services.Default
         public Task IsActiveAsync(IsActiveContext context)
         {
             return inner.IsActiveAsync(context);
+        }
+
+        public Task CreateAccount(string tenant, string username, string password, string email, Guid? id = null,
+            DateTime? dateCreated = null, IEnumerable<Claim> claims = null)
+        {
+            return inner.CreateAccount(tenant, username, password, email, id, dateCreated, claims);
         }
 
         public Task SignOutAsync(SignOutContext context)

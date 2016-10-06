@@ -93,6 +93,11 @@ namespace IdentityServer3.Core.Models
         public IEnumerable<string> AcrValues { get; set; }
 
         /// <summary>
+        /// Is for user registration
+        /// </summary>
+        public bool IsSignUp { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SignInMessage"/> class.
         /// </summary>
         public SignInMessage()

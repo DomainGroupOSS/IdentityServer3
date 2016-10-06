@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
 using IdentityServer3.Core.Models;
 using System.Threading.Tasks;
 
@@ -75,5 +78,19 @@ namespace IdentityServer3.Core.Services
         /// <param name="context">The context.</param>
         /// <returns></returns>
         Task IsActiveAsync(IsActiveContext context);
+
+        /// <summary>
+        /// Creates userAccount
+        /// </summary>
+        /// <param name="tenant"></param>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <param name="email"></param>
+        /// <param name="id"></param>
+        /// <param name="dateCreated"></param>
+        /// <param name="claims"></param>
+        /// <returns></returns>
+        Task CreateAccount(string tenant, string username, string password, string email,
+            Guid? id = null, DateTime? dateCreated = null, IEnumerable<Claim> claims = null);
     }
 }

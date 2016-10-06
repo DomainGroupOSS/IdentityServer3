@@ -652,7 +652,12 @@
     <Content Include="Services\DefaultViewService\HttpAssets\libs\jquery\jquery-1.11.0.min.js" />
     <EmbeddedResource Include="Services\DefaultViewService\HttpAssets\scripts.2.5.0.js" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\domain-auth\Domain.Identity.DataMigration.Services\Domain.Identity.DataMigration.Services.csproj">
+      <Project>{D09EDDB6-362A-4CE5-A222-4869AE7DFC88}</Project>
+      <Name>Domain.Identity.DataMigration.Services</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

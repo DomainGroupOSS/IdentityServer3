@@ -140,7 +140,9 @@ namespace IdentityServer3.Core.Extensions
             var cookie = new MessageCookie<SignInMessage>(env, options);
             var id = cookie.Write(message);
 
-            var url = env.GetIdentityServerBaseUrl() + (resumeUrl ?? Constants.RoutePaths.Login);
+            string relativePath = message.IsSignUp ? Constants.RoutePaths.SignUp : Constants.RoutePaths.Login; 
+                
+            var url = env.GetIdentityServerBaseUrl() + (resumeUrl ?? relativePath);
             var uri = string.IsNullOrWhiteSpace(resumeUrl) ? new Uri(url.AddQueryString("signin=" + id)) : new Uri(string.Format("{0}{1}",url,id));
             signinId = id;
             return uri.AbsoluteUri;
