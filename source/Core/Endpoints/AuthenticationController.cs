@@ -969,7 +969,6 @@ namespace IdentityServer3.Core.Endpoints
             }
 
             var loginPageLinks = options.AuthenticationOptions.LoginPageLinks.Render(Request.GetIdentityServerBaseUrl(), signInMessageId);
-            //string urlRoute = message.IsSignUp ? Constants.RouteNames.SignUp : Constants.RouteNames.Login;
             var loginModel = new LoginViewModel
             {
                 RequestId = context.GetRequestId(),
