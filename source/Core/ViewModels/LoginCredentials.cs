@@ -45,26 +45,4 @@ namespace IdentityServer3.Core.ViewModels
         /// </value>
         public bool? RememberMe { get; set; }
     }
-
-    /// <summary>
-    /// model for user signup
-    /// </summary>
-    public class SignupCredentials
-    {
-        /// <summary>
-        /// Gets or sets the username.
-        /// </summary>
-        /// <value>
-        /// The username.
-        /// </value>
-        public string Username { get; set; }
-
-        /// <summary>
-        /// Gets or sets the password.
-        /// </summary>
-        /// <value>
-        /// The password.
-        /// </value>
-        public string Password { get; set; }
-    }
 }
