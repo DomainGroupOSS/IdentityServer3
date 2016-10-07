@@ -100,12 +100,6 @@ namespace IdentityServer3.Core.Services.Default
             return Task.FromResult(0);
         }
 
-        public virtual Task CreateAccount(string tenant, string username, string password, string email, Guid? id = null,
-            DateTime? dateCreated = null, IEnumerable<Claim> claims = null)
-        {
-            return Task.FromResult(0);
-        }
-
         public virtual Task RequiresTwoFactorChallenge(RequiresTwoFactorChallengeContext context)
         {
             return Task.FromResult(0);

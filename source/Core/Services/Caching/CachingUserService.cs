@@ -128,12 +128,6 @@ namespace IdentityServer3.Core.Services.Caching
             return inner.IsActiveAsync(context);
         }
 
-        public Task CreateAccount(string tenant, string username, string password, string email, Guid? id = null,
-            DateTime? dateCreated = null, IEnumerable<Claim> claims = null)
-        {
-            return inner.CreateAccount(tenant, username, password, email, id, dateCreated, claims);
-        }
-
         private string GetKey(ClaimsPrincipal subject, IEnumerable<string> requestedClaimTypes)
         {
             var sub = subject.GetSubjectId();

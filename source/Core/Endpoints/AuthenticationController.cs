@@ -190,113 +190,6 @@ namespace IdentityServer3.Core.Endpoints
             return await RenderLoginPage(signInMessage, signin);
         }
 
-        [Route(Constants.RoutePaths.SignUp)]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IHttpActionResult> SignUp(string signin, SignupCredentials model)
-        {
-            Logger.Info("Signup page submitted");
-            if (signin.IsMissing())
-            {
-                Logger.Info("No signin id passed");
-                return HandleNoSignin();
-            }
-
-            if (signin.Length > MaxSignInMessageLength)
-            {
-                Logger.Error("Signin parameter passed was larger than max length");
-                return RenderErrorPage();
-            }
-
-            var signInMessage = signInMessageCookie.Read(signin);
-            if (signInMessage == null)
-            {
-                Logger.Info("No cookie matching signin id found");
-                return HandleNoSignin();
-            }
-
-            if (!(await IsLocalLoginAllowedForClient(signInMessage)))
-            {
-                Logger.ErrorFormat("Login not allowed for client {0}", signInMessage.ClientId);
-                return RenderErrorPage();
-            }
-
-            if (model == null)
-            {
-                Logger.Error("no data submitted");
-                return await RenderLoginPage(signInMessage, signin, localizationService.GetMessage(MessageIds.InvalidUsernameOrPassword));
-            }
-
-            if (String.IsNullOrWhiteSpace(model.Username))
-            {
-                ModelState.AddModelError("Username", localizationService.GetMessage(MessageIds.UsernameRequired));
-            }
-
-            if (String.IsNullOrWhiteSpace(model.Password))
-            {
-                ModelState.AddModelError("Password", localizationService.GetMessage(MessageIds.PasswordRequired));
-            }
-
-            if (!ModelState.IsValid)
-            {
-                Logger.Warn("validation error: username or password missing");
-                return await RenderLoginPage(signInMessage, signin, ModelState.GetError(), model.Username);
-            }
-
-            if (model.Username.Length > options.InputLengthRestrictions.UserName || model.Password.Length > options.InputLengthRestrictions.Password)
-            {
-                Logger.Error("username or password submitted beyond allowed length");
-                return await RenderLoginPage(signInMessage, signin);
-            }
-
-            try
-            {
-                await userService.CreateAccount(signInMessage.Tenant, model.Username, model.Password, model.Username);
-            }
-            catch (ValidationException ve)
-            {
-                ModelState.AddModelError("CreateUser", ve.Message);
-            }
-
-            if (!ModelState.IsValid)
-                return await RenderLoginPage(signInMessage, signin, ModelState.GetError(), model.Username);
-
-            var authenticationContext = new LocalAuthenticationContext
-            {
-                UserName = model.Username,
-                Password = model.Password,
-                SignInMessage = signInMessage
-            };
-
-            await userService.AuthenticateLocalAsync(authenticationContext);
-
-            var authResult = authenticationContext.AuthenticateResult;
-            if (authResult == null)
-            {
-                Logger.WarnFormat("user service indicated incorrect username or password for username: {0}", model.Username);
-
-                var errorMessage = localizationService.GetMessage(MessageIds.InvalidUsernameOrPassword);
-                await eventService.RaiseLocalLoginFailureEventAsync(model.Username, signin, signInMessage, errorMessage);
-
-                return await RenderLoginPage(signInMessage, signin, errorMessage, model.Username);
-            }
-
-            if (authResult.IsError)
-            {
-                Logger.WarnFormat("user service returned an error message: {0}", authResult.ErrorMessage);
-
-                await eventService.RaiseLocalLoginFailureEventAsync(model.Username, signin, signInMessage, authResult.ErrorMessage);
-
-                return await RenderLoginPage(signInMessage, signin, authResult.ErrorMessage, model.Username);
-            }
-
-            Logger.Info("Login credentials successfully validated by user service");
-
-            await eventService.RaiseLocalLoginSuccessEventAsync(model.Username, signin, signInMessage, authResult);
-
-            return await SignInAndRedirectAsync(signInMessage, signin, authResult);
-        }
-
         [Route(Constants.RoutePaths.Login)]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -373,7 +266,7 @@ namespace IdentityServer3.Core.Endpoints
             };
 
             await userService.AuthenticateLocalAsync(authenticationContext);
-
+            
             var authResult = authenticationContext.AuthenticateResult;
             if (authResult == null)
             {
@@ -1076,7 +969,7 @@ namespace IdentityServer3.Core.Endpoints
             }
 
             var loginPageLinks = options.AuthenticationOptions.LoginPageLinks.Render(Request.GetIdentityServerBaseUrl(), signInMessageId);
-            string urlRoute = message.IsSignUp ? Constants.RouteNames.SignUp : Constants.RouteNames.Login;
+            //string urlRoute = message.IsSignUp ? Constants.RouteNames.SignUp : Constants.RouteNames.Login;
             var loginModel = new LoginViewModel
             {
                 RequestId = context.GetRequestId(),
@@ -1085,7 +978,7 @@ namespace IdentityServer3.Core.Endpoints
                 ExternalProviders = visibleLinks,
                 AdditionalLinks = loginPageLinks,
                 ErrorMessage = errorMessage,
-                LoginUrl = isLocalLoginAllowed ? Url.Route(urlRoute, new { signin = signInMessageId }) : null,
+                LoginUrl = isLocalLoginAllowed ? Url.Route(Constants.RouteNames.Login, new { signin = signInMessageId }) : null,
                 AllowRememberMe = options.AuthenticationOptions.CookieOptions.AllowRememberMe,
                 RememberMe = options.AuthenticationOptions.CookieOptions.AllowRememberMe && rememberMe,
                 CurrentUser = context.GetCurrentUserDisplayName(),
