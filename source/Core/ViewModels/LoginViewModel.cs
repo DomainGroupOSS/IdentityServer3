@@ -120,5 +120,10 @@ namespace IdentityServer3.Core.ViewModels
         /// The client logo URL.
         /// </value>
         public string ClientLogoUrl { get; set; }
+
+        /// <summary>
+        /// Registration
+        /// </summary>
+        public bool IsSignup { get; set; }
     }
 }

@@ -78,6 +78,7 @@ namespace IdentityServer3.Core
             public const string AcrValues           = "acr_values";
             public const string CodeChallenge       = "code_challenge";
             public const string CodeChallengeMethod = "code_challenge_method";
+            public const string SignUp              = "Signup";
         }
 
         public static class TokenRequest
@@ -345,6 +346,7 @@ namespace IdentityServer3.Core
         {
             public const string HomeRealm = "idp:";
             public const string Tenant = "tenant:";
+            public const string Signup = "signup:";
         }
 
         public static class CodeChallengeMethods
@@ -739,6 +741,7 @@ namespace IdentityServer3.Core
         {
             public const string Welcome = "idsrv.welcome";
             public const string Login = "idsrv.authentication.login";
+            public const string SignUp = "idsrv.authentication.signup";
             public const string LoginExternal = "idsrv.authentication.loginexternal";
             public const string LoginExternalCallback = "idsrv.authentication.loginexternalcallback";
             public const string LogoutPrompt = "idsrv.authentication.logoutprompt";
@@ -777,6 +780,7 @@ namespace IdentityServer3.Core
             public const string ResumeLoginFromRedirect = "return";
             public const string CspReport = "csp/report";
             public const string ClientPermissions = "permissions";
+            public const string SignUp = "signup";
 
             public static class DomainOidc
             {
