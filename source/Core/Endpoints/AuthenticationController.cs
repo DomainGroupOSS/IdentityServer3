@@ -35,8 +35,6 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web.Http;
-using Domain.Identity.DataMigration.Helpers;
-using Microsoft.Owin.Security;
 using AuthenticateResult = IdentityServer3.Core.Models.AuthenticateResult;
 
 namespace IdentityServer3.Core.Endpoints
@@ -237,11 +235,6 @@ namespace IdentityServer3.Core.Endpoints
             if (String.IsNullOrWhiteSpace(model.Password))
             {
                 ModelState.AddModelError("Password", localizationService.GetMessage(MessageIds.PasswordRequired));
-            }
-
-            if (!UserNameEmailHelper.IsValidEmail(model.Username))
-            {
-                ModelState.AddModelError("Username", string.Format("{0} is not a valid email address", model.Username));
             }
 
             if (!ModelState.IsValid)
