@@ -63,12 +63,61 @@ namespace IdentityServer3.Core.ResponseHandling
             {
                 response = await ProcessRefreshTokenRequestAsync(request);
             }
+            else if (request.GrantType == Constants.GrantTypes.FacebookAssertion ||
+                     request.GrantType == Constants.GrantTypes.GoogleAssertion ||
+                     request.GrantType == Constants.GrantTypes.AccountKitAssertion)
+            {
+                response = await ProcessAssertionTokenRequestAsync(request);
+            }
             else
             {
                 response = await ProcessTokenRequestAsync(request);
             }
 
             return await _customResponseGenerator.GenerateAsync(request, response);
+        }
+
+        private async Task<TokenResponse> ProcessAssertionTokenRequestAsync(ValidatedTokenRequest request)
+        {
+            Logger.Info("Processing token request");
+
+            var identityToken = await CreateIdentityTokenAsync(request);
+            var accessToken = await CreateAccessTokenAsync(request);
+            var response = new TokenResponse()
+            {
+                IdentityToken = identityToken,
+                AccessToken = accessToken.Item1,
+                AccessTokenLifetime = request.Client.AccessTokenLifetime
+            };
+
+            if (accessToken.Item2.IsPresent())
+            {
+                response.RefreshToken = accessToken.Item2;
+            }
+
+            return response;
+        }
+
+        private async Task<string> CreateIdentityTokenAsync(ValidatedTokenRequest request)
+        {
+            var tokenRequest = new TokenCreationRequest
+            {
+                Subject = request.Subject,
+                Client = request.Client,
+                Scopes = request.ValidatedScopes.GrantedScopes,
+                ValidatedRequest = request
+            };
+            
+
+            // bind proof key to token if present
+            if (request.RequestedTokenType == RequestedTokenTypes.PoP)
+            {
+                tokenRequest.ProofKey = GetProofKey(request);
+            }
+
+            var identityToken = await _tokenService.CreateIdentityTokenAsync(tokenRequest);
+
+            return await _tokenService.CreateSecurityTokenAsync(identityToken);
         }
 
         private async Task<TokenResponse> ProcessAuthorizationCodeRequestAsync(ValidatedTokenRequest request)

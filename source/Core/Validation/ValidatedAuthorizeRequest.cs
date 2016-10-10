@@ -201,12 +201,6 @@ namespace IdentityServer3.Core.Validation
         public bool RequireTwoFactorChallenge { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating where the currect authorize request is for user registration/signup
-        /// </summary>
-        public bool IsSignUp { get; set; }
-
-
-        /// <summary>
         /// Gets a value indicating whether an access token was requested.
         /// </summary>
         /// <value>
