@@ -78,7 +78,6 @@ namespace IdentityServer3.Core
             public const string AcrValues           = "acr_values";
             public const string CodeChallenge       = "code_challenge";
             public const string CodeChallengeMethod = "code_challenge_method";
-            public const string SignUp              = "Signup";
         }
 
         public static class TokenRequest

@@ -62,9 +62,6 @@ namespace IdentityServer3.Core.ResponseHandling
         {
             // let the login page know the client requesting authorization
             _signIn.ClientId = request.ClientId;
-
-            //used to determine sign up or login page
-            _signIn.IsSignUp = request.IsSignUp;
             
             // pass through display mode to signin service
             if (request.DisplayMode.IsPresent())
