@@ -97,28 +97,14 @@ namespace IdentityServer3.Core.ResponseHandling
 
         private async Task<string> CreateIdentityTokenAsync(ValidatedTokenRequest request)
         {
-            TokenCreationRequest tokenRequest;
-
-            if (request.AuthorizationCode != null)
+            var tokenRequest = new TokenCreationRequest
             {
-                tokenRequest = new TokenCreationRequest
-                {
-                    Subject = request.AuthorizationCode.Subject,
-                    Client = request.AuthorizationCode.Client,
-                    Scopes = request.AuthorizationCode.RequestedScopes,
-                    ValidatedRequest = request
-                };
-            }
-            else
-            {
-                tokenRequest = new TokenCreationRequest
-                {
-                    Subject = request.Subject,
-                    Client = request.Client,
-                    Scopes = request.ValidatedScopes.GrantedScopes,
-                    ValidatedRequest = request
-                };
-            }
+                Subject = request.Subject,
+                Client = request.Client,
+                Scopes = request.ValidatedScopes.GrantedScopes,
+                ValidatedRequest = request
+            };
+            
 
             // bind proof key to token if present
             if (request.RequestedTokenType == RequestedTokenTypes.PoP)
