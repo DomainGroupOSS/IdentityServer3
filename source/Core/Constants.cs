@@ -180,6 +180,9 @@ namespace IdentityServer3.Core
             // domain custom grants
             public const string Passwordless = "passwordless";
             public static string DomainNative = "domain_native";
+            public const string FacebookAssertion = "facebook_assertion";
+            public const string GoogleAssertion = "google_assertion";
+            public const string AccountKitAssertion = "accountkit_assertion";
         }
 
         public static class ClientAssertionTypes
