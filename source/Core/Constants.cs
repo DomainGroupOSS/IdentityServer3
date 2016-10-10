@@ -89,7 +89,7 @@ namespace IdentityServer3.Core
             public const string ClientSecret        = "client_secret";
             public const string ClientAssertion     = "client_assertion";
             public const string ClientAssertionType = "client_assertion_type";
-            public const string Assertion           = "assertion";
+            public const string Assertion           = "assertion";            
             public const string Code                = "code";
             public const string RefreshToken        = "refresh_token";
             public const string Scope               = "scope";
@@ -98,6 +98,7 @@ namespace IdentityServer3.Core
             public const string CodeVerifier        = "code_verifier";
             public const string Algorithm           = "alg";
             public const string Key                 = "key";
+            public const string Token               = "token";
         }
 
         public static class NativeLoginRequest
@@ -170,6 +171,7 @@ namespace IdentityServer3.Core
             public const string Password          = "password";
             public const string AuthorizationCode = "authorization_code";
             public const string ClientCredentials = "client_credentials";
+            public const string Delegation = "delegation";
             public const string RefreshToken      = "refresh_token";
             public const string Implicit          = "implicit";
            
@@ -389,6 +391,7 @@ namespace IdentityServer3.Core
             public const string InvalidRequest          = "invalid_request";
             public const string InvalidClient           = "invalid_client";
             public const string InvalidGrant            = "invalid_grant";
+            public const string InvalidToken            = "invalid_token";
             public const string UnauthorizedClient      = "unauthorized_client";
             public const string UnsupportedGrantType    = "unsupported_grant_type";
             public const string UnsupportedResponseType = "unsupported_response_type";
@@ -618,6 +621,11 @@ namespace IdentityServer3.Core
 
             /// <summary>OAuth 2.0 Client Identifier valid at the Authorization Server.</summary>
             public const string ClientId         = "client_id";
+
+            /// <summary>
+            /// OAuth 2.0 Client Identifier which was delegated through the Delegation flow
+            /// </summary>
+            public const string DelegatedClientId = "delegated_client_id";
 
             /// <summary>
             /// Gets or sets the ClaimType used for the security stamp claim..

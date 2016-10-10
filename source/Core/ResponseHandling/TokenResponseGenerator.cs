@@ -23,6 +23,9 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityModel;
+using IdentityModel.Client;
+using TokenResponse = IdentityServer3.Core.Models.TokenResponse;
 
 #pragma warning disable 1591
 
@@ -228,6 +231,11 @@ namespace IdentityServer3.Core.ResponseHandling
             if (request.RequestedTokenType == RequestedTokenTypes.PoP)
             {
                 tokenRequest.ProofKey = GetProofKey(request);
+            }
+
+            if (request.GrantType == Constants.GrantTypes.Delegation)
+            {
+                tokenRequest.DelegatedClientId = request.DelegatedClientId;
             }
 
             Token accessToken = await _tokenService.CreateAccessTokenAsync(tokenRequest);

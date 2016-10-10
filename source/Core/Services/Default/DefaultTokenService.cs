@@ -281,6 +281,11 @@ namespace IdentityServer3.Core.Services.Default
                 claims.Add(new Claim(Constants.ClaimTypes.AuthorizationCode, code));
             }
 
+            if (request.DelegatedClientId.IsPresent())
+            {
+                claims.Add(new Claim(Constants.ClaimTypes.DelegatedClientId, request.DelegatedClientId));
+            }
+
             var token = new Token(Constants.TokenTypes.AccessToken)
             {
                 Audience = string.Format(Constants.AccessTokenAudience, IssuerUri.EnsureTrailingSlash()),
