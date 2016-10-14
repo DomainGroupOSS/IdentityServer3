@@ -28,13 +28,13 @@ using IdentityServer3.Core.ViewModels;
 using Microsoft.Owin;
 using Newtonsoft.Json;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web.Http;
-using Microsoft.Owin.Security;
 using AuthenticateResult = IdentityServer3.Core.Models.AuthenticateResult;
 
 namespace IdentityServer3.Core.Endpoints
@@ -91,6 +91,37 @@ namespace IdentityServer3.Core.Endpoints
             this.antiForgeryToken = antiForgeryToken;
         }
 
+        [Route(Constants.RoutePaths.SignUp, Name = Constants.RouteNames.SignUp)]
+        [HttpGet]
+        public async Task<IHttpActionResult> SignUp(string signin = null)
+        {
+            Logger.Info("Signup page requested");
+
+            if (signin.IsMissing())
+            {
+                Logger.Info("No signin id passed");
+                return HandleNoSignin();
+            }
+
+            if (signin.Length > MaxSignInMessageLength)
+            {
+                Logger.Error("signin parameter passed was larger than max length");
+                return RenderErrorPage();
+            }
+
+            var signInMessage = signInMessageCookie.Read(signin);
+
+            if (signInMessage == null)
+            {
+                Logger.Info("No cookie matching signin id found");
+                return HandleNoSignin();
+            }
+
+            Logger.DebugFormat("signin message passed to Signup: {0}", JsonConvert.SerializeObject(signInMessage, Formatting.Indented));
+
+            return await RenderLoginPage(signInMessage, signin);
+        }
+
         [Route(Constants.RoutePaths.Login, Name = Constants.RouteNames.Login)]
         [HttpGet]
         public async Task<IHttpActionResult> Login(string signin = null)
@@ -110,6 +141,7 @@ namespace IdentityServer3.Core.Endpoints
             }
 
             var signInMessage = signInMessageCookie.Read(signin);
+
             if (signInMessage == null)
             {
                 Logger.Info("No cookie matching signin id found");
@@ -234,7 +266,7 @@ namespace IdentityServer3.Core.Endpoints
             };
 
             await userService.AuthenticateLocalAsync(authenticationContext);
-
+            
             var authResult = authenticationContext.AuthenticateResult;
             if (authResult == null)
             {
@@ -937,7 +969,6 @@ namespace IdentityServer3.Core.Endpoints
             }
 
             var loginPageLinks = options.AuthenticationOptions.LoginPageLinks.Render(Request.GetIdentityServerBaseUrl(), signInMessageId);
-
             var loginModel = new LoginViewModel
             {
                 RequestId = context.GetRequestId(),
@@ -955,7 +986,8 @@ namespace IdentityServer3.Core.Endpoints
                 Username = username,
                 ClientName = client != null ? client.ClientName : null,
                 ClientUrl = client != null ? client.ClientUri : null,
-                ClientLogoUrl = client != null ? client.LogoUri : null
+                ClientLogoUrl = client != null ? client.LogoUri : null,
+                IsSignup = message.IsSignUp
             };
 
             return new LoginActionResult(viewService, loginModel, message);

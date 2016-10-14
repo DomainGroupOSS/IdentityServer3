@@ -117,7 +117,8 @@ namespace IdentityServer3.Tests.Validation
                 aggregateCustomValidator, 
                 customRequestValidator, 
                 scopeValidator, 
-                new DefaultEventService());
+                new DefaultEventService(),
+                CreateTokenValidator());
         }
 
         public static AuthorizeRequestValidator CreateAuthorizeRequestValidator(

@@ -75,7 +75,12 @@ namespace IdentityServer3.Core.Models
         /// <summary>
         /// hybrid flow with proof key
         /// </summary>
-        HybridWithProofKey = 7
+        HybridWithProofKey = 7,
+
+        /// <summary>
+        /// delegation flow, allow a client to request an access token but delegate the claims from the original authenticated client
+        /// </summary>
+        Delegation = 8,
     }
 
     /// <summary>

@@ -100,6 +100,13 @@ namespace IdentityServer3.Core.ResponseHandling
                 acrValues.Remove(tenant);
             }
 
+            var signup = acrValues.FirstOrDefault(x => x.StartsWith(Constants.KnownAcrValues.Signup));
+            if (signup.IsPresent())
+            {
+                _signIn.IsSignUp =  String.Equals(signup.Substring(Constants.KnownAcrValues.Signup.Length), bool.TrueString, StringComparison.CurrentCultureIgnoreCase);
+				acrValues.Remove(signup);
+            }
+
             // pass through any remaining acr values
             if (acrValues.Any())
             {

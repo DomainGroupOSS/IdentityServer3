@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -41,6 +42,7 @@ namespace IdentityServer3.Core.Validation
         private readonly IRefreshTokenStore _refreshTokens;
         private readonly ScopeValidator _scopeValidator;
         private readonly IEventService _events;
+        private readonly TokenValidator _tokenValidator;
 
         private ValidatedTokenRequest _validatedRequest;
 
@@ -52,7 +54,8 @@ namespace IdentityServer3.Core.Validation
             }
         }
 
-        public TokenRequestValidator(IdentityServerOptions options, IAuthorizationCodeStore authorizationCodes, IRefreshTokenStore refreshTokens, IUserService users, CustomGrantValidator customGrantValidator, ICustomRequestValidator customRequestValidator, ScopeValidator scopeValidator, IEventService events)
+        public TokenRequestValidator(IdentityServerOptions options, IAuthorizationCodeStore authorizationCodes, IRefreshTokenStore refreshTokens, IUserService users, CustomGrantValidator customGrantValidator, ICustomRequestValidator customRequestValidator, ScopeValidator scopeValidator, IEventService events,
+            TokenValidator tokenValidator)
         {
             _options = options;
             _authorizationCodes = authorizationCodes;
@@ -62,6 +65,7 @@ namespace IdentityServer3.Core.Validation
             _customRequestValidator = customRequestValidator;
             _scopeValidator = scopeValidator;
             _events = events;
+            _tokenValidator = tokenValidator;
         }
 
         public async Task<TokenRequestValidationResult> ValidateRequestAsync(NameValueCollection parameters, Client client)
@@ -131,6 +135,8 @@ namespace IdentityServer3.Core.Validation
                     return await RunValidationAsync(ValidateAuthorizationCodeRequestAsync, parameters);
                 case Constants.GrantTypes.ClientCredentials:
                     return await RunValidationAsync(ValidateClientCredentialsRequestAsync, parameters);
+                case Constants.GrantTypes.Delegation:
+                    return await RunValidationAsync(ValidateDelegationRequestAsync, parameters);
                 case Constants.GrantTypes.Password:
                     return await RunValidationAsync(ValidateResourceOwnerCredentialRequestAsync, parameters);
                 case Constants.GrantTypes.RefreshToken:
@@ -405,6 +411,83 @@ namespace IdentityServer3.Core.Validation
             }
 
             Logger.Info("Client credentials token request validation success");
+            return Valid();
+        }
+
+        private async Task<TokenRequestValidationResult> ValidateDelegationRequestAsync(NameValueCollection parameters)
+        {
+            Logger.Info("Start delegation token request validation");
+
+            /////////////////////////////////////////////
+            // check if client is authorized for grant type
+            /////////////////////////////////////////////
+            if (_validatedRequest.Client.Flow != Flows.Delegation)
+            {
+                LogError("Client not authorized for delegation flow");
+                return Invalid(Constants.TokenErrors.UnauthorizedClient);
+            }
+
+            var accessToken = parameters[Constants.TokenRequest.Token];
+
+            if (accessToken.IsMissing())
+            {
+                return Invalid(Constants.TokenErrors.InvalidToken);
+            }
+
+            var tokenValidationResult = await _tokenValidator.ValidateAccessTokenAsync(accessToken);
+
+            if (tokenValidationResult.IsError)
+            {
+                return Invalid(Constants.TokenErrors.InvalidGrant);
+            }
+
+            /////////////////////////////////////////////
+            // check if client is allowed to request scopes
+            /////////////////////////////////////////////
+            if (!(await ValidateRequestedScopesAsync(parameters)))
+            {
+                LogError("Invalid scopes.");
+                return Invalid(Constants.TokenErrors.InvalidScope);
+            }
+
+            if (_validatedRequest.ValidatedScopes.ContainsOpenIdScopes)
+            {
+                LogError("Client cannot request OpenID scopes in delegation flow");
+                return Invalid(Constants.TokenErrors.InvalidScope);
+            }
+
+            if (_validatedRequest.ValidatedScopes.ContainsOfflineAccessScope)
+            {
+                LogError("Client cannot request a refresh token in delegation flow");
+                return Invalid(Constants.TokenErrors.InvalidScope);
+            }
+
+            var subjectClaim = tokenValidationResult.Claims.FirstOrDefault(c => c.Type == Constants.ClaimTypes.Subject);
+
+            if (subjectClaim != null && subjectClaim.Value.IsPresent())
+            {
+                var userClaims = tokenValidationResult.Claims.Where(c => c.Type != Constants.ClaimTypes.Scope);
+                var authResult = new AuthenticateResult(subjectClaim.Value, Constants.ClaimTypes.Name, userClaims);
+                /////////////////////////////////////////////
+                // make sure user is enabled
+                /////////////////////////////////////////////
+                var isActiveCtx = new IsActiveContext(authResult.User, _validatedRequest.Client);
+                await _users.IsActiveAsync(isActiveCtx);
+
+                if (isActiveCtx.IsActive == false)
+                {
+                    var error = "User has been disabled: " + _validatedRequest.AuthorizationCode.Subject;
+                    LogError(error);
+
+                    return Invalid(Constants.TokenErrors.InvalidRequest);
+                }
+
+                _validatedRequest.Subject = authResult.User;
+            }
+            _validatedRequest.DelegatedClientId = tokenValidationResult.Client.ClientId;
+
+            Logger.Info("Client delegation token request validation success");
+
             return Valid();
         }
 

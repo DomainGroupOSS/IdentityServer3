@@ -101,6 +101,14 @@ namespace IdentityServer3.Core.Models
         /// </value>
         public string ProofKey { get; set; }
 
+        /// <summary>
+        /// Gets or sets the delegated client identifier.
+        /// </summary>
+        /// <value>
+        /// The delegated client identifier.
+        /// </value>
+        public string DelegatedClientId { get; set; }
+
         internal void Validate()
         {
             if (Client == null) LogAndStop("client");
