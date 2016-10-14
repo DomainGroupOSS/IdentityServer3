@@ -14,47 +14,15 @@
  * limitations under the License.
  */
 
-using IdentityServer3.Core.Extensions;
+using System;
 
 namespace IdentityServer3.Core.Models
 {
     /// <summary>
     /// Class describing the context of the local authentication
     /// </summary>
-    public class LocalAuthenticationContext
+    public class PasswordlessAuthenticationContext
     {
-        /// <summary>
-        /// Gets or sets the name of the user.
-        /// </summary>
-        /// <value>
-        /// The name of the user.
-        /// </value>
-        public string UserName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the password.
-        /// </summary>
-        /// <value>
-        /// The password.
-        /// </value>
-        public string Password { get; set; }
-
-        /// <summary>
-        /// Gets or sets the sign in message.
-        /// </summary>
-        /// <value>
-        /// The sign in message.
-        /// </value>
-        public SignInMessage SignInMessage { get; set; }
-
-        /// <summary>
-        /// Gets or sets the authenticate result.
-        /// </summary>
-        /// <value>
-        /// The authenticate result.
-        /// </value>
-        public AuthenticateResult AuthenticateResult { get; set; }
-
         /// <summary>
         /// Gets or sets the passworless connect code.
         /// </summary>
@@ -80,17 +48,19 @@ namespace IdentityServer3.Core.Models
         public string PasswordlessSessionCode { get; set; }
 
         /// <summary>
-        /// Gets a value indicating whether this instance is passwordless.
+        /// Gets or sets the subjecte.
         /// </summary>
         /// <value>
-        /// <c>true</c> if this instance is passwordless; otherwise, <c>false</c>.
+        /// The subject.
         /// </value>
-        public bool IsPasswordless
-        {
-            get
-            {
-                return PasswordlessConnectType.IsPresent();
-            }
-        }
+        public string Subject { get; set; }
+
+        /// <summary>
+        /// Gets or sets the redirect url.
+        /// </summary>
+        /// <value>
+        /// the redirect url.
+        /// </value>
+        public string RedirectUrl { get; set; }
     }
 }

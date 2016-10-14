@@ -26,20 +26,22 @@ namespace IdentityServer3.Core.ResponseHandling
         private readonly IScopeStore _scopes;
         private readonly IAuthorizationCodeStore _authorizationCodes;
         private readonly IEventService _eventService;
+        private readonly IUserService _userService;
 
         public NativeLoginResponseGenerator(ITokenService tokenService, 
             IRefreshTokenService refreshTokenService, 
             IScopeStore scopes, 
             IAuthorizationCodeStore authorizationCodes, 
-            IEventService eventService)
-        {
-
+            IEventService eventService, 
+            IUserService userService)
+            {
             _tokenService = tokenService;
             _refreshTokenService = refreshTokenService;
             _scopes = scopes;
             _authorizationCodes = authorizationCodes;
             _eventService = eventService;
-        }
+            _userService = userService;
+            }
 
         public async Task<NativeLoginResponse> ProcessAsync(ValidatedNativeLoginRequest request)
         {
@@ -57,7 +59,7 @@ namespace IdentityServer3.Core.ResponseHandling
             }
             else if (request.IsPartiallyAuthenticated)
             {
-                response = await ProcessPartialAuthNTokenRequestAsync(request);                
+                response = await ProcessPartialAuthNTokenRequestAsync(request);
             }
             else
             {
@@ -292,21 +294,49 @@ namespace IdentityServer3.Core.ResponseHandling
             var code = await CreateCodeAsync(request);
 
             var claims = new List<Claim>();
-            claims.AddRange(new []
-            {
-                new Claim(Constants.ClaimTypes.Partial.Reason, request.PartialReason),
-                new Claim(Constants.ClaimTypes.Partial.ConnectSessionCode, code),
-            });
+            claims.Add(new Claim(Constants.ClaimTypes.Partial.Reason, request.PartialReason));
 
-            if (request.PartialReason == Constants.NativeLoginPartialReasons.TwoFactorChallengeRequired)
+            if (request.PartialReason == Constants.NativeLoginPartialReasons.PasswordlessLoginRequired)
             {
-                claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.ClaimTypes.Partial.ConnectSms));
-            }else if (request.PartialReason.IsPresent())
+                claims.Add(new Claim(Constants.ClaimTypes.Partial.ConnectSessionCode, request.PasswordlessOtp));
+            }
+            else
             {
-                claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.ClaimTypes.Partial.ConnectWebView));
+                claims.Add(new Claim(Constants.ClaimTypes.Partial.ConnectSessionCode, code));
+            }
+
+
+            switch (request.PartialReason)
+            {
+                case Constants.NativeLoginPartialReasons.TwoFactorChallengeRequired:
+                    claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.ClaimTypes.Partial.ConnectSms));
+                    break;
+                case Constants.NativeLoginPartialReasons.PasswordlessLoginRequired:
+                    claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.NativeLoginRequest.ConnectTypes.Otp));
+                    break;
+                default:
+                    if (request.PartialReason.IsPresent())
+                    {
+                        claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.ClaimTypes.Partial.ConnectWebView));
+                    }
+                    break;
             }
 
             var identityToken = await _tokenService.CreatePartialAuthNIdentityTokenAsync(tokenRequest, claims).ConfigureAwait(false);
+
+            if (request.PartialReason == Constants.NativeLoginPartialReasons.PasswordlessLoginRequired)
+            {
+                var context = new PasswordlessAuthenticationContext
+                {
+                    PasswordlessConnectCode = code,
+                    PasswordlessConnectType = request.PasswordlessConnect,
+                    PasswordlessSessionCode = request.PasswordlessOtp,
+                    Subject = request.Subject.GetSubjectId(),
+                    RedirectUrl = request.SignInMessage.ReturnUrl
+
+                };
+                await _userService.SendPasswordlessNotificationAsync(context);
+            }
 
             return await _tokenService.CreateSecurityTokenAsync(identityToken);
         }
@@ -319,7 +349,8 @@ namespace IdentityServer3.Core.ResponseHandling
                 Subject = request.Subject,
                 SessionId = request.SessionId,
                 CodeChallenge = request.PasswordlessConnectCode.Sha256(),                                
-                RequestedScopes = request.ValidatedScopes.GrantedScopes      
+                RequestedScopes = request.ValidatedScopes.GrantedScopes,
+                RedirectUri = request.SignInMessage.ReturnUrl
             };
 
             // store id token and access token and return authorization code

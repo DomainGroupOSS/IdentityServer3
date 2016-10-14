@@ -75,5 +75,13 @@ namespace IdentityServer3.Core.Services
         /// <param name="context">The context.</param>
         /// <returns></returns>
         Task IsActiveAsync(IsActiveContext context);
+
+
+        /// <summary>
+        /// This method gets called for local authentication (whenever the user uses the username and password dialog).
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <returns></returns>
+        Task SendPasswordlessNotificationAsync(PasswordlessAuthenticationContext context);
     }
 }

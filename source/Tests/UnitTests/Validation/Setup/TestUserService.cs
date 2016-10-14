@@ -59,6 +59,11 @@ namespace IdentityServer3.Tests.Validation
             return Task.FromResult(0);
         }
 
+        public Task SendPasswordlessNotificationAsync(PasswordlessAuthenticationContext context)
+        {
+            return Task.FromResult(0);
+        }
+
         public Task RequiresTwoFactorChallenge(RequiresTwoFactorChallengeContext context)
         {
             throw new System.NotImplementedException();
