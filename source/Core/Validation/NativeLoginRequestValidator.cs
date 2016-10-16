@@ -27,6 +27,7 @@ namespace IdentityServer3.Core.Validation
         private readonly ScopeValidator _scopeValidator;
         private readonly IEventService _events;
         private readonly ITwoFactorService _twoFactorService;
+        private readonly IRedirectUriValidator _uriValidator;
 
         private static readonly IEnumerable<string> AllowedGrantTypes = new[]
         {
@@ -42,6 +43,7 @@ namespace IdentityServer3.Core.Validation
             Constants.NativeLoginRequest.ConnectTypes.Totp,
             Constants.NativeLoginRequest.ConnectTypes.Otp,
             Constants.NativeLoginRequest.ConnectTypes.NativeLogin,
+            Constants.NativeLoginRequest.ConnectTypes.Email
         };
 
         private ValidatedNativeLoginRequest _validatedRequest;
@@ -60,7 +62,8 @@ namespace IdentityServer3.Core.Validation
             CustomGrantValidator customGrantValidator, 
             ScopeValidator scopeValidator, 
             IEventService events, 
-            ITwoFactorService twoFactorService)
+            ITwoFactorService twoFactorService,
+            IRedirectUriValidator uriValidator)
         {
             _options = options;
             _authorizationCodes = authorizationCodes;
@@ -70,6 +73,7 @@ namespace IdentityServer3.Core.Validation
             _scopeValidator = scopeValidator;
             _events = events;
             _twoFactorService = twoFactorService;
+            _uriValidator = uriValidator;
         }
 
         public async Task<NativeLoginRequestValidationResult> ValidateRequestAsync(NameValueCollection parameters, Client client)
@@ -512,9 +516,12 @@ namespace IdentityServer3.Core.Validation
                 return Invalid(Constants.NativeLoginErrors.InvalidScope);
             }
 
-            var connectCode = parameters.Get(Constants.NativeLoginRequest.ConnectChallenge);
+
             var connectType = parameters.Get(Constants.NativeLoginRequest.Connect);
+            var connectCode = parameters.Get(Constants.NativeLoginRequest.ConnectChallenge);
             var connectSessionCode = parameters.Get(Constants.NativeLoginRequest.ConnectSessionCode);
+            var userName = parameters.Get(Constants.TokenRequest.UserName);
+            var redirectUri = parameters.Get(Constants.TokenRequest.RedirectUri);
 
             if (connectType.IsMissing())
             {
@@ -528,23 +535,50 @@ namespace IdentityServer3.Core.Validation
                 return Invalid(Constants.NativeLoginErrors.InvalidConnectType);
             }
 
-            if (connectSessionCode.IsMissing())
+            if (connectType == Constants.NativeLoginRequest.ConnectTypes.Email)
             {
-                LogError("auth code is missing.");
-                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
+                if (userName.IsMissing())
+                {
+                    LogError("username is missing for passworldless connect type.");
+                    return Invalid(Constants.NativeLoginErrors.UsernameMissing);
+                }
+                
+                if (redirectUri.IsMissing())
+                {
+                    LogError("Redirect URI is missing.");
+                    return Invalid(Constants.TokenErrors.UnauthorizedClient);
+                }
+
+                //////////////////////////////////////////////////////////
+                // check if redirect_uri is valid
+                //////////////////////////////////////////////////////////
+                if (await _uriValidator.IsRedirectUriValidAsync(redirectUri, _validatedRequest.Client) == false)
+                {
+                    LogError("Invalid redirect_uri: " + redirectUri);
+                    return Invalid(Constants.AuthorizeErrors.UnauthorizedClient);
+                }
+            }
+            else
+            {
+                if (connectSessionCode.IsMissing())
+                {
+                    LogError("auth code is missing.");
+                    return Invalid(Constants.NativeLoginErrors.InvalidGrant);
+                }
+
+                if (connectSessionCode.Length > _options.InputLengthRestrictions.AuthorizationCode)
+                {
+                    LogError("auth code too long.");
+                    return Invalid(Constants.NativeLoginErrors.InvalidGrant);
+                }
+
+                if (connectCode.IsMissing() && connectType != Constants.NativeLoginRequest.ConnectTypes.Otp)
+                {
+                    LogError("connect code missing.");
+                    return Invalid(Constants.NativeLoginErrors.InvalidConnectChallenge);
+                }
             }
 
-            if (connectSessionCode.Length > _options.InputLengthRestrictions.AuthorizationCode)
-            {
-                LogError("auth code too long.");
-                return Invalid(Constants.NativeLoginErrors.InvalidGrant);
-            }
-
-            if (connectCode.IsMissing() && connectType != Constants.NativeLoginRequest.ConnectTypes.Otp)
-            { 
-                LogError("connect code missing.");
-                return Invalid(Constants.NativeLoginErrors.InvalidConnectChallenge);
-            }
 
             _validatedRequest.PasswordlessConnect = connectType;
             _validatedRequest.PasswordlessConnectCode = connectCode;
@@ -557,6 +591,7 @@ namespace IdentityServer3.Core.Validation
 
             // pass through client_id
             signInMessage.ClientId = _validatedRequest.Client.ClientId;
+            signInMessage.ReturnUrl = redirectUri;
 
             // process acr values
             var acr = parameters.Get(Constants.AuthorizeRequest.AcrValues);
@@ -594,6 +629,7 @@ namespace IdentityServer3.Core.Validation
             }
 
             _validatedRequest.SignInMessage = signInMessage;
+            
 
             /////////////////////////////////////////////
             // authenticate user
@@ -603,7 +639,8 @@ namespace IdentityServer3.Core.Validation
                 PasswordlessConnectType = connectType,
                 PasswordlessConnectCode = connectCode,           
                 PasswordlessSessionCode = connectSessionCode,
-                SignInMessage = signInMessage
+                SignInMessage = signInMessage,
+                UserName = userName
             };
 
             await _users.AuthenticateLocalAsync(authenticationContext);
@@ -651,7 +688,7 @@ namespace IdentityServer3.Core.Validation
             if (authnResult.IsPartialSignIn)
             {
                 _validatedRequest.PartialReason = authnResult.PartialSignInReason;
-
+                _validatedRequest.PasswordlessOtp = authenticationContext.PasswordlessSessionCode;
                 await RaiseNativePartialLoginSuccessEventAsync(authnResult.User.Identities.First(), signInMessage);
 
                 return Partial(authnResult.PartialSignInReason);

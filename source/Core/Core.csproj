@@ -148,6 +148,7 @@
     <Compile Include="Endpoints\Models\NativeLoginResponse.cs" />
     <Compile Include="Endpoints\NativeAuthenticationController.cs" />
     <Compile Include="Models\AuthenticationFailedCode.cs" />
+    <Compile Include="Models\Contexts\PasswordlessAuthenticationContext.cs" />
     <Compile Include="Models\RequiresTwoFactorChallengeContext.cs" />
     <Compile Include="Models\LastUserNameCookieMessage.cs" />
     <Compile Include="ResponseHandling\NativeLoginResponseGenerator.cs" />

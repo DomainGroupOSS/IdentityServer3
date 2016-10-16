@@ -67,6 +67,11 @@ namespace IdentityServer3.Core.Services.Default
             return inner.IsActiveAsync(context);
         }
 
+        public Task SendPasswordlessNotificationAsync(PasswordlessAuthenticationContext context)
+        {
+            return inner.SendPasswordlessNotificationAsync(context);
+        }
+
         public Task SignOutAsync(SignOutContext context)
         {
             return inner.SignOutAsync(context);

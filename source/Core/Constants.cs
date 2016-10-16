@@ -122,6 +122,7 @@ namespace IdentityServer3.Core
                 public const string Otp = "otp";
                 public const string Totp = "totp";
                 public const string NativeLogin = "native";
+                public const string Email = "email";
             }
 
         }
@@ -411,6 +412,7 @@ namespace IdentityServer3.Core
             public const string UnsupportedGrantType = "unsupported_grant_type";
             public const string UnsupportedResponseType = "unsupported_response_type";
             public const string InvalidScope = "invalid_scope";
+            public const string UsernameMissing = "username_missing";
         }
 
         public static class NativeLoginPartialReasons
@@ -421,6 +423,7 @@ namespace IdentityServer3.Core
             public const string EmailVerificationRequired = "email_verification_required";
             public const string RequiresPasswordReset = "requires_password_reset";
             public const string LoginInstructionSteps = "login_instructions";
+            public const string PasswordlessLoginRequired = "passwordless_login_required";
         }
 
         public static class ProtectedResourceErrors
@@ -662,6 +665,8 @@ namespace IdentityServer3.Core
                 public const string ConnectSms = "sms";
                 public const string ConnectWebView = "webview";
                 public const string ConnectSessionCode = "connect_session";
+                public const string ConnectEmail = "email";
+                public const string ConnectCode = "connect_code";
             }
         }
 
