@@ -43,7 +43,8 @@ namespace IdentityServer3.Core.Validation
             Constants.NativeLoginRequest.ConnectTypes.Totp,
             Constants.NativeLoginRequest.ConnectTypes.Otp,
             Constants.NativeLoginRequest.ConnectTypes.NativeLogin,
-            Constants.NativeLoginRequest.ConnectTypes.Email
+            Constants.NativeLoginRequest.ConnectTypes.Email,
+            Constants.NativeLoginRequest.ConnectTypes.MobilePhone
         };
 
         private ValidatedNativeLoginRequest _validatedRequest;
@@ -535,27 +536,31 @@ namespace IdentityServer3.Core.Validation
                 return Invalid(Constants.NativeLoginErrors.InvalidConnectType);
             }
 
-            if (connectType == Constants.NativeLoginRequest.ConnectTypes.Email)
+            if (connectType == Constants.NativeLoginRequest.ConnectTypes.Email || 
+                connectType == Constants.NativeLoginRequest.ConnectTypes.MobilePhone)
             {
                 if (userName.IsMissing())
                 {
                     LogError("username is missing for passworldless connect type.");
                     return Invalid(Constants.NativeLoginErrors.UsernameMissing);
                 }
-                
-                if (redirectUri.IsMissing())
-                {
-                    LogError("Redirect URI is missing.");
-                    return Invalid(Constants.TokenErrors.UnauthorizedClient);
-                }
 
-                //////////////////////////////////////////////////////////
-                // check if redirect_uri is valid
-                //////////////////////////////////////////////////////////
-                if (await _uriValidator.IsRedirectUriValidAsync(redirectUri, _validatedRequest.Client) == false)
+                if (connectType == Constants.NativeLoginRequest.ConnectTypes.Email)
                 {
-                    LogError("Invalid redirect_uri: " + redirectUri);
-                    return Invalid(Constants.AuthorizeErrors.UnauthorizedClient);
+                    if (redirectUri.IsMissing())
+                    {
+                        LogError("Redirect URI is missing.");
+                        return Invalid(Constants.TokenErrors.UnauthorizedClient);
+                    }
+
+                    //////////////////////////////////////////////////////////
+                    // check if redirect_uri is valid
+                    //////////////////////////////////////////////////////////
+                    if (await _uriValidator.IsRedirectUriValidAsync(redirectUri, _validatedRequest.Client) == false)
+                    {
+                        LogError("Invalid redirect_uri: " + redirectUri);
+                        return Invalid(Constants.AuthorizeErrors.UnauthorizedClient);
+                    }
                 }
             }
             else

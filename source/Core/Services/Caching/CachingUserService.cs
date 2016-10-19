@@ -128,11 +128,6 @@ namespace IdentityServer3.Core.Services.Caching
             return inner.IsActiveAsync(context);
         }
 
-        public Task SendPasswordlessNotificationAsync(PasswordlessAuthenticationContext context)
-        {
-            return inner.SendPasswordlessNotificationAsync(context);
-        }
-
         private string GetKey(ClaimsPrincipal subject, IEnumerable<string> requestedClaimTypes)
         {
             var sub = subject.GetSubjectId();
