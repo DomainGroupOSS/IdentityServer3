@@ -160,6 +160,24 @@ namespace IdentityServer3.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid Email.
+        /// </summary>
+        public static string InvalidEmail {
+            get {
+                return ResourceManager.GetString("InvalidEmail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid Mobile Phone Number.
+        /// </summary>
+        public static string InvalidMobilephoneNumber {
+            get {
+                return ResourceManager.GetString("InvalidMobilephoneNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Challenge code or session code is invalid.
         /// </summary>
         public static string InvalidPasswordlessCodes {
@@ -246,6 +264,15 @@ namespace IdentityServer3.Core.Resources {
         public static string NoSubjectFromExternalProvider {
             get {
                 return ResourceManager.GetString("NoSubjectFromExternalProvider", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not able to send SMS code to provided mobile phone.
+        /// </summary>
+        public static string NotAbleToSendSmsCode {
+            get {
+                return ResourceManager.GetString("NotAbleToSendSmsCode", resourceCulture);
             }
         }
         

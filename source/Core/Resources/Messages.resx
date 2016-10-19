@@ -213,4 +213,13 @@
   <data name="PasswordlessCodeOrSessionNotFound" xml:space="preserve">
     <value>The challenge or session code is not valid, expired or does not exist</value>
   </data>
+  <data name="InvalidMobilephoneNumber" xml:space="preserve">
+    <value>Invalid Mobile Phone Number</value>
+  </data>
+  <data name="NotAbleToSendSmsCode" xml:space="preserve">
+    <value>Not able to send SMS code to provided mobile phone</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>Invalid Email</value>
+  </data>
 </root>
