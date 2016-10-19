@@ -26,7 +26,6 @@ namespace IdentityServer3.Core.ResponseHandling
         private readonly IScopeStore _scopes;
         private readonly IAuthorizationCodeStore _authorizationCodes;
         private readonly IEventService _eventService;
-        private readonly IUserService _userService;
 
         public NativeLoginResponseGenerator(ITokenService tokenService, 
             IRefreshTokenService refreshTokenService, 
@@ -40,8 +39,7 @@ namespace IdentityServer3.Core.ResponseHandling
             _scopes = scopes;
             _authorizationCodes = authorizationCodes;
             _eventService = eventService;
-            _userService = userService;
-            }
+        }
 
         public async Task<NativeLoginResponse> ProcessAsync(ValidatedNativeLoginRequest request)
         {
@@ -293,50 +291,9 @@ namespace IdentityServer3.Core.ResponseHandling
 
             var code = await CreateCodeAsync(request);
 
-            var claims = new List<Claim>();
-            claims.Add(new Claim(Constants.ClaimTypes.Partial.Reason, request.PartialReason));
-
-            if (request.PartialReason == Constants.NativeLoginPartialReasons.PasswordlessLoginRequired)
-            {
-                claims.Add(new Claim(Constants.ClaimTypes.Partial.ConnectSessionCode, request.PasswordlessOtp));
-            }
-            else
-            {
-                claims.Add(new Claim(Constants.ClaimTypes.Partial.ConnectSessionCode, code));
-            }
-
-
-            switch (request.PartialReason)
-            {
-                case Constants.NativeLoginPartialReasons.TwoFactorChallengeRequired:
-                    claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.ClaimTypes.Partial.ConnectSms));
-                    break;
-                case Constants.NativeLoginPartialReasons.PasswordlessLoginRequired:
-                    claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.NativeLoginRequest.ConnectTypes.Otp));
-                    break;
-                default:
-                    if (request.PartialReason.IsPresent())
-                    {
-                        claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.ClaimTypes.Partial.ConnectWebView));
-                    }
-                    break;
-            }
+            var claims = GetPartialAuthenitcationClaims(request, code);
 
             var identityToken = await _tokenService.CreatePartialAuthNIdentityTokenAsync(tokenRequest, claims).ConfigureAwait(false);
-
-            if (request.PartialReason == Constants.NativeLoginPartialReasons.PasswordlessLoginRequired)
-            {
-                var context = new PasswordlessAuthenticationContext
-                {
-                    PasswordlessConnectCode = code,
-                    PasswordlessConnectType = request.PasswordlessConnect,
-                    PasswordlessSessionCode = request.PasswordlessOtp,
-                    Subject = request.Subject.GetSubjectId(),
-                    RedirectUrl = request.SignInMessage.ReturnUrl
-
-                };
-                await _userService.SendPasswordlessNotificationAsync(context);
-            }
 
             return await _tokenService.CreateSecurityTokenAsync(identityToken);
         }
@@ -407,6 +364,35 @@ namespace IdentityServer3.Core.ResponseHandling
         {
             // for now we only support client generated proof keys
             return request.ProofKey;
+        }
+
+        private IEnumerable<Claim> GetPartialAuthenitcationClaims(ValidatedNativeLoginRequest request, string code)
+        {
+            var claims = new List<Claim>();
+            claims.Add(new Claim(Constants.ClaimTypes.Partial.Reason, request.PartialReason));
+
+            claims.Add(request.PartialReason == Constants.NativeLoginPartialReasons.PasswordlessLoginRequired
+                ? new Claim(Constants.ClaimTypes.Partial.ConnectSessionCode, request.PasswordlessOtp)
+                : new Claim(Constants.ClaimTypes.Partial.ConnectSessionCode, code));
+
+            switch (request.PartialReason)
+            {
+                case Constants.NativeLoginPartialReasons.TwoFactorChallengeRequired:
+                case Constants.NativeLoginPartialReasons.PasswordlessSmsRequired:
+                    claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.ClaimTypes.Partial.ConnectSms));
+                    break;
+                case Constants.NativeLoginPartialReasons.PasswordlessLoginRequired:
+                    claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.NativeLoginRequest.ConnectTypes.Otp));
+                    break;
+                default:
+                    if (request.PartialReason.IsPresent())
+                    {
+                        claims.Add(new Claim(Constants.ClaimTypes.Partial.Connect, Constants.ClaimTypes.Partial.ConnectWebView));
+                    }
+                    break;
+            }
+
+            return claims;
         }
     }
 }

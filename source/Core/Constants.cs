@@ -123,6 +123,7 @@ namespace IdentityServer3.Core
                 public const string Totp = "totp";
                 public const string NativeLogin = "native";
                 public const string Email = "email";
+                public const string MobilePhone = "mobile_phone";
             }
 
         }
@@ -424,6 +425,7 @@ namespace IdentityServer3.Core
             public const string RequiresPasswordReset = "requires_password_reset";
             public const string LoginInstructionSteps = "login_instructions";
             public const string PasswordlessLoginRequired = "passwordless_login_required";
+            public const string PasswordlessSmsRequired = "passwordless_sms_required";
         }
 
         public static class ProtectedResourceErrors
