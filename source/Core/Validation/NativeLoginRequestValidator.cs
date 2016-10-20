@@ -678,7 +678,7 @@ namespace IdentityServer3.Core.Validation
 
                 if (authnResult != null)
                 {
-                    return Invalid(error, authnResult.ErrorMessage);
+                    return authnResult.AuthenticationFailureCode == AuthenticationFailedCode.None ? Invalid(error, authnResult.ErrorMessage) : Invalid(authnResult.AuthenticationFailureCode.ToString(),authnResult.ErrorMessage);
                 }
 
                 return Invalid(Constants.TokenErrors.InvalidGrant);

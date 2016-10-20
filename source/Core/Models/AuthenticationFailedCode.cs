@@ -13,6 +13,9 @@ namespace IdentityServer3.Core.Models
         InvalidCredentials,
         InvalidPasswordlessCodes,
         LoginNotAllowed,
-        PasswordlessCodeOrSessionNotFound
+        PasswordlessCodeOrSessionNotFound,
+        InvalidMobilephoneNumber,
+        InvalidEmail,
+        NotAbleToSendSmsCode
     }
 }

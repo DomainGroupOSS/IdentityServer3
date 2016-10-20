@@ -41,7 +41,10 @@ namespace IdentityServer3.Core.Models
             { AuthenticationFailedCode.AccountRequiresSecondFactorToAuthenticate, Resources.Messages.AccountRequiresSecondFactorToAuthenticate },
             { AuthenticationFailedCode.FailedLoginAttemptsExceeded, Resources.Messages.FailedLoginAttemptsExceeded },
             { AuthenticationFailedCode.LoginNotAllowed, Resources.Messages.LoginNotAllowed },
-            { AuthenticationFailedCode.PasswordlessCodeOrSessionNotFound, Resources.Messages.PasswordlessCodeOrSessionNotFound }
+            { AuthenticationFailedCode.PasswordlessCodeOrSessionNotFound, Resources.Messages.PasswordlessCodeOrSessionNotFound },
+            { AuthenticationFailedCode.InvalidMobilephoneNumber, Resources.Messages.InvalidMobilephoneNumber },
+            { AuthenticationFailedCode.InvalidEmail, Resources.Messages.InvalidEmail },
+            { AuthenticationFailedCode.NotAbleToSendSmsCode, Resources.Messages.NotAbleToSendSmsCode }
         });
 
         /// <summary>
@@ -77,6 +80,7 @@ namespace IdentityServer3.Core.Models
             if (authenticationFailureCode != AuthenticationFailedCode.None)
             {
                 ErrorMessage = AuthFailureReasonMessages[authenticationFailureCode];
+                AuthenticationFailureCode = authenticationFailureCode;
             }
         }
 
