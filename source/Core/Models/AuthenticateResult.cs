@@ -77,6 +77,7 @@ namespace IdentityServer3.Core.Models
         /// <param name="authenticationFailureCode">The authentication failure code.</param>
         public AuthenticateResult(AuthenticationFailedCode authenticationFailureCode)
         {
+            AuthenticationFailureCode = authenticationFailureCode;
             if (authenticationFailureCode != AuthenticationFailedCode.None)
             {
                 ErrorMessage = AuthFailureReasonMessages[authenticationFailureCode];

@@ -36,6 +36,11 @@ namespace IdentityServer3.Core.Services.Default
         /// The login view
         /// </summary>
         public const string LoginView = "login";
+
+        /// <summary>
+        /// The signup view
+        /// </summary>
+        public const string SignupView = "signup";
         /// <summary>
         /// The logout view
         /// </summary>
@@ -103,7 +108,7 @@ namespace IdentityServer3.Core.Services.Default
         /// </returns>
         public virtual Task<Stream> Login(LoginViewModel model, SignInMessage message)
         {
-            return Render(model, LoginView);
+            return model.IsSignup ? Render(model,SignupView) : Render(model, LoginView);
         }
 
         /// <summary>

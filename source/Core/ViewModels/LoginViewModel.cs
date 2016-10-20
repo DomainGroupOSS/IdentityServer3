@@ -16,6 +16,7 @@
 
 using IdentityServer3.Core.Configuration;
 using System.Collections.Generic;
+using System.Net.Configuration;
 
 namespace IdentityServer3.Core.ViewModels
 {
@@ -24,6 +25,7 @@ namespace IdentityServer3.Core.ViewModels
     /// </summary>
     public class LoginViewModel : ErrorViewModel
     {
+
         /// <summary>
         /// The URL to POST credentials to for local logins. Will be <c>null</c> if local login is disabled.
         /// <see cref="LoginCredentials"/> for the model for the submitted data.
@@ -32,6 +34,11 @@ namespace IdentityServer3.Core.ViewModels
         /// The login URL.
         /// </value>
         public string LoginUrl { get; set; }
+
+        /// <summary>
+        /// Same as LoginUrl (Needed for react component)
+        /// </summary>
+        public string SignupUrl { get { return LoginUrl;} }
 
         /// <summary>
         /// The anti forgery values.
@@ -125,5 +132,10 @@ namespace IdentityServer3.Core.ViewModels
         /// Registration
         /// </summary>
         public bool IsSignup { get; set; }
+
+        /// <summary>
+        /// Non error message to alert to user
+        /// </summary>
+        public string AlertMessage { get; set; }
     }
 }
