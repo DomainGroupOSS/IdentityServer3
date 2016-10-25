@@ -17,6 +17,7 @@
 using IdentityServer3.Core.Configuration;
 using System.Collections.Generic;
 using System.Net.Configuration;
+using IdentityServer3.Core.Models;
 
 namespace IdentityServer3.Core.ViewModels
 {
@@ -136,6 +137,6 @@ namespace IdentityServer3.Core.ViewModels
         /// <summary>
         /// Non error message to alert to user
         /// </summary>
-        public string AlertMessage { get; set; }
+        public AlertMessageType? AlertMessage { get; set; }
     }
 }

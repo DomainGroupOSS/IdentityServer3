@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace IdentityServer3.Core.Services.Default
 {
     /// <summary>
@@ -73,7 +74,8 @@ namespace IdentityServer3.Core.Services.Default
 
         static readonly Newtonsoft.Json.JsonSerializerSettings settings = new Newtonsoft.Json.JsonSerializerSettings()
         {
-            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+            Converters = new List<Newtonsoft.Json.JsonConverter> { new Newtonsoft.Json.Converters.StringEnumConverter()}
         };
 
         /// <summary>

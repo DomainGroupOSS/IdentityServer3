@@ -24,5 +24,15 @@ namespace IdentityServer3.Core.Extensions
         {
             return (claim != null && claim.Value.IsPresent());
         }
+
+        public static string GetValueOrDefault(this Claim claim, string defaultValue)
+        {
+            if (claim == null || claim.Value == null)
+            {
+                return defaultValue;
+            }
+
+            return claim.Value;
+        }
     }
 }

@@ -290,9 +290,7 @@ namespace IdentityServer3.Core.Endpoints
                     return
                         await
                             RenderLoginPage(signInMessage, signin, authResult.ErrorMessage, model.Username,
-                                model.RememberMe == true,
-                                string.Format(
-                                    "Account {0} Created Successfully! Please contact our support team on 1300 799 109 to have your access to this application configured.", model.Username));
+                                model.RememberMe == true, AlertMessageType.RegisteredUserRestrictedAccess);
                 }
                 else
                 {
@@ -454,10 +452,10 @@ namespace IdentityServer3.Core.Endpoints
                 if (authResult.AuthenticationFailureCode == AuthenticationFailedCode.LoginNotAllowed)
                 {
                     Logger.Info("User created successfully, but requires Access");
-
+                    var username = externalIdentity.Claims.SingleOrDefault(x => x.Type == Constants.ClaimTypes.Email).HasValue() ? externalIdentity.Claims.SingleOrDefault(x => x.Type == Constants.ClaimTypes.Email).GetValueOrDefault(null) : externalIdentity.Claims.SingleOrDefault(x => x.Type == Constants.ClaimTypes.PhoneNumber).GetValueOrDefault(null);
                     return
                         await
-                            RenderLoginPage(signInMessage, signInId, authResult.ErrorMessage, alertMessage: string.Format("Account {0} Created Successfully! Please contact our support team on 1300 799 109 to have your access to this application configured.", externalIdentity.Claims.SingleOrDefault(x => x.Type == Constants.ClaimTypes.Email)));
+                            RenderLoginPage(signInMessage, signInId, authResult.ErrorMessage, username, alertMessage : AlertMessageType.RegisteredUserRestrictedAccess );
                 }
 
                 Logger.WarnFormat("user service returned error message: {0}", authResult.ErrorMessage);
@@ -938,7 +936,7 @@ namespace IdentityServer3.Core.Endpoints
             return true;
         }
 
-        private async Task<IHttpActionResult> RenderLoginPage(SignInMessage message, string signInMessageId, string errorMessage = null, string username = null, bool rememberMe = false, string alertMessage = null)
+        private async Task<IHttpActionResult> RenderLoginPage(SignInMessage message, string signInMessageId, string errorMessage = null, string username = null, bool rememberMe = false, AlertMessageType? alertMessage = null)
         {
             if (message == null) throw new ArgumentNullException("message");
 
