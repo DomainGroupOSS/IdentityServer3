@@ -24,7 +24,7 @@ namespace IdentityServer3.Core.Validation
         private readonly IUserService _users;
         private readonly CustomGrantValidator _customGrantValidator;
         private readonly IRefreshTokenStore _refreshTokens;
-        private readonly ScopeValidator _scopeValidator;
+        private readonly IScopeValidator _scopeValidator;
         private readonly IEventService _events;
         private readonly ITwoFactorService _twoFactorService;
         private readonly IRedirectUriValidator _uriValidator;
@@ -61,7 +61,7 @@ namespace IdentityServer3.Core.Validation
             IAuthorizationCodeStore authorizationCodes, 
             IRefreshTokenStore refreshTokens, IUserService users, 
             CustomGrantValidator customGrantValidator, 
-            ScopeValidator scopeValidator, 
+            IScopeValidator scopeValidator, 
             IEventService events, 
             ITwoFactorService twoFactorService,
             IRedirectUriValidator uriValidator)
