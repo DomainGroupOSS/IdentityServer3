@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 
 namespace IdentityServer3.Core.Validation
 {
-    internal class ClientSecretValidator
+    internal class ClientSecretValidator : IClientSecretValidator
     {
         private readonly static ILog Logger = LogProvider.GetCurrentClassLogger();
 

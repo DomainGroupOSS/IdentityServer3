@@ -21,14 +21,14 @@ namespace IdentityServer3.Core.Endpoints
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
         private readonly ClientSecretValidator _clientValidator;
         private readonly IEventService _eventService;
-        private readonly NativeLoginRequestValidator _requestValidator;
+        private readonly INativeLoginRequestValidator _requestValidator;
         private readonly NativeLoginResponseGenerator _responseGenerator;
 
 
         public NativeAuthenticationController(
             IEventService eventService,
             ClientSecretValidator clientValidator,
-            NativeLoginRequestValidator requestValidator,
+            INativeLoginRequestValidator requestValidator,
             NativeLoginResponseGenerator responseGenerator)
         {
             _eventService = eventService;

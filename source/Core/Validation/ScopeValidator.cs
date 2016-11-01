@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 namespace IdentityServer3.Core.Validation
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class ScopeValidator : IScopeValidator
+    public class ScopeValidator
     {
         private readonly static ILog Logger = LogProvider.GetCurrentClassLogger();
         

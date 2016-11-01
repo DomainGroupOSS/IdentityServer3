@@ -63,6 +63,6 @@ namespace IdentityServer3.Core.Validation
         /// <value>
         /// The validated scopes.
         /// </value>
-        public IScopeValidator ValidatedScopes { get; set; }
+        public ScopeValidator ValidatedScopes { get; set; }
     }
 }

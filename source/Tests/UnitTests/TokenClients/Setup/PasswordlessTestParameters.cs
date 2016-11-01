@@ -1,5 +1,6 @@
 ﻿using System.Collections.Specialized;
 using IdentityServer3.Core;
+using IdentityServer3.Core.Models;
 
 namespace IdentityServer3.Tests.TokenClients.Setup
 {
@@ -8,7 +9,7 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         public PasswordlessTestParameters()
         {
             Add(Constants.TokenRequest.GrantType, Constants.GrantTypes.Passwordless);
-            Add(Constants.TokenRequest.Scope, "test-scope");
+            Add(Constants.TokenRequest.Scope, StandardScopes.Profile.Name);
             Add(Constants.NativeLoginRequest.ConnectChallenge, "test-connect-code");
             Add(Constants.NativeLoginRequest.ConnectSessionCode,"test-connect-session-code");
             Add(Constants.TokenRequest.UserName, "test-username");
@@ -77,6 +78,12 @@ namespace IdentityServer3.Tests.TokenClients.Setup
             Add(Constants.TokenRequest.GrantType, "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
         }
 
+        public void ChangeToInvalidScope()
+        {
+            RemoveScope();
+            Add(Constants.TokenRequest.Scope, "invalid-scope");
+        }
+
         public void RemoveUsername()
         {
             Remove(Constants.TokenRequest.UserName);
@@ -85,6 +92,11 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         public void RemoveRedirectUri()
         {
             Remove(Constants.TokenRequest.RedirectUri);
+        }
+
+        public void RemoveScope()
+        {
+            Remove(Constants.TokenRequest.Scope);
         }
     }
 }

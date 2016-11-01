@@ -274,9 +274,10 @@
     <Compile Include="Services\ISigningKeyService.cs" />
     <Compile Include="Services\ITwoFactorService.cs" />
     <Compile Include="Validation\BasicAuthenticationSecretParser.cs" />
+    <Compile Include="Validation\IClientSecretValidator.cs" />
+    <Compile Include="Validation\INativeLoginRequestValidator.cs" />
     <Compile Include="Validation\IntrospectionRequestValidationResult.cs" />
     <Compile Include="Validation\IntrospectionRequestValidator.cs" />
-    <Compile Include="Validation\IScopeValidator.cs" />
     <Compile Include="Validation\NativeLoginRequestValidationResult.cs" />
     <Compile Include="Validation\NativeLoginRequestValidator.cs" />
     <Compile Include="Validation\RequestedTokenTypes.cs" />

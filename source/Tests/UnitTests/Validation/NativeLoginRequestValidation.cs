@@ -88,8 +88,8 @@ namespace IdentityServer3.Tests.Validation
         [Fact]
         public async void Invalid_Scopes_Passed_Return_Error_On_Passwordless()
         {
-            _validatorSetup.ScopeValidatorReturnsInvalid();
             _validatorSetup.InitializeValidator();
+            _parameters.ChangeToInvalidScope();
 
             var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
 
@@ -112,7 +112,6 @@ namespace IdentityServer3.Tests.Validation
         [Fact]
         public async void Missing_ConnectType_Return_Error_On_Passwordless()
         {
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
             _parameters.RemoveConnectType();
 
@@ -125,7 +124,6 @@ namespace IdentityServer3.Tests.Validation
         [Fact]
         public async void Invalid_ConnectType_Return_Error_On_Passwordless()
         {
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
             _parameters.ChangeToInvalidConnectType();
 
@@ -138,7 +136,6 @@ namespace IdentityServer3.Tests.Validation
         [Fact]
         public async void Missing_Username_Email_ConnectType_Return_Error_On_Passwordless()
         {
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
             _parameters.ChangeToEmailConnectType();
             _parameters.RemoveUsername();
@@ -152,7 +149,6 @@ namespace IdentityServer3.Tests.Validation
         [Fact]
         public async void Missing_RedirectUri_Email_ConnectType_Return_Error_On_Passwordless()
         {
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
             _parameters.ChangeToEmailConnectType();
             _parameters.RemoveRedirectUri();
@@ -166,7 +162,6 @@ namespace IdentityServer3.Tests.Validation
         [Fact]
         public async void Invalid_RedirectUri_Email_ConnectType_Return_Error_On_Passwordless()
         {
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.RedirectUriValidatorReturnsInvalid();
             _validatorSetup.InitializeValidator();
             _parameters.ChangeToEmailConnectType();
@@ -180,7 +175,6 @@ namespace IdentityServer3.Tests.Validation
         [Fact]
         public async void Missing_Username_MobilePhone_ConnectType_On_Passwordless()
         {
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
             _parameters.ChangeToMobilePhoneConnectType();
             _parameters.RemoveUsername();
@@ -194,7 +188,6 @@ namespace IdentityServer3.Tests.Validation
         [Fact]
         public async void Missing_ConnectSessionCode_Return_Error_On_Passwordless()
         {
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
             _parameters.RemoveSessionCode();
 
@@ -207,7 +200,6 @@ namespace IdentityServer3.Tests.Validation
         [Fact]
         public async void Long_ConnectSessionCode_Return_Error_On_Passwordless()
         {
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
             _parameters.ChangeToLongSessionCode();
 
@@ -220,7 +212,6 @@ namespace IdentityServer3.Tests.Validation
         [Fact]
         public async void Missing_ConnectCode_ReturnError_On_Passwordless()
         {
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
             _parameters.RemoveConnectCode();
 
@@ -234,7 +225,6 @@ namespace IdentityServer3.Tests.Validation
         public async void Invalid_User_Credentials_Return_Error_On_Passwordless()
         {
             _validatorSetup.UserAuthenticateLocalReturnsInvalid();
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
 
             var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
@@ -246,7 +236,6 @@ namespace IdentityServer3.Tests.Validation
         [Fact]
         public async void Empty_User_Credentials_Return_Error_On_Passwordless()
         {
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
 
             var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
@@ -259,7 +248,6 @@ namespace IdentityServer3.Tests.Validation
         public async void Valid_Partial_Login_Request_On_Passwordless()
         {
             _validatorSetup.UserAuthenticateLocalReturnsPartial();
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
 
             var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
@@ -273,7 +261,6 @@ namespace IdentityServer3.Tests.Validation
         public async void Valid_Passwordless_Native_Request_Returns_Valid()
         {
             _validatorSetup.UserAuthenticateLocalReturnsValid();
-            _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
 
             var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);

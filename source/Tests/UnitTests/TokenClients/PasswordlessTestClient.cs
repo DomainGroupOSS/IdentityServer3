@@ -9,6 +9,7 @@ namespace IdentityServer3.Tests.TokenClients
         {
             AllowedCustomGrantTypes.Add(Constants.GrantTypes.DomainNative);
             AllowedCustomGrantTypes.Add(Constants.GrantTypes.Passwordless);
+            AllowedScopes.Add(StandardScopes.Profile.Name);
             ClientId = "test-client";
         }
 
@@ -21,7 +22,5 @@ namespace IdentityServer3.Tests.TokenClients
         {
             AllowedCustomGrantTypes.Remove(Constants.GrantTypes.DomainNative);
         }
-
-
     }
 }

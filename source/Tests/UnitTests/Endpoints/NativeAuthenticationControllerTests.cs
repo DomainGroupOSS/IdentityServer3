@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using IdentityServer3.Core.Endpoints;
 
 namespace IdentityServer3.Tests.Endpoints
 {
-    public class NativeAuthenticationControllerTests : IdSvrHostTestBase
+    public class NativeAuthenticationControllerTests
     {
-
+        public NativeAuthenticationControllerTests()
+        {
+//            var controller = new NativeAuthenticationController();
+        }
     }
 }

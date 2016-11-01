@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using IdentityServer3.Core.Configuration;
 using IdentityServer3.Core.Models;
 using IdentityServer3.Core.Services;
+using IdentityServer3.Core.Services.InMemory;
 using IdentityServer3.Core.Validation;
+using IdentityServer3.Tests.Validation;
 using Moq;
 
 namespace IdentityServer3.Tests.TokenClients.Setup
@@ -21,7 +23,7 @@ namespace IdentityServer3.Tests.TokenClients.Setup
             EventServiceMock = new Mock<IEventService>();
             TwoFactorServiceMock = new Mock<ITwoFactorService>();
             RedirectUrlValidatorMock = new Mock<IRedirectUriValidator>();
-            ScopeValidatorMock = new Mock<IScopeValidator>();
+            ScopeValidator = new ScopeValidator(new InMemoryScopeStore(TestScopes.Get()));
         }
 
         internal NativeLoginRequestValidator Validator { get; set; }
@@ -34,32 +36,20 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         internal Mock<IEventService> EventServiceMock { get; set; }
         internal Mock<ITwoFactorService> TwoFactorServiceMock { get; set; }
         internal Mock<IRedirectUriValidator> RedirectUrlValidatorMock { get; set; }
-        public Mock<IScopeValidator> ScopeValidatorMock { get; set; }
+        public ScopeValidator ScopeValidator { get; set; }
 
         public void InitializeValidator()
         {
             var grantValidator = new Core.Validation.CustomGrantValidator(new[] {CustomGrantValidatorMock.Object});
 
             Validator = new NativeLoginRequestValidator(Options, AuthorizationCodeStoreMock.Object,
-                RefreshTokenStoreMock.Object, UserServiceMock.Object, grantValidator, ScopeValidatorMock.Object,
+                RefreshTokenStoreMock.Object, UserServiceMock.Object, grantValidator, ScopeValidator,
                 EventServiceMock.Object, TwoFactorServiceMock.Object, RedirectUrlValidatorMock.Object);
         }
 
         public void DisableLocalAuthentication()
         {
             Options.AuthenticationOptions.EnableLocalLogin = false;
-        }
-
-        public void ScopeValidatorReturnsValid()
-        {
-            ScopeValidatorMock.Setup(y => y.AreScopesAllowed(It.IsAny<Client>(), It.IsAny<List<string>>())).Returns(true);
-            ScopeValidatorMock.Setup(y => y.AreScopesValidAsync(It.IsAny<List<string>>())).Returns(Task.FromResult(true));
-        }
-
-        public void ScopeValidatorReturnsInvalid()
-        {
-            ScopeValidatorMock.Setup(y => y.AreScopesAllowed(It.IsAny<Client>(), It.IsAny<List<string>>())).Returns(false);
-            ScopeValidatorMock.Setup(y => y.AreScopesValidAsync(It.IsAny<List<string>>())).Returns(Task.FromResult(false));
         }
 
         public void RedirectUriValidatorReturnsValid()
