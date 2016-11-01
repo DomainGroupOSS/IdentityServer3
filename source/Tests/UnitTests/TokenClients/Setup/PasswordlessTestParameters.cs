@@ -39,6 +39,12 @@ namespace IdentityServer3.Tests.TokenClients.Setup
             Add(Constants.NativeLoginRequest.Connect, Constants.NativeLoginRequest.ConnectTypes.Otp);
         }
 
+        public void ChangeToInvalidConnectType()
+        {
+            RemoveConnectType();
+            Add(Constants.NativeLoginRequest.Connect, "invalid");
+        }
+
         public void RemoveSessionCode()
         {
             Remove(Constants.NativeLoginRequest.ConnectSessionCode);
@@ -69,6 +75,16 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         {
             Remove(Constants.TokenRequest.GrantType);
             Add(Constants.TokenRequest.GrantType, "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
+        }
+
+        public void RemoveUsername()
+        {
+            Remove(Constants.TokenRequest.UserName);
+        }
+
+        public void RemoveRedirectUri()
+        {
+            Remove(Constants.TokenRequest.RedirectUri);
         }
     }
 }

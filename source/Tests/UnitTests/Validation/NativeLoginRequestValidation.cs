@@ -110,7 +110,7 @@ namespace IdentityServer3.Tests.Validation
         }
 
         [Fact]
-        public async void Missing_ConnectType_ReturnError_On_Passwordless()
+        public async void Missing_ConnectType_Return_Error_On_Passwordless()
         {
             _validatorSetup.ScopeValidatorReturnsValid();
             _validatorSetup.InitializeValidator();
@@ -123,10 +123,162 @@ namespace IdentityServer3.Tests.Validation
         }
 
         [Fact]
-        [Ignore]
-        public async Task Valid_Passwordless_Native_Request_Returns_Valid()
+        public async void Invalid_ConnectType_Return_Error_On_Passwordless()
         {
-            
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.InitializeValidator();
+            _parameters.ChangeToInvalidConnectType();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidConnectType);
+        }
+
+        [Fact]
+        public async void Missing_Username_Email_ConnectType_Return_Error_On_Passwordless()
+        {
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.InitializeValidator();
+            _parameters.ChangeToEmailConnectType();
+            _parameters.RemoveUsername();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.UsernameMissing);
+        }
+
+        [Fact]
+        public async void Missing_RedirectUri_Email_ConnectType_Return_Error_On_Passwordless()
+        {
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.InitializeValidator();
+            _parameters.ChangeToEmailConnectType();
+            _parameters.RemoveRedirectUri();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.UnauthorizedClient);
+        }
+
+        [Fact]
+        public async void Invalid_RedirectUri_Email_ConnectType_Return_Error_On_Passwordless()
+        {
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.RedirectUriValidatorReturnsInvalid();
+            _validatorSetup.InitializeValidator();
+            _parameters.ChangeToEmailConnectType();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.UnauthorizedClient);
+        }
+
+        [Fact]
+        public async void Missing_Username_MobilePhone_ConnectType_On_Passwordless()
+        {
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.InitializeValidator();
+            _parameters.ChangeToMobilePhoneConnectType();
+            _parameters.RemoveUsername();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.UsernameMissing);
+        }
+
+        [Fact]
+        public async void Missing_ConnectSessionCode_Return_Error_On_Passwordless()
+        {
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.InitializeValidator();
+            _parameters.RemoveSessionCode();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Long_ConnectSessionCode_Return_Error_On_Passwordless()
+        {
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.InitializeValidator();
+            _parameters.ChangeToLongSessionCode();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Missing_ConnectCode_ReturnError_On_Passwordless()
+        {
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.InitializeValidator();
+            _parameters.RemoveConnectCode();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidConnectChallenge);
+        }
+
+        [Fact]
+        public async void Invalid_User_Credentials_Return_Error_On_Passwordless()
+        {
+            _validatorSetup.UserAuthenticateLocalReturnsInvalid();
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.InitializeValidator();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+            result.IsError.Should().BeTrue();
+            result.UnauthorizedReason.Should().Be(Core.Resources.Messages.InvalidUsernameOrPassword);
+        }
+
+        [Fact]
+        public async void Empty_User_Credentials_Return_Error_On_Passwordless()
+        {
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.InitializeValidator();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.TokenErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Valid_Partial_Login_Request_On_Passwordless()
+        {
+            _validatorSetup.UserAuthenticateLocalReturnsPartial();
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.InitializeValidator();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+
+            result.IsError.Should().BeFalse();
+            result.IsPartial.Should().BeTrue();
+        }
+
+        [Fact]
+        public async void Valid_Passwordless_Native_Request_Returns_Valid()
+        {
+            _validatorSetup.UserAuthenticateLocalReturnsValid();
+            _validatorSetup.ScopeValidatorReturnsValid();
+            _validatorSetup.InitializeValidator();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+
+            result.IsError.Should().BeFalse();
         }
     }
 }

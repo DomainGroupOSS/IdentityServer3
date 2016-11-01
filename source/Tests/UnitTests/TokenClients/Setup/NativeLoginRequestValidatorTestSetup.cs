@@ -61,5 +61,41 @@ namespace IdentityServer3.Tests.TokenClients.Setup
             ScopeValidatorMock.Setup(y => y.AreScopesAllowed(It.IsAny<Client>(), It.IsAny<List<string>>())).Returns(false);
             ScopeValidatorMock.Setup(y => y.AreScopesValidAsync(It.IsAny<List<string>>())).Returns(Task.FromResult(false));
         }
+
+        public void RedirectUriValidatorReturnsValid()
+        {
+            RedirectUrlValidatorMock.Setup(y => y.IsRedirectUriValidAsync(It.IsAny<string>(), It.IsAny<Client>())).Returns(Task.FromResult(true));
+        }
+
+        public void RedirectUriValidatorReturnsInvalid()
+        {
+            RedirectUrlValidatorMock.Setup(y => y.IsRedirectUriValidAsync(It.IsAny<string>(), It.IsAny<Client>())).Returns(Task.FromResult(false));
+        }
+
+        public void UserAuthenticateLocalReturnsValid()
+        {
+            UserServiceMock.Setup(y => y.AuthenticateLocalAsync(It.IsAny<LocalAuthenticationContext>())).Callback((LocalAuthenticationContext context) =>
+            {
+                context.AuthenticateResult = new AuthenticateResult("test-subject-id", "test-name");
+            }).Returns(Task.FromResult(true));
+        }
+
+        public void UserAuthenticateLocalReturnsInvalid()
+        {
+            UserServiceMock.Setup(y => y.AuthenticateLocalAsync(It.IsAny<LocalAuthenticationContext>())).Callback((LocalAuthenticationContext context) =>
+            {
+                context.AuthenticateResult = new AuthenticateResult(AuthenticationFailedCode.InvalidCredentials);
+            }).Returns(Task.FromResult(true));
+        }
+
+        public void UserAuthenticateLocalReturnsPartial()
+        {
+            UserServiceMock.Setup(y => y.AuthenticateLocalAsync(It.IsAny<LocalAuthenticationContext>())).Callback((LocalAuthenticationContext context) =>
+            {
+                context.AuthenticateResult = new AuthenticateResult("/test", "test-subject-id", "test-name");
+                context.AuthenticateResult.PartialSignInReason = "test successful partial reason";
+                context.PasswordlessSessionCode = context.PasswordlessSessionCode;
+            }).Returns(Task.FromResult(true));
+        }
     }
 }
