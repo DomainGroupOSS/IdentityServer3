@@ -44,5 +44,10 @@ namespace IdentityServer3.Core.ViewModels
         /// The remember me.
         /// </value>
         public bool? RememberMe { get; set; }
+
+        /// <summary>
+        /// Page request was sent from (signup/login)
+        /// </summary>
+        public string Page { get; set; }
     }
 }

@@ -246,6 +246,8 @@ namespace IdentityServer3.Core.Endpoints
 
             model.RememberMe = options.AuthenticationOptions.CookieOptions.CalculateRememberMeFromUserInput(model.RememberMe);
 
+            signInMessage.IsSignUp = string.Equals(model.Page,"signup", StringComparison.InvariantCultureIgnoreCase);
+
             if (!ModelState.IsValid)
             {
                 Logger.Warn("validation error: username or password missing");
@@ -280,11 +282,29 @@ namespace IdentityServer3.Core.Endpoints
 
             if (authResult.IsError)
             {
-                Logger.WarnFormat("user service returned an error message: {0}", authResult.ErrorMessage);
+                if (authResult.AuthenticationFailureCode == AuthenticationFailedCode.LoginNotAllowed &&
+                    signInMessage.IsSignUp)
+                {
+                    Logger.Info("User created successfully, but requires Access");
 
-                await eventService.RaiseLocalLoginFailureEventAsync(model.Username, signin, signInMessage, authResult.ErrorMessage);
+                    return
+                        await
+                            RenderLoginPage(signInMessage, signin, authResult.ErrorMessage, model.Username,
+                                model.RememberMe == true, AlertMessageType.RegisteredUserRestrictedAccess);
+                }
+                else
+                {
+                    Logger.WarnFormat("user service returned an error message: {0}", authResult.ErrorMessage);
 
-                return await RenderLoginPage(signInMessage, signin, authResult.ErrorMessage, model.Username, model.RememberMe == true);
+                    await
+                        eventService.RaiseLocalLoginFailureEventAsync(model.Username, signin, signInMessage,
+                            authResult.ErrorMessage);
+
+                    return
+                        await
+                            RenderLoginPage(signInMessage, signin, authResult.ErrorMessage, model.Username,
+                                model.RememberMe == true);
+                }
             }
 
             Logger.Info("Login credentials successfully validated by user service");
@@ -429,6 +449,15 @@ namespace IdentityServer3.Core.Endpoints
 
             if (authResult.IsError)
             {
+                if (authResult.AuthenticationFailureCode == AuthenticationFailedCode.LoginNotAllowed)
+                {
+                    Logger.Info("User created successfully, but requires Access");
+                    var username = externalIdentity.Claims.SingleOrDefault(x => x.Type == Constants.ClaimTypes.Email).HasValue() ? externalIdentity.Claims.SingleOrDefault(x => x.Type == Constants.ClaimTypes.Email).GetValueOrDefault(null) : externalIdentity.Claims.SingleOrDefault(x => x.Type == Constants.ClaimTypes.PhoneNumber).GetValueOrDefault(null);
+                    return
+                        await
+                            RenderLoginPage(signInMessage, signInId, authResult.ErrorMessage, username, alertMessage : AlertMessageType.RegisteredUserRestrictedAccess );
+                }
+
                 Logger.WarnFormat("user service returned error message: {0}", authResult.ErrorMessage);
 
                 await eventService.RaiseExternalLoginFailureEventAsync(externalIdentity, signInId, signInMessage, authResult.ErrorMessage);
@@ -907,7 +936,7 @@ namespace IdentityServer3.Core.Endpoints
             return true;
         }
 
-        private async Task<IHttpActionResult> RenderLoginPage(SignInMessage message, string signInMessageId, string errorMessage = null, string username = null, bool rememberMe = false)
+        private async Task<IHttpActionResult> RenderLoginPage(SignInMessage message, string signInMessageId, string errorMessage = null, string username = null, bool rememberMe = false, AlertMessageType? alertMessage = null)
         {
             if (message == null) throw new ArgumentNullException("message");
 
@@ -987,8 +1016,9 @@ namespace IdentityServer3.Core.Endpoints
                 ClientName = client != null ? client.ClientName : null,
                 ClientUrl = client != null ? client.ClientUri : null,
                 ClientLogoUrl = client != null ? client.LogoUri : null,
-                IsSignup = message.IsSignUp
-            };
+                IsSignup = message.IsSignUp,
+                AlertMessage = alertMessage
+        };
 
             return new LoginActionResult(viewService, loginModel, message);
         }

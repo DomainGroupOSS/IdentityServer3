@@ -146,4 +146,15 @@ namespace IdentityServer3.Core.Models
         /// </summary>
         Absolute = 1
     }
+
+    /// <summary>
+    /// Enum for alert messages
+    /// </summary>
+    public enum AlertMessageType
+    {
+        /// <summary>
+        /// User has registered but doesn't have access to client app
+        /// </summary>
+        RegisteredUserRestrictedAccess,
+    }
 }

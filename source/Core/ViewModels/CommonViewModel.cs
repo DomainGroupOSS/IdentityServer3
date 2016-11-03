@@ -21,6 +21,11 @@ namespace IdentityServer3.Core.ViewModels
     /// </summary>
     public class CommonViewModel
     {
+
+        /// <summary>
+        /// Property used by front end
+        /// </summary>
+        public string DefaultActiveScreen { get; set; }
         /// <summary>
         /// The site URL.
         /// </summary>

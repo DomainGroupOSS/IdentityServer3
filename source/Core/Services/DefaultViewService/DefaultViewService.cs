@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace IdentityServer3.Core.Services.Default
 {
     /// <summary>
@@ -36,6 +37,11 @@ namespace IdentityServer3.Core.Services.Default
         /// The login view
         /// </summary>
         public const string LoginView = "login";
+
+        /// <summary>
+        /// The signup view
+        /// </summary>
+        public const string SignupView = "signup";
         /// <summary>
         /// The logout view
         /// </summary>
@@ -68,7 +74,8 @@ namespace IdentityServer3.Core.Services.Default
 
         static readonly Newtonsoft.Json.JsonSerializerSettings settings = new Newtonsoft.Json.JsonSerializerSettings()
         {
-            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+            Converters = new List<Newtonsoft.Json.JsonConverter> { new Newtonsoft.Json.Converters.StringEnumConverter()}
         };
 
         /// <summary>
@@ -103,7 +110,7 @@ namespace IdentityServer3.Core.Services.Default
         /// </returns>
         public virtual Task<Stream> Login(LoginViewModel model, SignInMessage message)
         {
-            return Render(model, LoginView);
+            return model.IsSignup ? Render(model,SignupView) : Render(model, LoginView);
         }
 
         /// <summary>
