@@ -36,6 +36,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Formatting;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IdentityServer3.Tests.Endpoints
 {
@@ -90,7 +91,7 @@ namespace IdentityServer3.Tests.Endpoints
                 options.AuthenticationOptions.IdentityProviders = OverrideIdentityProviderConfiguration ?? ConfigureAdditionalIdentityProviders;
                 options.AuthenticationOptions.CookieOptions.TwoFactorSessionKey =
                     "9F797F9585E55F2DBE7B5C5F77C6D23216AD8E1679EB38F17E7B83330BCF0452BBE29C6D2F8EC97747057DA4207D33240592E65EBAA8EB9DC4A6736137D9C0C7";
-
+                
                 protector = options.DataProtector;
 
                 if (ConfigureIdentityServerOptions != null) ConfigureIdentityServerOptions(options);
@@ -99,7 +100,7 @@ namespace IdentityServer3.Tests.Endpoints
                 ticketFormatter = new TicketDataFormat(
                     new DataProtectorAdapter(protector, options.AuthenticationOptions.CookieOptions.Prefix + Constants.PartialSignInAuthenticationType));
             });
-
+            
             client = server.HttpClient;
         }
 
@@ -234,6 +235,12 @@ namespace IdentityServer3.Tests.Endpoints
         protected HttpResponseMessage Post<T>(string path, T value)
         {
             return client.PostAsJsonAsync(Url(path), value).Result;
+        }
+
+        protected async Task<HttpResponseMessage> Post(string path)
+        {
+            var test = new HttpMessageContent(new HttpRequestMessage());
+            return await client.PostAsync(Url(path), test).ConfigureAwait(false);
         }
 
         protected HttpResponseMessage Put<T>(string path, T value)

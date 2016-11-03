@@ -9,7 +9,7 @@ namespace IdentityServer3.Tests.TokenClients
         {
             AllowedCustomGrantTypes.Add(Constants.GrantTypes.DomainNative);
             AllowedCustomGrantTypes.Add(Constants.GrantTypes.Passwordless);
-            AllowedScopes.Add(StandardScopes.Profile.Name);
+            AllowedScopes.Add("read");
             ClientId = "test-client";
         }
 

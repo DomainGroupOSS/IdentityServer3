@@ -1,4 +1,5 @@
 ﻿using System.Collections.Specialized;
+using System.Linq;
 using IdentityServer3.Core;
 using IdentityServer3.Core.Models;
 
@@ -9,12 +10,19 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         public PasswordlessTestParameters()
         {
             Add(Constants.TokenRequest.GrantType, Constants.GrantTypes.Passwordless);
-            Add(Constants.TokenRequest.Scope, StandardScopes.Profile.Name);
+            Add(Constants.TokenRequest.Scope, "read");
             Add(Constants.NativeLoginRequest.ConnectChallenge, "test-connect-code");
             Add(Constants.NativeLoginRequest.ConnectSessionCode,"test-connect-session-code");
             Add(Constants.TokenRequest.UserName, "test-username");
+            Add(Constants.TokenRequest.Password, "test-password");
             Add(Constants.TokenRequest.RedirectUri, "http://localhost");
             Add(Constants.NativeLoginRequest.Connect, Constants.NativeLoginRequest.ConnectTypes.NativeLogin);
+        }
+
+        public void AddClient(Client client)
+        {
+            Add("client_id", client.ClientId);
+            Add("client_secret", "secret");
         }
 
         public void RemoveConnectType()

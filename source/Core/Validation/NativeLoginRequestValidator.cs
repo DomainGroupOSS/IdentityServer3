@@ -15,7 +15,7 @@ using IdentityServer3.Core.Services;
 
 namespace IdentityServer3.Core.Validation
 {
-    internal class NativeLoginRequestValidator : INativeLoginRequestValidator
+    internal class NativeLoginRequestValidator
     {
         private readonly static ILog Logger = LogProvider.GetCurrentClassLogger();
 
