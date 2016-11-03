@@ -135,6 +135,12 @@ namespace IdentityServer3.Tests.Endpoints
                         "write"
                     },
 
+                    AllowedCustomGrantTypes = new List<string>
+                    {
+                        Constants.GrantTypes.Passwordless,
+                        Constants.GrantTypes.DomainNative
+                    },
+
                     AccessTokenType = AccessTokenType.Jwt,
                     AccessTokenLifetime = 360,
                 },
