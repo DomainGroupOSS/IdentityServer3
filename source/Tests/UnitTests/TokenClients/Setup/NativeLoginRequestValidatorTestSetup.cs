@@ -19,7 +19,6 @@ namespace IdentityServer3.Tests.TokenClients.Setup
             RefreshTokenStoreMock = new Mock<IRefreshTokenStore>();
             CustomGrantValidatorMock = new Mock<ICustomGrantValidator>();
             UserServiceMock = new Mock<IUserService>();
-            ScopeStoreMock = new Mock<IScopeStore>();
             EventServiceMock = new Mock<IEventService>();
             TwoFactorServiceMock = new Mock<ITwoFactorService>();
             RedirectUrlValidatorMock = new Mock<IRedirectUriValidator>();
@@ -32,7 +31,6 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         internal Mock<IRefreshTokenStore> RefreshTokenStoreMock { get; set; }
         internal Mock<ICustomGrantValidator> CustomGrantValidatorMock { get; set; }
         internal Mock<IUserService> UserServiceMock { get; set; }
-        internal Mock<IScopeStore> ScopeStoreMock { get; set; }
         internal Mock<IEventService> EventServiceMock { get; set; }
         internal Mock<ITwoFactorService> TwoFactorServiceMock { get; set; }
         internal Mock<IRedirectUriValidator> RedirectUrlValidatorMock { get; set; }

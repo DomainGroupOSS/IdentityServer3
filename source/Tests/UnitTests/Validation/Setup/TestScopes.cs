@@ -28,7 +28,13 @@ namespace IdentityServer3.Tests.Validation
                 StandardScopes.OpenId,
                 StandardScopes.Profile,
                 StandardScopes.OfflineAccess,
-
+                new Scope
+                {
+                    Name = "read",
+                    DisplayName = "Read data",
+                    Type = ScopeType.Resource,
+                    Emphasize = false,
+                },
                 new Scope
                 {
                     Name = "resource",
