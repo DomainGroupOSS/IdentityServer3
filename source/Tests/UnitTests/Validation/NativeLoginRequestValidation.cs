@@ -16,23 +16,365 @@ namespace IdentityServer3.Tests.Validation
         public NativeLoginRequestValidation()
         {
             _validatorSetup = new NativeLoginRequestValidatorTestSetup();
-            _parameters = new PasswordlessTestParameters();
-            _client = new PasswordlessTestClient();
+            _passwordlessTestParameters = new PasswordlessTestParameters();
+            _passwordlessTestClient = new PasswordlessTestClient();
+            _authorizationCodeTestClient = new AuthorizationCodeTestClient();
+            _authorizationCodeTestParameters = new AuthorizationCodeTestParameters();
         }
 
         private const string Category = "Validation - Native Login Request Validation Tests";
 
         private readonly NativeLoginRequestValidatorTestSetup _validatorSetup;
-        private readonly PasswordlessTestParameters _parameters;
-        private readonly PasswordlessTestClient _client;
+        private readonly PasswordlessTestParameters _passwordlessTestParameters;
+        private readonly PasswordlessTestClient _passwordlessTestClient;
+        private readonly AuthorizationCodeTestClient _authorizationCodeTestClient;
+        private readonly AuthorizationCodeTestParameters _authorizationCodeTestParameters;
+
+        [Fact]
+        public async void Client_Does_Not_Contain_DomainNative_GrantType_Return_Unauthorized_On_Authorization_Code()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.UnauthorizeDomainNativeGrantType();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.UnauthorizedClient);
+        }
+
+        [Fact]
+        public async void Missing_Code_Should_Throw_Invalid_Grant_On_Authorization_Code()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestParameters.RemoveCode();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Code_Too_Long_Should_Throw_Invalid_Grant_On_Authorization_Code()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestParameters.ChangeToLongCode();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Authorization_Code_Is_Not_Found_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Different_Client_Id_Passed_To_Request_From_Authorization_Code_Store()
+        {
+            _validatorSetup.InitializeValidator();
+            var testClient = new Client
+            {
+                AllowedCustomGrantTypes = { Constants.GrantTypes.DomainNative, Constants.GrantTypes.AuthorizationCode },
+                AllowedScopes = { "read" },
+                ClientId = "test-different-client-name",
+            };
+
+            var code = new TestAuthorizationCode(testClient);
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void AuthorizationCodeWithProofKey_Missing_Code_Challenge_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToAuthorizationCodeWithProofKey();
+            
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+            code.RemoveCodeChallenge();
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+            
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void HybridWithProofKey_Missing_Code_Challenge_Should_Throw_Invalid_Grant_On_Authorization_Code()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToHybridWithProofKey();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+            code.RemoveCodeChallenge();
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void AuthorizationCodeWithProofKey_Missing_Code_Challenge_Method_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToAuthorizationCodeWithProofKey();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+            code.RemoveCodeChallengeMethod();
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void HybridWithProofKey_Missing_Code_Challenge_Method_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToHybridWithProofKey();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+            code.RemoveCodeChallengeMethod();
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void AuthorizationCodeWithProofKey_Missing_Code_Verifier_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToAuthorizationCodeWithProofKey();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+        
+        [Fact]
+        public async void HybridWithProofKey_Missing_Code_Verifier_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToHybridWithProofKey();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void AuthorizationCodeWithProofKey_Code_Verifier_Too_Long_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToAuthorizationCodeWithProofKey();
+            _authorizationCodeTestParameters.SetToLongCodeVerifier();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void HybridWithProofKey_Code_Verifier_Too_Long_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToHybridWithProofKey();
+            _authorizationCodeTestParameters.SetToLongCodeVerifier();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void AuthorizationCodeWithProofKey_Code_Challenge_Method_Not_Supported_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToAuthorizationCodeWithProofKey();
+            _authorizationCodeTestParameters.SetDefaultCodeVerifier();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+            code.SetCodeChallengeMethodToRandom();
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void HybridWithProofKey_Code_Challenge_Method_Not_Supported_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToHybridWithProofKey();
+            _authorizationCodeTestParameters.SetDefaultCodeVerifier();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+            code.SetCodeChallengeMethodToRandom();
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void AuthorizationCodeWithProofKey_Plain_Code_Challenge_Is_Not_Validated_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToAuthorizationCodeWithProofKey();
+            _authorizationCodeTestParameters.SetDefaultCodeVerifier();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+            code.SetToWrongCodeChallenge();
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void HybridWithProofKey_Plain_Code_Challenge_Is_Not_Validated_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestClient.SetFlowToHybridWithProofKey();
+            _authorizationCodeTestParameters.SetDefaultCodeVerifier();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+            code.SetToWrongCodeChallenge();
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
 
         [Fact]
         public async void Client_Does_Not_Contain_DomainNative_GrantType_Return_Unauthorized_On_Passwordless()
         {
             _validatorSetup.InitializeValidator();
-            _client.UnauthorizeDomainNativeGrantType();
+            _passwordlessTestClient.UnauthorizeDomainNativeGrantType();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.UnauthorizedClient);
@@ -42,10 +384,10 @@ namespace IdentityServer3.Tests.Validation
         public async void Disabled_Local_Authentication_Should_Return_Error_Result_On_Passwordless()
         {
             _validatorSetup.DisableLocalAuthentication();
-            _client.DisableLocalLogin();
+            _passwordlessTestClient.DisableLocalLogin();
             _validatorSetup.InitializeValidator();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.UnsupportedGrantType);
@@ -57,7 +399,7 @@ namespace IdentityServer3.Tests.Validation
             Client client = null;
             _validatorSetup.InitializeValidator();
 
-            Func<Task> act = async () => { await _validatorSetup.Validator.ValidateRequestAsync(_parameters, client); };
+            Func<Task> act = async () => { await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, client); };
 
             act.ShouldThrow<ArgumentNullException>();
         }
@@ -68,7 +410,7 @@ namespace IdentityServer3.Tests.Validation
             NameValueCollection parameters = null;
             _validatorSetup.InitializeValidator();
 
-            Func<Task> act = async () => { await _validatorSetup.Validator.ValidateRequestAsync(parameters, _client); };
+            Func<Task> act = async () => { await _validatorSetup.Validator.ValidateRequestAsync(parameters, _passwordlessTestClient); };
 
             act.ShouldThrow<ArgumentNullException>();
         }
@@ -77,9 +419,9 @@ namespace IdentityServer3.Tests.Validation
         public async void GrantType_Too_Long_Should_Return_Error_Result()
         {
             _validatorSetup.InitializeValidator();
-            _parameters.ChangeToLongGrantType();
+            _passwordlessTestParameters.ChangeToLongGrantType();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.UnsupportedGrantType);
@@ -89,9 +431,9 @@ namespace IdentityServer3.Tests.Validation
         public async void Invalid_Scopes_Passed_Return_Error_On_Passwordless()
         {
             _validatorSetup.InitializeValidator();
-            _parameters.ChangeToInvalidScope();
+            _passwordlessTestParameters.ChangeToInvalidScope();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.InvalidScope);
@@ -101,9 +443,9 @@ namespace IdentityServer3.Tests.Validation
         public async void Missing_GrantType_Should_Return_Error_Result()
         {
             _validatorSetup.InitializeValidator();
-            _parameters.RemoveGrantType();
+            _passwordlessTestParameters.RemoveGrantType();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.UnsupportedGrantType);
@@ -113,9 +455,9 @@ namespace IdentityServer3.Tests.Validation
         public async void Missing_ConnectType_Return_Error_On_Passwordless()
         {
             _validatorSetup.InitializeValidator();
-            _parameters.RemoveConnectType();
+            _passwordlessTestParameters.RemoveConnectType();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
@@ -125,9 +467,9 @@ namespace IdentityServer3.Tests.Validation
         public async void Invalid_ConnectType_Return_Error_On_Passwordless()
         {
             _validatorSetup.InitializeValidator();
-            _parameters.ChangeToInvalidConnectType();
+            _passwordlessTestParameters.ChangeToInvalidConnectType();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.InvalidConnectType);
@@ -137,10 +479,10 @@ namespace IdentityServer3.Tests.Validation
         public async void Missing_Username_Email_ConnectType_Return_Error_On_Passwordless()
         {
             _validatorSetup.InitializeValidator();
-            _parameters.ChangeToEmailConnectType();
-            _parameters.RemoveUsername();
+            _passwordlessTestParameters.ChangeToEmailConnectType();
+            _passwordlessTestParameters.RemoveUsername();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.UsernameMissing);
@@ -150,10 +492,10 @@ namespace IdentityServer3.Tests.Validation
         public async void Missing_RedirectUri_Email_ConnectType_Return_Error_On_Passwordless()
         {
             _validatorSetup.InitializeValidator();
-            _parameters.ChangeToEmailConnectType();
-            _parameters.RemoveRedirectUri();
+            _passwordlessTestParameters.ChangeToEmailConnectType();
+            _passwordlessTestParameters.RemoveRedirectUri();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.UnauthorizedClient);
@@ -164,9 +506,9 @@ namespace IdentityServer3.Tests.Validation
         {
             _validatorSetup.RedirectUriValidatorReturnsInvalid();
             _validatorSetup.InitializeValidator();
-            _parameters.ChangeToEmailConnectType();
+            _passwordlessTestParameters.ChangeToEmailConnectType();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.UnauthorizedClient);
@@ -176,10 +518,10 @@ namespace IdentityServer3.Tests.Validation
         public async void Missing_Username_MobilePhone_ConnectType_On_Passwordless()
         {
             _validatorSetup.InitializeValidator();
-            _parameters.ChangeToMobilePhoneConnectType();
-            _parameters.RemoveUsername();
+            _passwordlessTestParameters.ChangeToMobilePhoneConnectType();
+            _passwordlessTestParameters.RemoveUsername();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.UsernameMissing);
@@ -189,9 +531,9 @@ namespace IdentityServer3.Tests.Validation
         public async void Missing_ConnectSessionCode_Return_Error_On_Passwordless()
         {
             _validatorSetup.InitializeValidator();
-            _parameters.RemoveSessionCode();
+            _passwordlessTestParameters.RemoveSessionCode();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
@@ -201,9 +543,9 @@ namespace IdentityServer3.Tests.Validation
         public async void Long_ConnectSessionCode_Return_Error_On_Passwordless()
         {
             _validatorSetup.InitializeValidator();
-            _parameters.ChangeToLongSessionCode();
+            _passwordlessTestParameters.ChangeToLongSessionCode();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
@@ -213,9 +555,9 @@ namespace IdentityServer3.Tests.Validation
         public async void Missing_ConnectCode_ReturnError_On_Passwordless()
         {
             _validatorSetup.InitializeValidator();
-            _parameters.RemoveConnectCode();
+            _passwordlessTestParameters.RemoveConnectCode();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.InvalidConnectChallenge);
@@ -227,7 +569,7 @@ namespace IdentityServer3.Tests.Validation
             _validatorSetup.UserAuthenticateLocalReturnsInvalid();
             _validatorSetup.InitializeValidator();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.UnauthorizedReason.Should().Be(Core.Resources.Messages.InvalidUsernameOrPassword);
@@ -238,7 +580,7 @@ namespace IdentityServer3.Tests.Validation
         {
             _validatorSetup.InitializeValidator();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.TokenErrors.InvalidGrant);
@@ -250,7 +592,7 @@ namespace IdentityServer3.Tests.Validation
             _validatorSetup.UserAuthenticateLocalReturnsPartial();
             _validatorSetup.InitializeValidator();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
 
             result.IsError.Should().BeFalse();
@@ -263,7 +605,7 @@ namespace IdentityServer3.Tests.Validation
             _validatorSetup.UserAuthenticateLocalReturnsValid();
             _validatorSetup.InitializeValidator();
 
-            var result = await _validatorSetup.Validator.ValidateRequestAsync(_parameters, _client);
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeFalse();
         }

@@ -15,7 +15,7 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         public NativeLoginRequestValidatorTestSetup()
         {
             Options = new IdentityServerOptions();
-            AuthorizationCodeStoreMock = new Mock<IAuthorizationCodeStore>();
+            AuthorizationCodeStore = new InMemoryAuthorizationCodeStore();
             RefreshTokenStoreMock = new Mock<IRefreshTokenStore>();
             CustomGrantValidatorMock = new Mock<ICustomGrantValidator>();
             UserServiceMock = new Mock<IUserService>();
@@ -25,9 +25,10 @@ namespace IdentityServer3.Tests.TokenClients.Setup
             ScopeValidator = new ScopeValidator(new InMemoryScopeStore(TestScopes.Get()));
         }
 
+
         internal NativeLoginRequestValidator Validator { get; set; }
         internal IdentityServerOptions Options { get; set; }
-        internal Mock<IAuthorizationCodeStore> AuthorizationCodeStoreMock { get; set; }
+        internal InMemoryAuthorizationCodeStore AuthorizationCodeStore { get; set; }
         internal Mock<IRefreshTokenStore> RefreshTokenStoreMock { get; set; }
         internal Mock<ICustomGrantValidator> CustomGrantValidatorMock { get; set; }
         internal Mock<IUserService> UserServiceMock { get; set; }
@@ -40,9 +41,14 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         {
             var grantValidator = new Core.Validation.CustomGrantValidator(new[] {CustomGrantValidatorMock.Object});
 
-            Validator = new NativeLoginRequestValidator(Options, AuthorizationCodeStoreMock.Object,
+            Validator = new NativeLoginRequestValidator(Options, AuthorizationCodeStore,
                 RefreshTokenStoreMock.Object, UserServiceMock.Object, grantValidator, ScopeValidator,
                 EventServiceMock.Object, TwoFactorServiceMock.Object, RedirectUrlValidatorMock.Object);
+        }
+
+        public async Task SetDefaultAuthorizationCodeStore(AuthorizationCode code)
+        {
+            await AuthorizationCodeStore.StoreAsync("test-connect-code", code);
         }
 
         public void DisableLocalAuthentication()
