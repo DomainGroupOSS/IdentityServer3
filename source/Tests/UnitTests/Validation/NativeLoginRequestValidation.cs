@@ -369,6 +369,141 @@ namespace IdentityServer3.Tests.Validation
         }
 
         [Fact]
+        public async void Code_Verifier_Presents_At_Non_AuthCodeWithProof_And_HybridWithProof_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestParameters.SetDefaultCodeVerifier();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Expired_AuthCode_Should_Throw_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+            code.SetToOldCreationtime();
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Missing_Redirect_Uri_Should_Throw_Unauthorized_Client_On_Authorization_Code()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestParameters.RemoveRedirectUri();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.TokenErrors.UnauthorizedClient);
+        }
+
+        [Fact]
+        public async void Wrong_Redirect_Uri_Should_Throw_Unauthorized_Client_On_Authorization_Code()
+        {
+            _validatorSetup.InitializeValidator();
+            _authorizationCodeTestParameters.SetToWrongRedirectUri();
+            _authorizationCodeTestClient.RemoveAuthorizationCodeFromAllowedGrantType();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.TokenErrors.UnauthorizedClient);
+        }
+
+        [Fact]
+        public async void Missing_Requested_Scopes_Should_Throw_Invalid_Request_On_Authorization_Code()
+        {
+            _validatorSetup.InitializeValidator();
+            
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+            code.RemoveDefaultRequestedScopes();
+            
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.TokenErrors.InvalidRequest);
+        }
+
+        [Fact]
+        public async void Disabled_Account_Should_Throw_Invalid_Request_On_Authorization_Code()
+        {
+            _validatorSetup.UserIsActiveReturnsFalse();
+            _validatorSetup.InitializeValidator();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.TokenErrors.InvalidRequest);
+        }
+
+        [Fact]
+        public async void Valid_Request_On_Authorization_Code()
+        {
+            _validatorSetup.UserIsActiveReturnsTrue();
+            _validatorSetup.InitializeValidator();
+
+            var code = new TestAuthorizationCode(_authorizationCodeTestClient);
+
+            await _validatorSetup.SetDefaultAuthorizationCodeStore(code);
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
+                        _authorizationCodeTestClient);
+
+            result.IsError.Should().BeFalse();
+        }
+
+        [Fact]
         public async void Client_Does_Not_Contain_DomainNative_GrantType_Return_Unauthorized_On_Passwordless()
         {
             _validatorSetup.InitializeValidator();

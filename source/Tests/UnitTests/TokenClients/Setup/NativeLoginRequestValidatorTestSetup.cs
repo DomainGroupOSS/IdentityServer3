@@ -91,5 +91,23 @@ namespace IdentityServer3.Tests.TokenClients.Setup
                 context.PasswordlessSessionCode = context.PasswordlessSessionCode;
             }).Returns(Task.FromResult(true));
         }
+
+        public void UserIsActiveReturnsTrue()
+        {
+            UserServiceMock.Setup(y => y.IsActiveAsync(It.IsAny<IsActiveContext>())).Callback(
+                (IsActiveContext isActiveContext) =>
+                {
+                    isActiveContext.IsActive = true;
+                }).Returns(Task.FromResult(true));
+        }
+
+        public void UserIsActiveReturnsFalse()
+        {
+            UserServiceMock.Setup(y => y.IsActiveAsync(It.IsAny<IsActiveContext>())).Callback(
+                (IsActiveContext isActiveContext) =>
+                {
+                    isActiveContext.IsActive = false;
+                }).Returns(Task.FromResult(true));
+        }
     }
 }
