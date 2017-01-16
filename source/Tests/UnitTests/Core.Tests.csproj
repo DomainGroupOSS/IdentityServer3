@@ -205,11 +205,13 @@
     <Compile Include="TokenClients\PasswordlessTestClient.cs" />
     <Compile Include="TokenClients\RefreshTokenClient.cs" />
     <Compile Include="TokenClients\ResourceOwnerClient.cs" />
+    <Compile Include="TokenClients\ResourceOwnerTestClient.cs" />
     <Compile Include="TokenClients\Setup\AuthorizationCodeTestParameters.cs" />
     <Compile Include="TokenClients\Setup\Clients.cs" />
     <Compile Include="TokenClients\Setup\CustomGrantValidator.cs" />
     <Compile Include="TokenClients\Setup\CustomGrantValidator2.cs" />
     <Compile Include="TokenClients\Setup\PasswordlessTestParameters.cs" />
+    <Compile Include="TokenClients\Setup\ResourceOwnerTestParameters.cs" />
     <Compile Include="TokenClients\Setup\Scopes.cs" />
     <Compile Include="TokenClients\Setup\Startup.cs" />
     <Compile Include="TokenClients\Setup\NativeLoginRequestValidatorTestSetup.cs" />

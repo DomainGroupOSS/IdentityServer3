@@ -20,6 +20,8 @@ namespace IdentityServer3.Tests.Validation
             _passwordlessTestClient = new PasswordlessTestClient();
             _authorizationCodeTestClient = new AuthorizationCodeTestClient();
             _authorizationCodeTestParameters = new AuthorizationCodeTestParameters();
+            _resourceOwnerTestClient = new ResourceOwnerTestClient();
+            _resourceOwnerTestParameters = new ResourceOwnerTestParameters();
         }
 
         private const string Category = "Validation - Native Login Request Validation Tests";
@@ -29,6 +31,8 @@ namespace IdentityServer3.Tests.Validation
         private readonly PasswordlessTestClient _passwordlessTestClient;
         private readonly AuthorizationCodeTestClient _authorizationCodeTestClient;
         private readonly AuthorizationCodeTestParameters _authorizationCodeTestParameters;
+        private readonly ResourceOwnerTestClient _resourceOwnerTestClient;
+        private readonly ResourceOwnerTestParameters _resourceOwnerTestParameters;
 
         [Fact]
         public async void Client_Does_Not_Contain_DomainNative_GrantType_Return_Unauthorized_On_Authorization_Code()
@@ -499,6 +503,69 @@ namespace IdentityServer3.Tests.Validation
                 await
                     _validatorSetup.Validator.ValidateRequestAsync(_authorizationCodeTestParameters,
                         _authorizationCodeTestClient);
+
+            result.IsError.Should().BeFalse();
+        }
+
+        [Fact]
+        public async void Disabled_Local_Authentication_Should_Return_Error_Result_On_Resource_Owner()
+        {
+            _validatorSetup.DisableLocalAuthentication();
+            _resourceOwnerTestClient.DisableLocalLogin();
+            _validatorSetup.InitializeValidator();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_resourceOwnerTestParameters, _resourceOwnerTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.UnsupportedGrantType);
+        }
+
+        [Fact]
+        public async void Invalid_Requested_Scopes_On_Resource_Owner()
+        {
+            _validatorSetup.InitializeValidator();
+            _resourceOwnerTestParameters.SetScopeToInvalid();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_resourceOwnerTestParameters, _resourceOwnerTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidScope);
+        }
+
+        [Fact]
+        public async void Invalid_User_Authentication_Should_Throw_Invalid_Grant_On_Resource_Owner()
+        {
+            _validatorSetup.UserAuthenticateLocalReturnsInvalid();
+            _validatorSetup.InitializeValidator();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_resourceOwnerTestParameters,
+                        _resourceOwnerTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Core.Resources.Messages.InvalidUsernameOrPassword);
+        }
+
+        [Fact]
+        public async void Valid_Partial_Request_With_2FA_On_Resource_Owner()
+        {
+            _validatorSetup.UserAuthenticateLocalReturnsPartial();
+            _validatorSetup.InitializeValidator();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_resourceOwnerTestParameters, _resourceOwnerTestClient);
+            
+            result.IsError.Should().BeFalse();
+            result.IsPartial.Should().BeTrue();
+        }
+
+        [Fact]
+        public async void Valid_Request_On_Resource_Owner()
+        {
+            _validatorSetup.UserAuthenticateLocalReturnsValid();
+            _validatorSetup.InitializeValidator();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_resourceOwnerTestParameters, _resourceOwnerTestClient);
 
             result.IsError.Should().BeFalse();
         }
