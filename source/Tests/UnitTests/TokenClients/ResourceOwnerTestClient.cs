@@ -17,5 +17,10 @@ namespace IdentityServer3.Tests.TokenClients
         {
             EnableLocalLogin = false;
         }
+
+        public void RemoveDomainNative()
+        {
+            AllowedCustomGrantTypes.Remove(Constants.GrantTypes.DomainNative);
+        }
     }
 }

@@ -42,6 +42,23 @@ namespace IdentityServer3.Tests.Validation
         private readonly RefreshTokenTestParameters _refreshTokenTestParameters;
 
         [Fact]
+        public async void Unsupported_Grant_Type_Returns_Invalid()
+        {
+            _validatorSetup.InitializeValidator();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(new NameValueCollection
+            {
+                {Constants.TokenRequest.GrantType, Constants.GrantTypes.JwtBearer}
+            }, new Client
+            {
+                ClientId = "empty-test"
+            });
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.UnsupportedGrantType);
+        }
+
+        [Fact]
         public async void Client_Does_Not_Contain_DomainNative_GrantType_Return_Unauthorized_On_Authorization_Code()
         {
             _validatorSetup.InitializeValidator();
@@ -528,6 +545,18 @@ namespace IdentityServer3.Tests.Validation
         }
 
         [Fact]
+        public async void Unauthorized_Client_Grant_Type_Throws_Unauthorized_Client_On_Resource_Owner()
+        {
+            _validatorSetup.InitializeValidator();
+            _resourceOwnerTestClient.RemoveDomainNative();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_resourceOwnerTestParameters, _resourceOwnerTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.UnauthorizedClient);
+        }
+
+        [Fact]
         public async void Invalid_Requested_Scopes_On_Resource_Owner()
         {
             _validatorSetup.InitializeValidator();
@@ -537,6 +566,54 @@ namespace IdentityServer3.Tests.Validation
 
             result.IsError.Should().BeTrue();
             result.Error.Should().Be(Constants.NativeLoginErrors.InvalidScope);
+        }
+
+        [Fact]
+        public async void Missing_Username_Throws_Invalid_Grant_On_Resource_Owner()
+        {
+            _validatorSetup.InitializeValidator();
+            _resourceOwnerTestParameters.RemoveUsername();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_resourceOwnerTestParameters, _resourceOwnerTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Missing_Password_Throws_Invalid_Grant_On_Resource_Owner()
+        {
+            _validatorSetup.InitializeValidator();
+            _resourceOwnerTestParameters.RemovePassword();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_resourceOwnerTestParameters, _resourceOwnerTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Long_Username_Throws_Invalid_Grant_On_Resource_Owner()
+        {
+            _validatorSetup.InitializeValidator();
+            _resourceOwnerTestParameters.ChangeToLongUsername();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_resourceOwnerTestParameters, _resourceOwnerTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Long_Password_Throws_Invalid_Grant_On_Resource_Owner()
+        {
+            _validatorSetup.InitializeValidator();
+            _resourceOwnerTestParameters.ChangeToLongPassword();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_resourceOwnerTestParameters, _resourceOwnerTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
         }
 
         [Fact]
