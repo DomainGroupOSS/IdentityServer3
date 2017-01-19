@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using FluentAssertions;
 using IdentityServer3.Core;
@@ -7,6 +9,7 @@ using IdentityServer3.Core.Models;
 using IdentityServer3.Tests.TokenClients;
 using IdentityServer3.Tests.TokenClients.Setup;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Xunit;
 
 namespace IdentityServer3.Tests.Validation
@@ -22,6 +25,8 @@ namespace IdentityServer3.Tests.Validation
             _authorizationCodeTestParameters = new AuthorizationCodeTestParameters();
             _resourceOwnerTestClient = new ResourceOwnerTestClient();
             _resourceOwnerTestParameters = new ResourceOwnerTestParameters();
+            _refreshTokenTestClient = new RefreshTokenTestClient();
+            _refreshTokenTestParameters = new RefreshTokenTestParameters();
         }
 
         private const string Category = "Validation - Native Login Request Validation Tests";
@@ -33,6 +38,8 @@ namespace IdentityServer3.Tests.Validation
         private readonly AuthorizationCodeTestParameters _authorizationCodeTestParameters;
         private readonly ResourceOwnerTestClient _resourceOwnerTestClient;
         private readonly ResourceOwnerTestParameters _resourceOwnerTestParameters;
+        private readonly RefreshTokenTestClient _refreshTokenTestClient;
+        private readonly RefreshTokenTestParameters _refreshTokenTestParameters;
 
         [Fact]
         public async void Client_Does_Not_Contain_DomainNative_GrantType_Return_Unauthorized_On_Authorization_Code()
@@ -557,6 +564,8 @@ namespace IdentityServer3.Tests.Validation
             
             result.IsError.Should().BeFalse();
             result.IsPartial.Should().BeTrue();
+
+            _validatorSetup.TwoFactorServiceMock.Verify(m => m.RequestCodeAsync(_resourceOwnerTestClient, It.IsAny<ClaimsPrincipal>()), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -566,6 +575,162 @@ namespace IdentityServer3.Tests.Validation
             _validatorSetup.InitializeValidator();
 
             var result = await _validatorSetup.Validator.ValidateRequestAsync(_resourceOwnerTestParameters, _resourceOwnerTestClient);
+
+            result.IsError.Should().BeFalse();
+        }
+
+        [Fact]
+        public async void Missing_Refresh_Token_Should_Throw_InvalidRequest()
+        {
+            _validatorSetup.InitializeValidator();
+            _refreshTokenTestParameters.RemoveRefreshToken();
+
+            var result = await _validatorSetup.Validator.ValidateRequestAsync(_refreshTokenTestParameters, _refreshTokenTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidRequest);
+        }
+
+        [Fact]
+        public async void Refresh_Token_Too_Long_Returns_Invalid_Grant()
+        {
+            _validatorSetup.InitializeValidator();
+            _refreshTokenTestParameters.ChangeToLongRefreshToken();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_refreshTokenTestParameters, _refreshTokenTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Invalid_Refresh_Token_Should_Throw_Invalid_Grant()
+        {
+            var testRefreshToken = new TestRefreshToken(_refreshTokenTestClient);
+            
+            await _validatorSetup.SetDefaultRefreshTokenStore(testRefreshToken);
+            _refreshTokenTestParameters.ChangeToInvalidRefreshToken();
+            _validatorSetup.InitializeValidator();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_refreshTokenTestParameters, _refreshTokenTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Expired_Refresh_Token_Should_Throw_Invalid_Grant()
+        {
+            var testRefreshToken = new TestRefreshToken(_refreshTokenTestClient);
+            testRefreshToken.SetCreationTimeToExpired();
+
+            await _validatorSetup.SetDefaultRefreshTokenStore(testRefreshToken);
+            _validatorSetup.InitializeValidator();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_refreshTokenTestParameters, _refreshTokenTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Invalid_Client_On_Refresh_Token_Should_Throw_Invalid_Grant()
+        {
+            var testRefreshToken = new TestRefreshToken(new Client
+            {
+                AllowedCustomGrantTypes = { Constants.GrantTypes.DomainNative, Constants.GrantTypes.RefreshToken },
+                AllowedScopes = { "read" },
+                ClientId = "test-different-client-name",
+            });
+
+            await _validatorSetup.SetDefaultRefreshTokenStore(testRefreshToken);
+            _validatorSetup.InitializeValidator();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_refreshTokenTestParameters, _refreshTokenTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Missing_Offline_Scope_Should_Throw_Invalid_Grant_On_Refresh_Token()
+        {
+            var testRefreshToken = new TestRefreshToken(_refreshTokenTestClient);
+
+            await _validatorSetup.SetDefaultRefreshTokenStore(testRefreshToken);
+            _validatorSetup.InitializeValidator();
+
+            _refreshTokenTestClient.RemoveOfflineAccessScope();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_refreshTokenTestParameters, _refreshTokenTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Invalid_Requested_Scopes_Should_Throw_Invalid_Grant_On_Refresh_Token()
+        {
+            var testRefreshToken = new TestRefreshToken(_refreshTokenTestClient, new List<Claim>
+            {
+                new Claim("scope", "read"),
+                new Claim("scope", Constants.StandardScopes.OfflineAccess),
+                new Claim("scope", "invalid"),
+                new Claim(Constants.ClaimTypes.Subject, "test-subject-id")
+            });
+
+            await _validatorSetup.SetDefaultRefreshTokenStore(testRefreshToken);
+
+
+            _validatorSetup.InitializeValidator();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_refreshTokenTestParameters, _refreshTokenTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidGrant);
+        }
+
+        [Fact]
+        public async void Disabled_User_Should_Throw_Invalid_Request_On_Refresh_Token()
+        {
+            var testRefreshToken = new TestRefreshToken(_refreshTokenTestClient);
+
+            await _validatorSetup.SetDefaultRefreshTokenStore(testRefreshToken);
+            _validatorSetup.UserIsActiveReturnsFalse();
+            _validatorSetup.InitializeValidator();
+            
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_refreshTokenTestParameters, _refreshTokenTestClient);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.NativeLoginErrors.InvalidRequest);
+        }
+
+        [Fact]
+        public async void Valid_Refresh_Token_Request()
+        {
+            var testRefreshToken = new TestRefreshToken(_refreshTokenTestClient);
+
+            await _validatorSetup.SetDefaultRefreshTokenStore(testRefreshToken);
+            _validatorSetup.UserIsActiveReturnsTrue();
+            _validatorSetup.InitializeValidator();
+
+            var result =
+                await
+                    _validatorSetup.Validator.ValidateRequestAsync(_refreshTokenTestParameters, _refreshTokenTestClient);
 
             result.IsError.Should().BeFalse();
         }

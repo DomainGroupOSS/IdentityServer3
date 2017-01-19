@@ -17,7 +17,7 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         {
             Options = new IdentityServerOptions();
             AuthorizationCodeStore = new InMemoryAuthorizationCodeStore();
-            RefreshTokenStoreMock = new Mock<IRefreshTokenStore>();
+            RefreshTokenStore = new InMemoryRefreshTokenStore();
             CustomGrantValidatorMock = new Mock<ICustomGrantValidator>();
             UserServiceMock = new Mock<IUserService>();
             EventServiceMock = new Mock<IEventService>();
@@ -30,7 +30,7 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         internal NativeLoginRequestValidator Validator { get; set; }
         internal IdentityServerOptions Options { get; set; }
         internal InMemoryAuthorizationCodeStore AuthorizationCodeStore { get; set; }
-        internal Mock<IRefreshTokenStore> RefreshTokenStoreMock { get; set; }
+        internal InMemoryRefreshTokenStore RefreshTokenStore { get; set; }
         internal Mock<ICustomGrantValidator> CustomGrantValidatorMock { get; set; }
         internal Mock<IUserService> UserServiceMock { get; set; }
         internal Mock<IEventService> EventServiceMock { get; set; }
@@ -43,13 +43,18 @@ namespace IdentityServer3.Tests.TokenClients.Setup
             var grantValidator = new Core.Validation.CustomGrantValidator(new[] {CustomGrantValidatorMock.Object});
 
             Validator = new NativeLoginRequestValidator(Options, AuthorizationCodeStore,
-                RefreshTokenStoreMock.Object, UserServiceMock.Object, grantValidator, ScopeValidator,
+                RefreshTokenStore, UserServiceMock.Object, grantValidator, ScopeValidator,
                 EventServiceMock.Object, TwoFactorServiceMock.Object, RedirectUrlValidatorMock.Object);
         }
 
         public async Task SetDefaultAuthorizationCodeStore(AuthorizationCode code)
         {
             await AuthorizationCodeStore.StoreAsync("test-connect-code", code);
+        }
+
+        public async Task SetDefaultRefreshTokenStore(RefreshToken refreshToken)
+        {
+            await RefreshTokenStore.StoreAsync("valid-example-of-refresh-token", refreshToken);
         }
 
         public void DisableLocalAuthentication()
