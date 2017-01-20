@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using IdentityServer3.Core;
 using IdentityServer3.Core.Configuration;
 using IdentityServer3.Core.Models;
 using IdentityServer3.Core.Services;
@@ -15,8 +16,8 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         public NativeLoginRequestValidatorTestSetup()
         {
             Options = new IdentityServerOptions();
-            AuthorizationCodeStoreMock = new Mock<IAuthorizationCodeStore>();
-            RefreshTokenStoreMock = new Mock<IRefreshTokenStore>();
+            AuthorizationCodeStore = new InMemoryAuthorizationCodeStore();
+            RefreshTokenStore = new InMemoryRefreshTokenStore();
             CustomGrantValidatorMock = new Mock<ICustomGrantValidator>();
             UserServiceMock = new Mock<IUserService>();
             EventServiceMock = new Mock<IEventService>();
@@ -25,10 +26,11 @@ namespace IdentityServer3.Tests.TokenClients.Setup
             ScopeValidator = new ScopeValidator(new InMemoryScopeStore(TestScopes.Get()));
         }
 
+
         internal NativeLoginRequestValidator Validator { get; set; }
         internal IdentityServerOptions Options { get; set; }
-        internal Mock<IAuthorizationCodeStore> AuthorizationCodeStoreMock { get; set; }
-        internal Mock<IRefreshTokenStore> RefreshTokenStoreMock { get; set; }
+        internal InMemoryAuthorizationCodeStore AuthorizationCodeStore { get; set; }
+        internal InMemoryRefreshTokenStore RefreshTokenStore { get; set; }
         internal Mock<ICustomGrantValidator> CustomGrantValidatorMock { get; set; }
         internal Mock<IUserService> UserServiceMock { get; set; }
         internal Mock<IEventService> EventServiceMock { get; set; }
@@ -40,9 +42,19 @@ namespace IdentityServer3.Tests.TokenClients.Setup
         {
             var grantValidator = new Core.Validation.CustomGrantValidator(new[] {CustomGrantValidatorMock.Object});
 
-            Validator = new NativeLoginRequestValidator(Options, AuthorizationCodeStoreMock.Object,
-                RefreshTokenStoreMock.Object, UserServiceMock.Object, grantValidator, ScopeValidator,
+            Validator = new NativeLoginRequestValidator(Options, AuthorizationCodeStore,
+                RefreshTokenStore, UserServiceMock.Object, grantValidator, ScopeValidator,
                 EventServiceMock.Object, TwoFactorServiceMock.Object, RedirectUrlValidatorMock.Object);
+        }
+
+        public async Task SetDefaultAuthorizationCodeStore(AuthorizationCode code)
+        {
+            await AuthorizationCodeStore.StoreAsync("test-connect-code", code);
+        }
+
+        public async Task SetDefaultRefreshTokenStore(RefreshToken refreshToken)
+        {
+            await RefreshTokenStore.StoreAsync("valid-example-of-refresh-token", refreshToken);
         }
 
         public void DisableLocalAuthentication()
@@ -81,9 +93,27 @@ namespace IdentityServer3.Tests.TokenClients.Setup
             UserServiceMock.Setup(y => y.AuthenticateLocalAsync(It.IsAny<LocalAuthenticationContext>())).Callback((LocalAuthenticationContext context) =>
             {
                 context.AuthenticateResult = new AuthenticateResult("/test", "test-subject-id", "test-name");
-                context.AuthenticateResult.PartialSignInReason = "test successful partial reason";
+                context.AuthenticateResult.PartialSignInReason = Constants.NativeLoginPartialReasons.TwoFactorChallengeRequired;
                 context.PasswordlessSessionCode = context.PasswordlessSessionCode;
             }).Returns(Task.FromResult(true));
+        }
+
+        public void UserIsActiveReturnsTrue()
+        {
+            UserServiceMock.Setup(y => y.IsActiveAsync(It.IsAny<IsActiveContext>())).Callback(
+                (IsActiveContext isActiveContext) =>
+                {
+                    isActiveContext.IsActive = true;
+                }).Returns(Task.FromResult(true));
+        }
+
+        public void UserIsActiveReturnsFalse()
+        {
+            UserServiceMock.Setup(y => y.IsActiveAsync(It.IsAny<IsActiveContext>())).Callback(
+                (IsActiveContext isActiveContext) =>
+                {
+                    isActiveContext.IsActive = false;
+                }).Returns(Task.FromResult(true));
         }
     }
 }
