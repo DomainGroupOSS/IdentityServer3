@@ -390,10 +390,20 @@ namespace IdentityServer3.Core.Endpoints
 
             if (error.IsPresent())
             {
+                var signInIdOnQueryString = context.Request.Query.Get("signin");
+
                 if (error.Length > options.InputLengthRestrictions.ExternalError) error = error.Substring(0, options.InputLengthRestrictions.ExternalError);
 
                 Logger.ErrorFormat("External identity provider returned error: {0}", error);
                 await eventService.RaiseExternalLoginErrorEventAsync(error);
+
+                if (signInIdOnQueryString.IsPresent())
+                {
+                    var signInMessageUsingQueryString = signInMessageCookie.Read(signInIdOnQueryString);
+                    
+                    return await RenderLoginPage(signInMessageUsingQueryString, signInIdOnQueryString, String.Format(localizationService.GetMessage(MessageIds.ExternalProviderError), error));
+                }
+                
                 return RenderErrorPage(String.Format(localizationService.GetMessage(MessageIds.ExternalProviderError), error));
             }
 
