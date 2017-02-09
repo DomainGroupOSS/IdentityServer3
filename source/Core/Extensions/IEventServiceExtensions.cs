@@ -463,6 +463,23 @@ namespace IdentityServer3.Core.Extensions
             await events.RaiseEventAsync(evt);
         }
 
+        public static async Task RaiseTokenRevokedEventAsync(this IEventService events, string subjectId, string token, string tokenType)
+        {
+            var evt = new Event<TokenRevokedDetails>(
+                EventConstants.Categories.Authentication,
+                Resources.Events.TokenRevoked,
+                EventTypes.Success,
+                EventConstants.Ids.TokenRevoked,
+                new TokenRevokedDetails()
+                {
+                    SubjectId = subjectId,
+                    Token = ObfuscateToken(token),
+                    TokenType = tokenType
+                });
+
+            await events.RaiseEventAsync(evt);
+        }
+
         public static async Task RaiseUnhandledExceptionEventAsync(this IEventService events, Exception exception)
         {
             var evt = new Event<object>(
@@ -542,7 +559,7 @@ namespace IdentityServer3.Core.Extensions
                 EventConstants.Ids.IntrospectionEndpointSuccess,
                 new IntrospectionEndpointDetail
                 {
-                    Token = token,
+                    Token = ObfuscateToken(token),
                     TokenStatus = tokenStatus,
                     ScopeName = scopeName
                 });
@@ -559,7 +576,7 @@ namespace IdentityServer3.Core.Extensions
                  EventConstants.Ids.IntrospectionEndpointFailure,
                  new IntrospectionEndpointDetail
                  {
-                     Token = token,
+                     Token = ObfuscateToken(token),
                      ScopeName = scopeName
                  },
                  error);
@@ -703,6 +720,17 @@ namespace IdentityServer3.Core.Extensions
             if (events == null) throw new ArgumentNullException("events");
 
             await events.RaiseAsync(evt);
+        }
+
+        private static string ObfuscateToken(string token)
+        {
+            string last4chars = "****";
+            if (token.IsPresent() && token.Length > 4)
+            {
+                last4chars = token.Substring(token.Length - 4);
+            }
+
+            return "****" + last4chars;
         }
     }
 }

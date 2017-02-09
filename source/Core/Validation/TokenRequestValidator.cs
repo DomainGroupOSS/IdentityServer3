@@ -180,6 +180,10 @@ namespace IdentityServer3.Core.Validation
                 {
                     message += ": " + customResult.Error;
                 }
+                else
+                {
+                    customResult.Error = Constants.TokenErrors.InvalidRequest;
+                }
 
                 LogError(message);
                 return customResult;
@@ -611,7 +615,7 @@ namespace IdentityServer3.Core.Validation
                 {
                     error = "Partial signin returned from AuthenticateLocalAsync";
                 }
-                LogError("User authentication failed: " + error);
+                LogWarn("User authentication failed: " + error);
                 await RaiseFailedResourceOwnerAuthenticationEventAsync(userName, signInMessage, error);
 
                 if (authnResult != null)
@@ -829,7 +833,7 @@ namespace IdentityServer3.Core.Validation
                 if (result.Error.IsPresent())
                 {
                     LogError("Invalid custom grant: " + result.Error);
-                    return Invalid(result.Error);
+                    return Invalid(result.Error, result.ErrorDescription ?? "");
                 }
                 else
                 {
@@ -978,23 +982,20 @@ namespace IdentityServer3.Core.Validation
             };
         }
 
-        private TokenRequestValidationResult Invalid(string error)
+        private TokenRequestValidationResult Invalid(string error, string errorDescription = "")
         {
-            return new TokenRequestValidationResult
+            var result = new TokenRequestValidationResult
             {
                 IsError = true,
                 Error = error
             };
-        }
 
-        private TokenRequestValidationResult Invalid(string error, string errorDescription)
-        {
-            return new TokenRequestValidationResult
+            if (errorDescription.IsPresent())
             {
-                IsError = true,
-                Error = error,
-                ErrorDescription = errorDescription
-            };
+                result.ErrorDescription = errorDescription;
+            }
+
+            return result;
         }
 
         private void LogError(string message)
@@ -1019,7 +1020,7 @@ namespace IdentityServer3.Core.Validation
                 var validationLog = new TokenRequestValidationLog(_validatedRequest);
                 var json = LogSerializer.Serialize(validationLog);
 
-                return string.Format("{0}\n {1}", message, json);
+                return message + "\n " + json;
             };
         }
 

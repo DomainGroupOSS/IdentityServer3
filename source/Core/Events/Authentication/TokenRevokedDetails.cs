@@ -14,32 +14,35 @@
  * limitations under the License.
  */
 
-namespace IdentityServer3.Core.Models
+using IdentityServer3.Core.Models;
+
+namespace IdentityServer3.Core.Events
 {
     /// <summary>
-    /// Class describing the context of the post-authentication stage
+    /// Event details for token revocation event
     /// </summary>
-    public class PostAuthenticationContext
+    public class TokenRevokedDetails
     {
         /// <summary>
-        /// Gets or sets the sign in message.
+        /// Gets or sets the token.
         /// </summary>
         /// <value>
-        /// The sign in message.
+        /// The token that was revoked.
         /// </value>
-        public SignInMessage SignInMessage { get; set; }
+        public string Token { get; set; }
 
         /// <summary>
-        /// Gets or sets the authenticate result.
+        /// Gets or sets the token toke.
         /// </summary>
         /// <value>
-        /// The authenticate result.
+        /// The type of token that was revoked. Access token or Refresh.
         /// </value>
-        public AuthenticateResult AuthenticateResult { get; set; }
+        public string TokenType { get; set; }
 
         /// <summary>
-        /// Gets or sets if the login page should be used to show the error from the authenticate result (as opposed to the general error page).
+        /// Gets or sets the subject Id
         /// </summary>
-        public bool ShowLoginPageOnErrorResult { get; set; }
+        /// <value></value>
+        public string SubjectId { get; set; }
     }
 }

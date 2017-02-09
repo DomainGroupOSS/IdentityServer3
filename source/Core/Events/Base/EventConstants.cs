@@ -72,6 +72,8 @@ namespace IdentityServer3.Core.Events
             
             public const int Logout = AuthenticationEventsStart + 30;
 
+            public const int TokenRevoked = AuthenticationEventsStart + 35;
+
             public const int PartialLogin = AuthenticationEventsStart + 40;
             public const int PartialLoginComplete = AuthenticationEventsStart + 41;
             public const int DomainNativePartialLoginComplete = AuthenticationEventsStart + 42;
