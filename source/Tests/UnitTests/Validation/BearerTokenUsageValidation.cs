@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using FluentAssertions;
 using IdentityServer3.Core.Validation;
 using Microsoft.Owin;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using IdentityModel;
 using Xunit;
 
 namespace IdentityServer3.Tests.Validation
@@ -110,6 +112,21 @@ namespace IdentityServer3.Tests.Validation
             result.TokenFound.Should().BeTrue();
             result.Token.Should().Be("token");
             result.UsageType.Should().Be(BearerTokenUsageType.AuthorizationHeader);
+        }
+
+        [Fact]
+        [Trait("Category", Category)]
+        public void Valid_Bearer_Scheme_Header_Via_QueryString()
+        {
+            var validator = new BearerTokenUsageValidator();
+            var result = validator.ValidatedQueryString(new List<KeyValuePair<string, string[]>>
+            {
+                 new KeyValuePair<string, string[]>(OidcConstants.AuthenticationSchemes.QueryStringBearer, new [] {"token"})
+            });
+
+            result.TokenFound.Should().BeTrue();
+            result.Token.Should().Be("token");
+            result.UsageType.Should().Be(BearerTokenUsageType.QueryString);
         }
 
         [Fact]

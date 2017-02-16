@@ -319,6 +319,13 @@ namespace IdentityServer3.Core.Extensions
                 String.Equals(request.ContentType, "application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase);
         }
 
+        public static bool IsGetRequest(this IOwinRequest request)
+        {
+            if (request == null) throw new ArgumentNullException("request");
+
+            return request.Method == "GET";
+        }
+
         public async static Task<IFormCollection> ReadRequestFormAsync(this IOwinContext context)
         {
             if (context == null) throw new ArgumentNullException("context");

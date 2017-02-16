@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using IdentityServer3.Core.Extensions;
 using Microsoft.Owin;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using IdentityModel;
 
 namespace IdentityServer3.Core.Validation
 {
@@ -27,18 +29,47 @@ namespace IdentityServer3.Core.Validation
         public async Task<BearerTokenUsageValidationResult> ValidateAsync(IOwinContext context)
         {
             var result = ValidateAuthorizationHeader(context);
+
             if (result.TokenFound)
             {
                 return result;
             }
 
-            if (context.Request.IsFormData())
+            if (context.Request.IsGetRequest())
             {
-                result = await ValidatePostBodyAsync(context);
+                result = ValidatedQueryString(context.Request.Query);
+
                 if (result.TokenFound)
                 {
                     return result;
                 }
+            }
+
+            if (context.Request.IsFormData())
+            {
+                result = await ValidatePostBodyAsync(context);
+
+                if (result.TokenFound)
+                {
+                    return result;
+                }
+            }
+
+            return new BearerTokenUsageValidationResult();
+        }
+
+        public BearerTokenUsageValidationResult ValidatedQueryString(IEnumerable<KeyValuePair<string, string[]>> queryParams)
+        {
+            var queryStringAccessToken = queryParams.FirstOrDefault(q => q.Key == OidcConstants.AuthenticationSchemes.QueryStringBearer);
+
+            if (queryStringAccessToken.Value != null && queryStringAccessToken.Value.First().IsPresent())
+            {
+                return new BearerTokenUsageValidationResult
+                {
+                    TokenFound = true,
+                    Token = queryStringAccessToken.Value.First(),
+                    UsageType = BearerTokenUsageType.QueryString
+                };
             }
 
             return new BearerTokenUsageValidationResult();
