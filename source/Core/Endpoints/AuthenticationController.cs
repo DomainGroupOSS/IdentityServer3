@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -374,7 +374,7 @@ namespace IdentityServer3.Core.Endpoints
 
             Logger.Info("Triggering challenge for external identity provider");
 
-            // add the id to the dictionary so we can recall the cookie id on the callback
+            // add the id to the dictionary so we can recall the cookie id on the callback 
             authProp.Dictionary.Add(Constants.Authentication.SigninId, signin);
             authProp.Dictionary.Add(Constants.Authentication.KatanaAuthenticationType, provider);
             context.Authentication.Challenge(authProp, provider);
