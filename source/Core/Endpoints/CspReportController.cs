@@ -39,7 +39,7 @@ namespace IdentityServer3.Core.Endpoints
         {
             this.options = options;
             this.eventService = eventService;
-        }
+        } 
 
         [HttpPost]
         public async Task<IHttpActionResult> Post()
