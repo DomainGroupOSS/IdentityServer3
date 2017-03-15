@@ -140,6 +140,8 @@ namespace IdentityServer3.Core.Validation
                 return customResult;
             }
 
+            IdsrvMetrics.IdentityTokenValidationRatePerClient(clientId);
+
             _log.Claims = customResult.Claims.ToClaimsDictionary();
 
             LogSuccess();
@@ -269,7 +271,9 @@ namespace IdentityServer3.Core.Validation
                     {
                         throw new InvalidOperationException("Client does not exist anymore.");
                     }
-                }
+
+                    IdsrvMetrics.AccessTokenReferenceTokenValidationRatePerClient(client.ClientId);
+                }                
 
                 return new TokenValidationResult
                 {
@@ -313,6 +317,8 @@ namespace IdentityServer3.Core.Validation
                 await _tokenHandles.RemoveAsync(tokenHandle);
                 return Invalid(Constants.ProtectedResourceErrors.ExpiredToken);
             }
+
+            IdsrvMetrics.AccessTokenReferenceTokenValidationRatePerClient(token.ClientId);
 
             return new TokenValidationResult
             {
