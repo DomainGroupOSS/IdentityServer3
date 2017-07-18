@@ -73,7 +73,7 @@ namespace IdentityServer3.Tests.Conformance.Basic
 
             result.AssertPage("error");
             var model = result.GetPageModel<ErrorViewModel>();
-            model.ErrorMessage.Should().Be(Messages.unauthorized_client);
+            model.ErrorMessage.Should().Contain("http://bad");
         }
 
         [Fact]
@@ -135,7 +135,7 @@ namespace IdentityServer3.Tests.Conformance.Basic
             
             result.AssertPage("error");
             var model = result.GetPageModel<ErrorViewModel>();
-            model.ErrorMessage.Should().Be(Messages.unauthorized_client);
+            model.ErrorMessage.Should().Contain(redirect_uri);
         }
     }
 }
