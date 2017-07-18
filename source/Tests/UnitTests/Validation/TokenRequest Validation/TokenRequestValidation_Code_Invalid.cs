@@ -274,7 +274,7 @@ namespace IdentityServer3.Tests.Validation.TokenRequest
             var result = await validator.ValidateRequestAsync(parameters, client);
 
             result.IsError.Should().BeTrue();
-            result.Error.Should().Be(Constants.TokenErrors.UnauthorizedClient);
+            result.Error.Should().Contain("https://server2/cb");
         }
 
         [Fact]

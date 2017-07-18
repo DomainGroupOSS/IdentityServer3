@@ -319,7 +319,7 @@ namespace IdentityServer3.Core.Validation
                 LogError(error);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, error);
 
-                return Invalid(Constants.TokenErrors.UnauthorizedClient);
+                return Invalid("The redirect URI in the request, " + redirectUri + ", does not match the ones authorized for the OAuth client.");
             }
 
             /////////////////////////////////////////////
