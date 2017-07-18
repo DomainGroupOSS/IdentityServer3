@@ -198,7 +198,7 @@ namespace IdentityServer3.Core.Validation
             if (await _uriValidator.IsRedirectUriValidAsync(request.RedirectUri, request.Client) == false)
             {
                 LogError("Invalid redirect_uri: " + request.RedirectUri, request);
-                return Invalid(request, ErrorTypes.User, Constants.AuthorizeErrors.UnauthorizedClient);
+                return Invalid(request, ErrorTypes.User, "The redirect URI in the request, " + request.RedirectUri + ", does not match the ones authorized for the OAuth client.");
             }
 
             return Valid(request);

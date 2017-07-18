@@ -274,7 +274,7 @@ namespace IdentityServer3.Core.Validation
                     LogError(error);
                     await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, error);
 
-                    return Invalid(Constants.TokenErrors.UnauthorizedClient);
+                    return Invalid("The redirect URI in the request, " + _validatedRequest.AuthorizationCode.RedirectUri + ", does not match the ones authorized for the OAuth client.");
                 }
             }
 
@@ -559,7 +559,7 @@ namespace IdentityServer3.Core.Validation
                     if (await _uriValidator.IsRedirectUriValidAsync(redirectUri, _validatedRequest.Client) == false)
                     {
                         LogError("Invalid redirect_uri: " + redirectUri);
-                        return Invalid(Constants.AuthorizeErrors.UnauthorizedClient);
+                        return Invalid("The redirect URI in the request, " + redirectUri + ", does not match the ones authorized for the OAuth client.");
                     }
                 }
             }
