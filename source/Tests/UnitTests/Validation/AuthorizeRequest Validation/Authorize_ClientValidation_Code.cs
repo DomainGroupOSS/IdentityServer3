@@ -62,7 +62,7 @@ namespace IdentityServer3.Tests.Validation.AuthorizeRequest
             
             result.IsError.Should().BeTrue();
             result.ErrorType.Should().Be(ErrorTypes.User);
-            result.Error.Should().Be(Constants.AuthorizeErrors.UnauthorizedClient);
+            result.Error.Should().Contain("https://invalid");
         }
 
         [Fact]

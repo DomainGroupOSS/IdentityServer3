@@ -472,7 +472,7 @@ namespace IdentityServer3.Tests.Validation
                         _authorizationCodeTestClient);
 
             result.IsError.Should().BeTrue();
-            result.Error.Should().Be(Constants.TokenErrors.UnauthorizedClient);
+            result.Error.Should().Contain("https://test.domain.com.au");
         }
 
         [Fact]
@@ -955,7 +955,7 @@ namespace IdentityServer3.Tests.Validation
             var result = await _validatorSetup.Validator.ValidateRequestAsync(_passwordlessTestParameters, _passwordlessTestClient);
 
             result.IsError.Should().BeTrue();
-            result.Error.Should().Be(Constants.NativeLoginErrors.UnauthorizedClient);
+            result.Error.Should().Contain("http://localhost");
         }
 
         [Fact]

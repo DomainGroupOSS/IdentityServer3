@@ -88,28 +88,6 @@ namespace IdentityServer3.Core.Validation
                 return mandatoryResult;
             }
 
-            if (request.Client.Claims.Any(c => c.Type == Constants.ClaimTypes.ExternalProviderClient && c.Value == bool.TrueString))
-            {
-                var rawRequestedScopes = parameters.Get(Constants.TokenRequest.Scope);
-                var requestedScopes = new List<string>();
-
-                if (!string.IsNullOrWhiteSpace(rawRequestedScopes))
-                {
-                    requestedScopes = rawRequestedScopes.Trim()
-                        .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Distinct()
-                        .ToList();
-                }
-
-                var scopeToValidate = request.Client.AllowedScopes.Union(requestedScopes).Distinct().ToList();
-                var validScopes = (await _scopeValidator.GetValidScopesForExternalClientAsync(scopeToValidate, request.Client.Flow, request.ResponseType)).ToList();
-
-                var clientScope = string.Join(" ", validScopes);
-
-                parameters.Remove(Constants.TokenRequest.Scope);
-                parameters.Add(Constants.TokenRequest.Scope, clientScope);
-            }
-
             // scope, scope restrictions and plausability
             var scopeResult = await ValidateScopeAsync(request);
             if (scopeResult.IsError)
@@ -198,7 +176,7 @@ namespace IdentityServer3.Core.Validation
             if (await _uriValidator.IsRedirectUriValidAsync(request.RedirectUri, request.Client) == false)
             {
                 LogError("Invalid redirect_uri: " + request.RedirectUri, request);
-                return Invalid(request, ErrorTypes.User, Constants.AuthorizeErrors.UnauthorizedClient);
+                return Invalid(request, ErrorTypes.User, "The redirect URI in the request, " + request.RedirectUri + ", does not match the ones authorized for the OAuth client.");
             }
 
             return Valid(request);

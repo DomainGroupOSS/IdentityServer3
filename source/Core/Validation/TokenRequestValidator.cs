@@ -84,28 +84,6 @@ namespace IdentityServer3.Core.Validation
                 throw new ArgumentNullException("parameters");
             }
 
-            if (client.Claims.Any(c => c.Type == Constants.ClaimTypes.ExternalProviderClient && c.Value == bool.TrueString))
-            {
-                var rawRequestedScopes = parameters.Get(Constants.TokenRequest.Scope);
-                var requestedScopes = new List<string>();
-
-                if (!string.IsNullOrWhiteSpace(rawRequestedScopes))
-                {
-                    requestedScopes = rawRequestedScopes.Trim()
-                        .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Distinct()
-                        .ToList();
-                }
-
-                var validScopes = (await _scopeValidator.GetValidScopesForExternalClientAsync(requestedScopes, client.Flow)).ToList();
-                var allowedScope = client.AllowedScopes.Union(validScopes).Distinct().ToList();
-
-                var clientScope = string.Join(" ", allowedScope);
-
-                parameters.Remove(Constants.TokenRequest.Scope);
-                parameters.Add(Constants.TokenRequest.Scope, clientScope);
-            }
-
             _validatedRequest.Raw = parameters;
             _validatedRequest.Client = client;
             _validatedRequest.Options = _options;
@@ -319,7 +297,7 @@ namespace IdentityServer3.Core.Validation
                 LogError(error);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, error);
 
-                return Invalid(Constants.TokenErrors.UnauthorizedClient);
+                return Invalid("The redirect URI in the request, " + redirectUri + ", does not match the ones authorized for the OAuth client.");
             }
 
             /////////////////////////////////////////////

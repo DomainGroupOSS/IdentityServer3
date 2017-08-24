@@ -269,7 +269,7 @@ namespace IdentityServer3.Core.Validation
                     {
                         throw new InvalidOperationException("Client does not exist anymore.");
                     }
-                }
+                }                
 
                 return new TokenValidationResult
                 {
