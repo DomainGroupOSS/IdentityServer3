@@ -304,7 +304,7 @@ namespace IdentityServer3.Core.Endpoints
                 return new AuthorizeFormPostResult(response, Request);
             }
 
-            Logger.Error("Unsupported response mode. Aborting.");
+            Logger.Warn("Unsupported response mode. Aborting.");
             throw new InvalidOperationException("Unsupported response mode");
         }
 

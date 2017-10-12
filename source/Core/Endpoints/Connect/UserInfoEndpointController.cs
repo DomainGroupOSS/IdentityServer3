@@ -76,7 +76,7 @@ namespace IdentityServer3.Core.Endpoints
             {
                 var error = "No token found.";
 
-                Logger.Error(error);
+                Logger.Warn(error);
                 await RaiseFailureEventAsync(error);
                 return Error(Constants.ProtectedResourceErrors.InvalidToken);
             }
@@ -89,7 +89,7 @@ namespace IdentityServer3.Core.Endpoints
 
             if (tokenResult.IsError)
             {
-                Logger.Error(tokenResult.Error);
+                Logger.Warn(tokenResult.Error);
                 await RaiseFailureEventAsync(tokenResult.Error);
                 return Error(tokenResult.Error);
             }
@@ -99,7 +99,7 @@ namespace IdentityServer3.Core.Endpoints
             if (!tokenClaims.Any(x=>x.Type == Constants.ClaimTypes.Subject))
             {
                 var error = "Token contains no sub claim";
-                Logger.Error(error);
+                Logger.Warn(error);
                 await RaiseFailureEventAsync(error);
                 return Error(Constants.ProtectedResourceErrors.InvalidToken);
             }

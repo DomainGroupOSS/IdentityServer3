@@ -94,13 +94,13 @@ namespace IdentityServer3.Core.Validation
             var grantType = parameters.Get(Constants.TokenRequest.GrantType);
             if (grantType.IsMissing())
             {
-                LogError("Grant type is missing.");
+                LogWarn("Grant type is missing.");
                 return Invalid(Constants.TokenErrors.UnsupportedGrantType);
             }
 
             if (grantType.Length > _options.InputLengthRestrictions.GrantType)
             {
-                LogError("Grant type is too long.");
+                LogWarn("Grant type is too long.");
                 return Invalid(Constants.TokenErrors.UnsupportedGrantType);
             }
 
@@ -131,7 +131,7 @@ namespace IdentityServer3.Core.Validation
                     return result;
                 }
 
-                LogError("Unsupported grant_type: " + grantType);
+                LogWarn("Unsupported grant_type: " + grantType);
                 return Invalid(Constants.TokenErrors.UnsupportedGrantType);
             }
 
@@ -163,7 +163,7 @@ namespace IdentityServer3.Core.Validation
                     customResult.Error = Constants.TokenErrors.InvalidRequest;
                 }
 
-                LogError(message);
+                LogWarn(message);
                 return customResult;
             }
 
@@ -181,7 +181,7 @@ namespace IdentityServer3.Core.Validation
             if (Constants.AllowedFlowsForAuthorizationCodeGrantType.Contains(_validatedRequest.Client.Flow) == false &&
                 !_validatedRequest.Client.AllowedCustomGrantTypes.Contains(Constants.GrantTypes.DomainNative))
             {
-                LogError("Client not authorized for code flow");
+                LogWarn("Client not authorized for code flow");
                 return Invalid(Constants.TokenErrors.UnauthorizedClient);
             }
 
@@ -192,7 +192,7 @@ namespace IdentityServer3.Core.Validation
             if (code.IsMissing())
             {
                 var error = "Authorization code is missing.";
-                LogError(error);
+                LogWarn(error);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(null, error);
 
                 return Invalid(Constants.TokenErrors.InvalidGrant);
@@ -201,7 +201,7 @@ namespace IdentityServer3.Core.Validation
             if (code.Length > _options.InputLengthRestrictions.AuthorizationCode)
             {
                 var error = "Authorization code is too long.";
-                LogError(error);
+                LogWarn(error);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(null, error);
 
                 return Invalid(Constants.TokenErrors.InvalidGrant);
@@ -212,7 +212,7 @@ namespace IdentityServer3.Core.Validation
             var authZcode = await _authorizationCodes.GetAsync(code);
             if (authZcode == null)
             {
-                LogError("Invalid authorization code: " + code);
+                LogWarn("Invalid authorization code: " + code);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, "Invalid handle");
 
                 return Invalid(Constants.TokenErrors.InvalidGrant);
@@ -270,7 +270,7 @@ namespace IdentityServer3.Core.Validation
             if (authZcode.CreationTime.HasExceeded(_validatedRequest.Client.AuthorizationCodeLifetime))
             {
                 var error = "Authorization code is expired";
-                LogError(error);
+                LogWarn(error);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, error);
 
                 return Invalid(Constants.TokenErrors.InvalidGrant);
@@ -285,7 +285,7 @@ namespace IdentityServer3.Core.Validation
             if (redirectUri.IsMissing())
             {
                 var error = "Redirect URI is missing.";
-                LogError(error);
+                LogWarn(error);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, error);
 
                 return Invalid(Constants.TokenErrors.UnauthorizedClient);
@@ -294,7 +294,7 @@ namespace IdentityServer3.Core.Validation
             if (redirectUri.Equals(_validatedRequest.AuthorizationCode.RedirectUri, StringComparison.Ordinal) == false)
             {
                 var error = "Invalid redirect_uri: " + redirectUri;
-                LogError(error);
+                LogWarn(error);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, error);
 
                 return Invalid("The redirect URI in the request, " + redirectUri + ", does not match the ones authorized for the OAuth client.");
@@ -307,7 +307,7 @@ namespace IdentityServer3.Core.Validation
                 !_validatedRequest.AuthorizationCode.RequestedScopes.Any())
             {
                 var error = "Authorization code has no associated scopes.";
-                LogError(error);
+                LogWarn(error);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, error);
 
                 return Invalid(Constants.TokenErrors.InvalidRequest);
@@ -322,7 +322,7 @@ namespace IdentityServer3.Core.Validation
             if (isActiveCtx.IsActive == false)
             {
                 var error = "User has been disabled: " + _validatedRequest.AuthorizationCode.Subject;
-                LogError(error);
+                LogWarn(error);
                 await RaiseFailedAuthorizationCodeRedeemedEventAsync(code, error);
 
                 return Invalid(Constants.TokenErrors.InvalidRequest);
@@ -366,7 +366,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (_validatedRequest.Client.AllowClientCredentialsOnly == false)
                 {
-                    LogError("Client not authorized for client credentials flow");
+                    LogWarn("Client not authorized for client credentials flow");
                     return Invalid(Constants.TokenErrors.UnauthorizedClient);
                 }
             }
@@ -376,19 +376,19 @@ namespace IdentityServer3.Core.Validation
             /////////////////////////////////////////////
             if (!(await ValidateRequestedScopesAsync(parameters)))
             {
-                LogError("Invalid scopes.");
+                LogWarn("Invalid scopes.");
                 return Invalid(Constants.TokenErrors.InvalidScope);
             }
 
             if (_validatedRequest.ValidatedScopes.ContainsOpenIdScopes)
             {
-                LogError("Client cannot request OpenID scopes in client credentials flow");
+                LogWarn("Client cannot request OpenID scopes in client credentials flow");
                 return Invalid(Constants.TokenErrors.InvalidScope);
             }
 
             if (_validatedRequest.ValidatedScopes.ContainsOfflineAccessScope)
             {
-                LogError("Client cannot request a refresh token in client credentials flow");
+                LogWarn("Client cannot request a refresh token in client credentials flow");
                 return Invalid(Constants.TokenErrors.InvalidScope);
             }
 
@@ -405,7 +405,7 @@ namespace IdentityServer3.Core.Validation
             /////////////////////////////////////////////
             if (_validatedRequest.Client.Flow != Flows.Delegation)
             {
-                LogError("Client not authorized for delegation flow");
+                LogWarn("Client not authorized for delegation flow");
                 return Invalid(Constants.TokenErrors.UnauthorizedClient);
             }
 
@@ -428,19 +428,19 @@ namespace IdentityServer3.Core.Validation
             /////////////////////////////////////////////
             if (!(await ValidateRequestedScopesAsync(parameters)))
             {
-                LogError("Invalid scopes.");
+                LogWarn("Invalid scopes.");
                 return Invalid(Constants.TokenErrors.InvalidScope);
             }
 
             if (_validatedRequest.ValidatedScopes.ContainsOpenIdScopes)
             {
-                LogError("Client cannot request OpenID scopes in delegation flow");
+                LogWarn("Client cannot request OpenID scopes in delegation flow");
                 return Invalid(Constants.TokenErrors.InvalidScope);
             }
 
             if (_validatedRequest.ValidatedScopes.ContainsOfflineAccessScope)
             {
-                LogError("Client cannot request a refresh token in delegation flow");
+                LogWarn("Client cannot request a refresh token in delegation flow");
                 return Invalid(Constants.TokenErrors.InvalidScope);
             }
 
@@ -459,7 +459,7 @@ namespace IdentityServer3.Core.Validation
                 if (isActiveCtx.IsActive == false)
                 {
                     var error = "User has been disabled: " + _validatedRequest.AuthorizationCode.Subject;
-                    LogError(error);
+                    LogWarn(error);
 
                     return Invalid(Constants.TokenErrors.InvalidRequest);
                 }
@@ -481,7 +481,7 @@ namespace IdentityServer3.Core.Validation
             if (_options.AuthenticationOptions.EnableLocalLogin == false ||
                 _validatedRequest.Client.EnableLocalLogin == false)
             {
-                LogError("EnableLocalLogin is disabled, failing with UnsupportedGrantType");
+                LogWarn("EnableLocalLogin is disabled, failing with UnsupportedGrantType");
                 return Invalid(Constants.TokenErrors.UnsupportedGrantType);
             }
 
@@ -490,7 +490,7 @@ namespace IdentityServer3.Core.Validation
             /////////////////////////////////////////////
             if (_validatedRequest.Client.Flow != Flows.ResourceOwner)
             {
-                LogError("Client not authorized for resource owner flow");
+                LogWarn("Client not authorized for resource owner flow");
                 return Invalid(Constants.TokenErrors.UnauthorizedClient);
             }
 
@@ -499,7 +499,7 @@ namespace IdentityServer3.Core.Validation
             /////////////////////////////////////////////
             if (!(await ValidateRequestedScopesAsync(parameters)))
             {
-                LogError("Invalid scopes.");
+                LogWarn("Invalid scopes.");
                 return Invalid(Constants.TokenErrors.InvalidScope);
             }
 
@@ -511,14 +511,14 @@ namespace IdentityServer3.Core.Validation
 
             if (userName.IsMissing() || password.IsMissing())
             {
-                LogError("Username or password missing.");
+                LogWarn("Username or password missing.");
                 return Invalid(Constants.TokenErrors.InvalidGrant);
             }
 
             if (userName.Length > _options.InputLengthRestrictions.UserName ||
                 password.Length > _options.InputLengthRestrictions.Password)
             {
-                LogError("Username or password too long.");
+                LogWarn("Username or password too long.");
                 return Invalid(Constants.TokenErrors.InvalidGrant);
             }
 
@@ -538,7 +538,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (acr.Length > _options.InputLengthRestrictions.AcrValues)
                 {
-                    LogError("Acr values too long.");
+                    LogWarn("Acr values too long.");
                     return Invalid(Constants.TokenErrors.InvalidRequest);
                 }
 
@@ -620,7 +620,7 @@ namespace IdentityServer3.Core.Validation
             if (refreshTokenHandle.IsMissing())
             {
                 var error = "Refresh token is missing";
-                LogError(error);
+                LogWarn(error);
                 await RaiseRefreshTokenRefreshFailureEventAsync(null, error);
 
                 return Invalid(Constants.TokenErrors.InvalidRequest);
@@ -629,7 +629,7 @@ namespace IdentityServer3.Core.Validation
             if (refreshTokenHandle.Length > _options.InputLengthRestrictions.RefreshToken)
             {
                 var error = "Refresh token too long";
-                LogError(error);
+                LogWarn(error);
                 await RaiseRefreshTokenRefreshFailureEventAsync(null, error);
 
                 return Invalid(Constants.TokenErrors.InvalidGrant);
@@ -682,7 +682,7 @@ namespace IdentityServer3.Core.Validation
                 if (!_validatedRequest.Client.AllowedScopes.Contains(Constants.StandardScopes.OfflineAccess))
                 {
                     var error = "Client does not have access to offline_access scope anymore";
-                    LogError(error);
+                    LogWarn(error);
                     await RaiseRefreshTokenRefreshFailureEventAsync(refreshTokenHandle, error);
 
                     return Invalid(Constants.TokenErrors.InvalidGrant);
@@ -700,7 +700,7 @@ namespace IdentityServer3.Core.Validation
                     if (!_validatedRequest.Client.AllowedScopes.Contains(scope))
                     {
                         var error = "Client does not have access to a requested scope anymore: " + scope;
-                        LogError(error);
+                        LogWarn(error);
                         await RaiseRefreshTokenRefreshFailureEventAsync(refreshTokenHandle, error);
 
                         return Invalid(Constants.TokenErrors.InvalidGrant);
@@ -721,7 +721,7 @@ namespace IdentityServer3.Core.Validation
             if (isActiveCtx.IsActive == false)
             {
                 var error = "User has been disabled: " + _validatedRequest.RefreshToken.SubjectId;
-                LogError(error);
+                LogWarn(error);
                 await RaiseRefreshTokenRefreshFailureEventAsync(refreshTokenHandle, error);
 
                 return Invalid(Constants.TokenErrors.InvalidRequest);
@@ -761,7 +761,7 @@ namespace IdentityServer3.Core.Validation
             /////////////////////////////////////////////
             if (_validatedRequest.Client.Flow != Flows.Custom)
             {
-                LogError("Client not registered for custom grant type");
+                LogWarn("Client not registered for custom grant type");
                 return Invalid(Constants.TokenErrors.UnsupportedGrantType);
             }
 
@@ -772,7 +772,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (!_validatedRequest.Client.AllowedCustomGrantTypes.Contains(_validatedRequest.GrantType))
                 {
-                    LogError("Client does not have the custom grant type in the allowed list, therefore requested grant is not allowed.");
+                    LogWarn("Client does not have the custom grant type in the allowed list, therefore requested grant is not allowed.");
                     return Invalid(Constants.TokenErrors.UnsupportedGrantType);
                 }
             }
@@ -782,7 +782,7 @@ namespace IdentityServer3.Core.Validation
             /////////////////////////////////////////////
             if (!_customGrantValidator.GetAvailableGrantTypes().Contains(_validatedRequest.GrantType, StringComparer.Ordinal))
             {
-                LogError("No validator is registered for the grant type.");
+                LogWarn("No validator is registered for the grant type.");
                 return Invalid(Constants.TokenErrors.UnsupportedGrantType);
             }
 
@@ -791,7 +791,7 @@ namespace IdentityServer3.Core.Validation
             /////////////////////////////////////////////
             if (!(await ValidateRequestedScopesAsync(parameters)))
             {
-                LogError("Invalid scopes.");
+                LogWarn("Invalid scopes.");
                 return Invalid(Constants.TokenErrors.InvalidScope);
             }
 
@@ -802,7 +802,7 @@ namespace IdentityServer3.Core.Validation
 
             if (result == null)
             {
-                LogError("Invalid custom grant.");
+                LogWarn("Invalid custom grant.");
                 return Invalid(Constants.TokenErrors.InvalidGrant);
             }
 
@@ -810,12 +810,12 @@ namespace IdentityServer3.Core.Validation
             {
                 if (result.Error.IsPresent())
                 {
-                    LogError("Invalid custom grant: " + result.Error);
+                    LogWarn("Invalid custom grant: " + result.Error);
                     return Invalid(result.Error, result.ErrorDescription ?? "");
                 }
                 else
                 {
-                    LogError("Invalid custom grant.");
+                    LogWarn("Invalid custom grant.");
                     return Invalid(Constants.TokenErrors.InvalidGrant);
                 }
             }
@@ -864,20 +864,20 @@ namespace IdentityServer3.Core.Validation
         {
             if (authZcode.CodeChallenge.IsMissing() || authZcode.CodeChallengeMethod.IsMissing())
             {
-                LogError("Client uses AuthorizationCodeWithProofKey flow but missing code challenge or code challenge method in authZ code");
+                LogWarn("Client uses AuthorizationCodeWithProofKey flow but missing code challenge or code challenge method in authZ code");
                 return Invalid(Constants.TokenErrors.InvalidGrant);
             }
 
             if (codeVerifier.IsMissing())
             {
-                LogError("Missing code_verifier");
+                LogWarn("Missing code_verifier");
                 return Invalid(Constants.TokenErrors.InvalidGrant);
             }
 
             if (codeVerifier.Length < _options.InputLengthRestrictions.CodeVerifierMinLength ||
                 codeVerifier.Length > _options.InputLengthRestrictions.CodeVerifierMaxLength)
             {
-                LogError("code_verifier is too short or too long.");
+                LogWarn("code_verifier is too short or too long.");
                 return Invalid(Constants.TokenErrors.InvalidGrant);
             }
 

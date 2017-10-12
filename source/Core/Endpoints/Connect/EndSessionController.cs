@@ -122,7 +122,7 @@ namespace IdentityServer3.Core.Endpoints
 
             if (ValidateSid(sid) == false)
             {
-                Logger.Error("Invalid sid passed to end session callback");
+                Logger.Warn("Invalid sid passed to end session callback");
                 return StatusCode(HttpStatusCode.BadRequest);
             }
 

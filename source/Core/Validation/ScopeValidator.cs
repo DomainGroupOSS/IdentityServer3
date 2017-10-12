@@ -87,13 +87,13 @@ namespace IdentityServer3.Core.Validation
 
                 if (scopeDetail == null)
                 {
-                    Logger.ErrorFormat("Invalid scope: {0}", requestedScope);
+                    Logger.WarnFormat("Invalid scope: {0}", requestedScope);
                     return false;
                 }
 
                 if (scopeDetail.Enabled == false)
                 {
-                    Logger.ErrorFormat("Scope disabled: {0}", requestedScope);
+                    Logger.WarnFormat("Scope disabled: {0}", requestedScope);
                     return false;
                 }
 
@@ -130,7 +130,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (!client.AllowedScopes.Contains(scope))
                 {
-                    Logger.ErrorFormat("Requested scope not allowed: {0}", scope);
+                    Logger.WarnFormat("Requested scope not allowed: {0}", scope);
                     return false;
                 }
             }
@@ -147,7 +147,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (!ContainsOpenIdScopes)
                 {
-                    Logger.Error("Requests for id_token response type must include identity scopes");
+                    Logger.Warn("Requests for id_token response type must include identity scopes");
                     return false;
                 }
             }
@@ -157,7 +157,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (!ContainsOpenIdScopes || ContainsResourceScopes)
                 {
-                    Logger.Error("Requests for id_token response type only must not include resource scopes");
+                    Logger.Warn("Requests for id_token response type only must not include resource scopes");
                     return false;
                 }
             }
@@ -167,7 +167,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (ContainsOpenIdScopes || !ContainsResourceScopes)
                 {
-                    Logger.Error("Requests for token response type only must include resource scopes, but no identity scopes.");
+                    Logger.Warn("Requests for token response type only must include resource scopes, but no identity scopes.");
                     return false;
                 }
             }

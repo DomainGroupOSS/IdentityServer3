@@ -68,7 +68,7 @@ namespace IdentityServer3.Core.Validation
             
             if (parameters == null)
             {
-                Logger.Error("Parameters are null.");
+                Logger.Warn("Parameters are null.");
                 throw new ArgumentNullException("parameters");
             }
 
@@ -114,7 +114,7 @@ namespace IdentityServer3.Core.Validation
                     message += ": " + customResult.Error;
                 }
 
-                LogError(message, request);
+                LogWarn(message, request);
                 return Invalid(request, customResult.ErrorType, customResult.Error ?? message);
             }
 
@@ -130,7 +130,7 @@ namespace IdentityServer3.Core.Validation
             var clientId = request.Raw.Get(Constants.AuthorizeRequest.ClientId);
             if (clientId.IsMissingOrTooLong(_options.InputLengthRestrictions.ClientId))
             {
-                LogError("client_id is missing or too long", request);
+                LogWarn("client_id is missing or too long", request);
                 return Invalid(request);
             }
 
@@ -144,14 +144,14 @@ namespace IdentityServer3.Core.Validation
 
             if (redirectUri.IsMissingOrTooLong(_options.InputLengthRestrictions.RedirectUri))
             {
-                LogError("redirect_uri is missing or too long", request);
+                LogWarn("redirect_uri is missing or too long", request);
                 return Invalid(request);
             }
 
             Uri uri;
             if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out uri))
             {
-                LogError("invalid redirect_uri: " + redirectUri, request);
+                LogWarn("invalid redirect_uri: " + redirectUri, request);
                 return Invalid(request);
             }
 
@@ -164,7 +164,7 @@ namespace IdentityServer3.Core.Validation
             var client = await _clients.FindClientByIdAsync(request.ClientId);
             if (client == null || client.Enabled == false)
             {
-                LogError("Unknown client or not enabled: " + request.ClientId, request);
+                LogWarn("Unknown client or not enabled: " + request.ClientId, request);
                 return Invalid(request, ErrorTypes.User, Constants.AuthorizeErrors.UnauthorizedClient);
             }
 
@@ -175,7 +175,7 @@ namespace IdentityServer3.Core.Validation
             //////////////////////////////////////////////////////////
             if (await _uriValidator.IsRedirectUriValidAsync(request.RedirectUri, request.Client) == false)
             {
-                LogError("Invalid redirect_uri: " + request.RedirectUri, request);
+                LogWarn("Invalid redirect_uri: " + request.RedirectUri, request);
                 return Invalid(request, ErrorTypes.User, "The redirect URI in the request, " + request.RedirectUri + ", does not match the ones authorized for the OAuth client.");
             }
 
@@ -199,7 +199,7 @@ namespace IdentityServer3.Core.Validation
             var responseType = request.Raw.Get(Constants.AuthorizeRequest.ResponseType);
             if (responseType.IsMissing())
             {
-                LogError("Missing response_type", request);
+                LogWarn("Missing response_type", request);
                 return Invalid(request, ErrorTypes.User, Constants.AuthorizeErrors.UnsupportedResponseType);
             }
 
@@ -214,7 +214,7 @@ namespace IdentityServer3.Core.Validation
             // as a space-delimited list of values in which the order of values does not matter.'
             if (!Constants.SupportedResponseTypes.Contains(responseType, _responseTypeEqualityComparer))
             {
-                LogError("Response type not supported: " + responseType, request);
+                LogWarn("Response type not supported: " + responseType, request);
                 return Invalid(request, ErrorTypes.User, Constants.AuthorizeErrors.UnsupportedResponseType);
             }
 
@@ -253,7 +253,7 @@ namespace IdentityServer3.Core.Validation
             //////////////////////////////////////////////////////////
             if (!Constants.AllowedFlowsForAuthorizeEndpoint.Contains(request.Flow))
             {
-                LogError("Invalid flow", request);
+                LogWarn("Invalid flow", request);
                 return Invalid(request);
             }
 
@@ -277,13 +277,13 @@ namespace IdentityServer3.Core.Validation
                     }
                     else
                     {
-                        LogError("Invalid response_mode for flow: " + responseMode, request);
+                        LogWarn("Invalid response_mode for flow: " + responseMode, request);
                         return Invalid(request, ErrorTypes.User, Constants.AuthorizeErrors.UnsupportedResponseType);
                     }
                 }
                 else
                 {
-                    LogError("Unsupported response_mode: " + responseMode, request);
+                    LogWarn("Unsupported response_mode: " + responseMode, request);
                     return Invalid(request, ErrorTypes.User, Constants.AuthorizeErrors.UnsupportedResponseType);
                 }
             }
@@ -294,7 +294,7 @@ namespace IdentityServer3.Core.Validation
             //////////////////////////////////////////////////////////
             if ((request.Flow != request.Client.Flow) && !request.Client.AllowedCustomGrantTypes.Contains(Constants.GrantTypes.DomainNative))
             {
-                LogError("Invalid flow for client: " + request.Flow, request);
+                LogWarn("Invalid flow for client: " + request.Flow, request);
                 return Invalid(request, ErrorTypes.User, Constants.AuthorizeErrors.UnauthorizedClient);
             }
 
@@ -308,7 +308,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (!request.Client.AllowAccessTokensViaBrowser)
                 {
-                    LogError("Client requested access token - but client is not configured to receive access tokens via browser", request);
+                    LogWarn("Client requested access token - but client is not configured to receive access tokens via browser", request);
                     return Invalid(request);
                 }
             }
@@ -324,13 +324,13 @@ namespace IdentityServer3.Core.Validation
             var scope = request.Raw.Get(Constants.AuthorizeRequest.Scope);
             if (scope.IsMissing())
             {
-                LogError("scope is missing", request);
+                LogWarn("scope is missing", request);
                 return Invalid(request, ErrorTypes.Client);
             }
 
             if (scope.Length > _options.InputLengthRestrictions.Scope)
             {
-                LogError("scopes too long.", request);
+                LogWarn("scopes too long.", request);
                 return Invalid(request, ErrorTypes.Client);
             }
 
@@ -350,7 +350,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (request.IsOpenIdRequest == false)
                 {
-                    LogError("response_type requires the openid scope", request);
+                    LogWarn("response_type requires the openid scope", request);
                     return Invalid(request, ErrorTypes.Client);
                 }
             }
@@ -365,7 +365,7 @@ namespace IdentityServer3.Core.Validation
 
             if (_scopeValidator.ContainsOpenIdScopes && !request.IsOpenIdRequest)
             {
-                LogError("Identity related scope requests, but no openid scope", request);
+                LogWarn("Identity related scope requests, but no openid scope", request);
                 return Invalid(request, ErrorTypes.Client, Constants.AuthorizeErrors.InvalidScope);
             }
 
@@ -405,7 +405,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (nonce.Length > _options.InputLengthRestrictions.Nonce)
                 {
-                    LogError("Nonce too long", request);
+                    LogWarn("Nonce too long", request);
                     return Invalid(request, ErrorTypes.Client);
                 }
 
@@ -420,7 +420,7 @@ namespace IdentityServer3.Core.Validation
                     // only openid requests require nonce
                     if (request.IsOpenIdRequest)
                     {
-                        LogError("Nonce required for implicit and hybrid flow with openid scope", request);
+                        LogWarn("Nonce required for implicit and hybrid flow with openid scope", request);
                         return Invalid(request, ErrorTypes.Client);
                     }
                 }
@@ -451,7 +451,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (uilocales.Length > _options.InputLengthRestrictions.UiLocale)
                 {
-                    LogError("UI locale too long", request);
+                    LogWarn("UI locale too long", request);
                     return Invalid(request, ErrorTypes.Client);
                 }
 
@@ -487,13 +487,13 @@ namespace IdentityServer3.Core.Validation
                     }
                     else
                     {
-                        LogError("Invalid max_age.", request);
+                        LogWarn("Invalid max_age.", request);
                         return Invalid(request, ErrorTypes.Client);
                     }
                 }
                 else
                 {
-                    LogError("Invalid max_age.", request);
+                    LogWarn("Invalid max_age.", request);
                     return Invalid(request, ErrorTypes.Client);
                 }
             }
@@ -506,7 +506,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (loginHint.Length > _options.InputLengthRestrictions.LoginHint)
                 {
-                    LogError("Login hint too long", request);
+                    LogWarn("Login hint too long", request);
                     return Invalid(request, ErrorTypes.Client);
                 }
 
@@ -521,7 +521,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (acrValues.Length > _options.InputLengthRestrictions.AcrValues)
                 {
-                    LogError("Acr values too long", request);
+                    LogWarn("Acr values too long", request);
                     return Invalid(request, ErrorTypes.Client);
                 }
 
@@ -565,7 +565,7 @@ namespace IdentityServer3.Core.Validation
             var codeChallenge = request.Raw.Get(Constants.AuthorizeRequest.CodeChallenge);
             if (codeChallenge.IsMissing())
             {
-                LogError("code_challenge is missing", request);
+                LogWarn("code_challenge is missing", request);
                 fail.ErrorDescription = "code challenge required";
                 return fail;
             }
@@ -573,7 +573,7 @@ namespace IdentityServer3.Core.Validation
             if (codeChallenge.Length < _options.InputLengthRestrictions.CodeChallengeMinLength ||
                 codeChallenge.Length > _options.InputLengthRestrictions.CodeChallengeMaxLength)
             {
-                LogError("code_challenge is either too short or too long", request);
+                LogWarn("code_challenge is either too short or too long", request);
                 return fail;
             }
 
@@ -588,7 +588,7 @@ namespace IdentityServer3.Core.Validation
 
             if (!Constants.SupportedCodeChallengeMethods.Contains(codeChallengeMethod))
             {
-                LogError("Unsupported code_challenge_method: " + codeChallengeMethod, request);
+                LogWarn("Unsupported code_challenge_method: " + codeChallengeMethod, request);
                 fail.ErrorDescription = "transform algorithm not supported";
                 return fail;
             }
@@ -632,12 +632,12 @@ namespace IdentityServer3.Core.Validation
             return result;
         }
 
-        private void LogError(string message, ValidatedAuthorizeRequest request)
+        private void LogWarn(string message, ValidatedAuthorizeRequest request)
         {
             var validationLog = new AuthorizeRequestValidationLog(request);
             var json = LogSerializer.Serialize(validationLog);
 
-            Logger.ErrorFormat("{0}\n {1}", message, json);
+            Logger.WarnFormat("{0}\n {1}", message, json);
         }
 
         private void LogSuccess(ValidatedAuthorizeRequest request)

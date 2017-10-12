@@ -92,7 +92,7 @@ namespace IdentityServer3.Core.Validation
 
             if (token.Length > _options.InputLengthRestrictions.Jwt)
             {
-                Logger.Error("JWT too long");
+                Logger.Warn("JWT too long");
                 return Invalid(Constants.ProtectedResourceErrors.InvalidToken);
             }
 
@@ -102,7 +102,7 @@ namespace IdentityServer3.Core.Validation
 
                 if (clientId.IsMissing())
                 {
-                    Logger.Error("No clientId supplied, can't find id in identity token.");
+                    Logger.Warn("No clientId supplied, can't find id in identity token.");
                     return Invalid(Constants.ProtectedResourceErrors.InvalidToken);
                 }
             }
@@ -113,7 +113,7 @@ namespace IdentityServer3.Core.Validation
             var client = await _clients.FindClientByIdAsync(clientId);
             if (client == null)
             {
-                LogError("Unknown or disabled client.");
+                LogWarn("Unknown or disabled client.");
                 return Invalid(Constants.ProtectedResourceErrors.InvalidToken);
             }
 
@@ -126,7 +126,7 @@ namespace IdentityServer3.Core.Validation
 
             if (result.IsError)
             {
-                LogError("Error validating JWT");
+                LogWarn("Error validating JWT");
                 return result;
             }
 
@@ -136,7 +136,7 @@ namespace IdentityServer3.Core.Validation
 
             if (customResult.IsError)
             {
-                LogError("Custom validator failed: " + (customResult.Error ?? "unknown"));
+                LogWarn("Custom validator failed: " + (customResult.Error ?? "unknown"));
                 return customResult;
             }
 
@@ -159,7 +159,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (token.Length > _options.InputLengthRestrictions.Jwt)
                 {
-                    Logger.Error("JWT too long");
+                    Logger.Warn("JWT too long");
 
                     return new TokenValidationResult
                     {
@@ -179,7 +179,7 @@ namespace IdentityServer3.Core.Validation
             {
                 if (token.Length > _options.InputLengthRestrictions.TokenHandle)
                 {
-                    Logger.Error("token handle too long");
+                    Logger.Warn("token handle too long");
 
                     return new TokenValidationResult
                     {
@@ -205,7 +205,7 @@ namespace IdentityServer3.Core.Validation
                 var scope = result.Claims.FirstOrDefault(c => c.Type == Constants.ClaimTypes.Scope && c.Value == expectedScope);
                 if (scope == null)
                 {
-                    LogError(string.Format("Checking for expected scope {0} failed", expectedScope));
+                    LogWarn(string.Format("Checking for expected scope {0} failed", expectedScope));
                     return Invalid(Constants.ProtectedResourceErrors.InsufficientScope);
                 }
             }
@@ -214,7 +214,7 @@ namespace IdentityServer3.Core.Validation
 
             if (customResult.IsError)
             {
-                LogError("Custom validator failed: " + (customResult.Error ?? "unknown"));
+                LogWarn("Custom validator failed: " + (customResult.Error ?? "unknown"));
                 return customResult;
             }
 
@@ -300,7 +300,7 @@ namespace IdentityServer3.Core.Validation
 
             if (token.Type != Constants.TokenTypes.AccessToken)
             {
-                LogError("Token handle does not resolve to an access token - but instead to: " + token.Type);
+                LogWarn("Token handle does not resolve to an access token - but instead to: " + token.Type);
 
                 await _tokenHandles.RemoveAsync(tokenHandle);
                 return Invalid(Constants.ProtectedResourceErrors.InvalidToken);
@@ -308,7 +308,7 @@ namespace IdentityServer3.Core.Validation
 
             if (DateTimeOffsetHelper.UtcNow >= token.CreationTime.AddSeconds(token.Lifetime))
             {
-                LogError("Token expired.");
+                LogWarn("Token expired.");
 
                 await _tokenHandles.RemoveAsync(tokenHandle);
                 return Invalid(Constants.ProtectedResourceErrors.ExpiredToken);
@@ -351,7 +351,7 @@ namespace IdentityServer3.Core.Validation
             }
             catch (Exception ex)
             {
-                Logger.ErrorException("Malformed JWT token", ex);
+                Logger.WarnException("Malformed JWT token", ex);
                 return null;
             }
         }
@@ -371,10 +371,10 @@ namespace IdentityServer3.Core.Validation
             Logger.InfoFormat("{0}\n{1}", message, json);
         }
 
-        private void LogError(string message)
+        private void LogWarn(string message)
         {
             var json = LogSerializer.Serialize(_log);
-            Logger.ErrorFormat("{0}\n{1}", message, json);
+            Logger.WarnFormat("{0}\n{1}", message, json);
         }
 
         private void LogSuccess()

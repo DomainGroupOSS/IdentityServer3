@@ -81,7 +81,7 @@ namespace IdentityServer3.Core.Endpoints
             if (token.IsMissing())
             {
                 var error = "token is missing.";
-                Logger.Error(error);
+                Logger.Warn(error);
                 await RaiseFailureEventAsync(error);
 
                 return BadRequest(_localizationService.GetMessage(MessageIds.MissingToken));
@@ -91,7 +91,7 @@ namespace IdentityServer3.Core.Endpoints
             if (clientId.IsMissing())
             {
                 var error = "client_id is missing.";
-                Logger.Error(error);
+                Logger.Warn(error);
                 await RaiseFailureEventAsync(error);
 
                 return BadRequest(_localizationService.GetMessage(MessageIds.MissingClientId));

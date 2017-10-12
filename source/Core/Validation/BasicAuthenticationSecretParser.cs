@@ -103,7 +103,7 @@ namespace IdentityServer3.Core.Validation
                 if (clientId.Length > _options.InputLengthRestrictions.ClientId ||
                     secret.Length > _options.InputLengthRestrictions.ClientSecret)
                 {
-                    Logger.Error("Client ID or secret exceeds allowed length.");
+                    Logger.Warn("Client ID or secret exceeds allowed length.");
                     return notfound;
                 }
 
