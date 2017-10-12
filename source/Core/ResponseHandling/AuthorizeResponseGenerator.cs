@@ -62,7 +62,7 @@ namespace IdentityServer3.Core.ResponseHandling
                 return await CreateHybridFlowResponseAsync(request);
             }
 
-            Logger.Error("Unsupported flow: " + request.Flow.ToString());
+            Logger.Warn("Unsupported flow: " + request.Flow.ToString());
             throw new InvalidOperationException("invalid flow: " + request.Flow.ToString());
         }
 

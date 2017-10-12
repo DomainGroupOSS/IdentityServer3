@@ -93,7 +93,7 @@ namespace IdentityServer3.Core.Endpoints
             {
                 if (validationResult.FailureReason == IntrospectionRequestValidationFailureReason.MissingToken)
                 {
-                    Logger.Error("Missing token");
+                    Logger.Warn("Missing token");
 
                     await RaiseFailureEventAsync(validationResult.ErrorDescription, validationResult.Token, scope.Name);
                     return BadRequest("missing_token");

@@ -74,7 +74,7 @@ namespace IdentityServer3.Core.Validation
                 var tokenValidationResult = await _tokenValidator.ValidateIdentityTokenAsync(idTokenHint, null, false);
                 if (tokenValidationResult.IsError)
                 {
-                    LogError("Error validating id token hint.");
+                    LogWarn("Error validating id token hint.");
                     return Invalid();
                 }
 
@@ -86,7 +86,7 @@ namespace IdentityServer3.Core.Validation
                 {
                     if (subject.GetSubjectId() != subClaim.Value)
                     {
-                        LogError("Current user does not match identity token");
+                        LogWarn("Current user does not match identity token");
                         return Invalid();
                     }
                 }
@@ -98,7 +98,7 @@ namespace IdentityServer3.Core.Validation
 
                     if (await _uriValidator.IsPostLogoutRedirectUriValidAsync(redirectUri, _validatedRequest.Client) == false)
                     {
-                        LogError("Invalid post logout URI");
+                        LogWarn("Invalid post logout URI");
                         return Invalid();
                     }
 
@@ -131,12 +131,12 @@ namespace IdentityServer3.Core.Validation
             };
         }
 
-        private void LogError(string message)
+        private void LogWarn(string message)
         {
             var log = new EndSessionRequestValidationLog(_validatedRequest);
             var json = LogSerializer.Serialize(log);
-            
-            Logger.ErrorFormat("{0}\n{1}", message, json);
+
+            Logger.WarnFormat("{0}\n{1}", message, json);
         }
 
         private void LogSuccess()

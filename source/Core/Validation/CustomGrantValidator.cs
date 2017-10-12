@@ -64,7 +64,7 @@ namespace IdentityServer3.Core.Validation
             }
             catch (Exception e)
             {
-                Logger.Error("Grant validation error:" + e.Message);
+                Logger.Warn("Grant validation error:" + e.Message);
                 return new CustomGrantValidationResult
                 {
                     IsError = true,

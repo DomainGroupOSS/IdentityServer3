@@ -105,7 +105,7 @@ namespace IdentityServer3.Core.Endpoints
 
             if (signin.Length > MaxSignInMessageLength)
             {
-                Logger.Error("signin parameter passed was larger than max length");
+                Logger.Warn("signin parameter passed was larger than max length");
                 return RenderErrorPage();
             }
 
@@ -136,7 +136,7 @@ namespace IdentityServer3.Core.Endpoints
 
             if (signin.Length > MaxSignInMessageLength)
             {
-                Logger.Error("Signin parameter passed was larger than max length");
+                Logger.Warn("Signin parameter passed was larger than max length");
                 return RenderErrorPage();
             }
 
@@ -211,7 +211,7 @@ namespace IdentityServer3.Core.Endpoints
 
             if (signin.Length > MaxSignInMessageLength)
             {
-                Logger.Error("Signin parameter passed was larger than max length");
+                Logger.Warn("Signin parameter passed was larger than max length");
                 return RenderErrorPage();
             }
 
@@ -224,13 +224,13 @@ namespace IdentityServer3.Core.Endpoints
 
             if (!(await IsLocalLoginAllowedForClient(signInMessage)))
             {
-                Logger.ErrorFormat("Login not allowed for client {0}", signInMessage.ClientId);
+                Logger.WarnFormat("Login not allowed for client {0}", signInMessage.ClientId);
                 return RenderErrorPage();
             }
 
             if (model == null)
             {
-                Logger.Error("no data submitted");
+                Logger.Warn("no data submitted");
                 return await RenderLoginPage(signInMessage, signin, localizationService.GetMessage(MessageIds.InvalidUsernameOrPassword));
             }
 
@@ -256,7 +256,7 @@ namespace IdentityServer3.Core.Endpoints
 
             if (model.Username.Length > options.InputLengthRestrictions.UserName || model.Password.Length > options.InputLengthRestrictions.Password)
             {
-                Logger.Error("username or password submitted beyond allowed length");
+                Logger.Warn("username or password submitted beyond allowed length");
                 return await RenderLoginPage(signInMessage, signin);
             }
 
@@ -322,13 +322,13 @@ namespace IdentityServer3.Core.Endpoints
 
             if (provider.IsMissing())
             {
-                Logger.Error("No provider passed");
+                Logger.Warn("No provider passed");
                 return RenderErrorPage(localizationService.GetMessage(MessageIds.NoExternalProvider));
             }
 
             if (provider.Length > options.InputLengthRestrictions.IdentityProvider)
             {
-                Logger.Error("Provider parameter passed was larger than max length");
+                Logger.Warn("Provider parameter passed was larger than max length");
                 return RenderErrorPage();
             }
 
@@ -340,7 +340,7 @@ namespace IdentityServer3.Core.Endpoints
 
             if (signin.Length > MaxSignInMessageLength)
             {
-                Logger.Error("Signin parameter passed was larger than max length");
+                Logger.Warn("Signin parameter passed was larger than max length");
                 return RenderErrorPage();
             }
 
@@ -354,7 +354,7 @@ namespace IdentityServer3.Core.Endpoints
             if (!(await clientStore.IsValidIdentityProviderAsync(signInMessage.ClientId, provider)))
             {
                 var msg = String.Format("External login error: provider {0} not allowed for client: {1}", provider, signInMessage.ClientId);
-                Logger.ErrorFormat(msg);
+                Logger.WarnFormat(msg);
                 await eventService.RaiseFailureEndpointEventAsync(EventConstants.EndpointNames.Authenticate, msg);
                 return RenderErrorPage();
             }
@@ -362,7 +362,7 @@ namespace IdentityServer3.Core.Endpoints
             if (context.IsValidExternalAuthenticationProvider(provider) == false)
             {
                 var msg = String.Format("External login error: provider requested {0} is not a configured external provider", provider);
-                Logger.ErrorFormat(msg);
+                Logger.WarnFormat(msg);
                 await eventService.RaiseFailureEndpointEventAsync(EventConstants.EndpointNames.Authenticate, msg);
                 return RenderErrorPage();
             }
@@ -394,7 +394,7 @@ namespace IdentityServer3.Core.Endpoints
 
                 if (error.Length > options.InputLengthRestrictions.ExternalError) error = error.Substring(0, options.InputLengthRestrictions.ExternalError);
 
-                Logger.ErrorFormat("External identity provider returned error: {0}", error);
+                Logger.WarnFormat("External identity provider returned error: {0}", error);
                 await eventService.RaiseExternalLoginErrorEventAsync(error);
 
                 if (signInIdOnQueryString.IsPresent())
@@ -424,7 +424,7 @@ namespace IdentityServer3.Core.Endpoints
             var user = await context.GetIdentityFromExternalProvider();
             if (user == null)
             {
-                Logger.Error("no identity from external identity provider");
+                Logger.Warn("no identity from external identity provider");
                 return await RenderLoginPage(signInMessage, signInId, localizationService.GetMessage(MessageIds.NoMatchingExternalAccount));
             }
 
@@ -432,7 +432,7 @@ namespace IdentityServer3.Core.Endpoints
             if (externalIdentity == null)
             {
                 var claims = user.Claims.Select(x => new { x.Type, x.Value });
-                Logger.ErrorFormat("no subject or unique identifier claims from external identity provider. Claims provided:\r\n{0}", LogSerializer.Serialize(claims));
+                Logger.WarnFormat("no subject or unique identifier claims from external identity provider. Claims provided:\r\n{0}", LogSerializer.Serialize(claims));
                 return await RenderLoginPage(signInMessage, signInId, localizationService.GetMessage(MessageIds.NoMatchingExternalAccount));
             }
 
@@ -492,20 +492,20 @@ namespace IdentityServer3.Core.Endpoints
 
             if (resume.IsMissing())
             {
-                Logger.Error("no resumeId passed");
+                Logger.Warn("no resumeId passed");
                 return RenderErrorPage();
             }
 
             if (resume.Length > MaxSignInMessageLength)
             {
-                Logger.Error("resumeId length longer than allowed length");
+                Logger.Warn("resumeId length longer than allowed length");
                 return RenderErrorPage();
             }
 
             var user = await context.GetIdentityFromPartialSignIn();
             if (user == null)
             {
-                Logger.Error("no identity from partial login");
+                Logger.Warn("no identity from partial login");
                 return RenderErrorPage();
             }
 
@@ -513,21 +513,21 @@ namespace IdentityServer3.Core.Endpoints
             var resumeClaim = user.FindFirst(type);
             if (resumeClaim == null)
             {
-                Logger.Error("no claim matching resumeId");
+                Logger.Warn("no claim matching resumeId");
                 return RenderErrorPage();
             }
 
             var signInId = resumeClaim.Value;
             if (signInId.IsMissing())
             {
-                Logger.Error("No signin id found in resume claim");
+                Logger.Warn("No signin id found in resume claim");
                 return RenderErrorPage();
             }
 
             var signInMessage = signInMessageCookie.Read(signInId);
             if (signInMessage == null)
             {
-                Logger.Error("No cookie matching signin id found");
+                Logger.Warn("No cookie matching signin id found");
                 return RenderErrorPage();
             }
 
@@ -631,7 +631,7 @@ namespace IdentityServer3.Core.Endpoints
         {
             if (id != null && id.Length > MaxSignInMessageLength)
             {
-                Logger.Error("Logout prompt requested, but id param is longer than allowed length");
+                Logger.Warn("Logout prompt requested, but id param is longer than allowed length");
                 return RenderErrorPage();
             }
 
@@ -686,7 +686,7 @@ namespace IdentityServer3.Core.Endpoints
 
             if (id != null && id.Length > MaxSignInMessageLength)
             {
-                Logger.Error("id param is longer than allowed length");
+                Logger.Warn("id param is longer than allowed length");
                 return RenderErrorPage();
             }
 
