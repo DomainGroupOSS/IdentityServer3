@@ -205,7 +205,7 @@
     <value>Exceeded failed login attempts</value>
   </data>
   <data name="LoginNotAllowed" xml:space="preserve">
-    <value>Not allowed to signin to this application</value>
+    <value>Not allowed to sign in to this application</value>
   </data>
   <data name="InvalidPasswordlessCodes" xml:space="preserve">
     <value>Challenge code or session code is invalid</value>
