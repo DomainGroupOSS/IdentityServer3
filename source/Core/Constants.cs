@@ -344,6 +344,7 @@ namespace IdentityServer3.Core
                             {
                                 PromptModes.None,
                                 PromptModes.Login,
+                                PromptModes.TwoFactorChallenge,
                                 PromptModes.Consent,
                                 PromptModes.SelectAccount,
                             };

@@ -93,6 +93,14 @@ namespace IdentityServer3.Core.Models
         public IEnumerable<string> AcrValues { get; set; }
 
         /// <summary>
+        /// The prompt passed from the authorization request.
+        /// </summary>
+        /// <value>
+        /// The Prompt
+        /// </value>
+        public string Prompt { get; set; }
+
+        /// <summary>
         /// Is for user registration
         /// </summary>
         public bool IsSignUp { get; set; }

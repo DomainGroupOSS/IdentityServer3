@@ -81,6 +81,12 @@ namespace IdentityServer3.Core.ResponseHandling
                 _signIn.LoginHint = request.LoginHint;
             }
 
+            // pass through prompt Mode
+            if (request.PromptMode.IsPresent())
+            {
+                _signIn.Prompt = request.PromptMode;
+            }
+
             // process acr values
             var acrValues = request.AuthenticationContextReferenceClasses.Distinct().ToList();
             
@@ -200,7 +206,20 @@ namespace IdentityServer3.Core.ResponseHandling
                         SignInMessage = _signIn
                     };
                 }
-            }            
+            }
+
+            if (request.PromptMode == Constants.PromptModes.TwoFactorChallenge)
+            {
+                Logger.Info("Two Factor Challenge. Redirecting to two factor challenge.");
+                // remove prompt so when we redirect back in from login page
+                // we won't think we need to force a prompt again
+                request.Raw.Remove(Constants.AuthorizeRequest.Prompt);
+
+                return new LoginInteractionResponse
+                {
+                    SignInMessage = _signIn
+                };
+            }
 
             return new LoginInteractionResponse();
         }
