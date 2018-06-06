@@ -52,11 +52,5 @@ namespace IdentityServer3.Core.Events
         /// The lifetime.
         /// </value>
         public int Lifetime { get; set; }
-
-        /// <summary>
-        /// Gets or sets the subject Id
-        /// </summary>
-        /// <value></value>
-        public string SubjectId { get; set; }
     }
 }
