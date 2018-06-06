@@ -457,7 +457,8 @@ namespace IdentityServer3.Core.Extensions
                 OldHandle = oldHandle,
                 NewHandle = newHandle,
                 ClientId = token.ClientId,
-                Lifetime = token.LifeTime
+                Lifetime = token.LifeTime,
+                SubjectId = token.SubjectId
             };
 
             await events.RaiseEventAsync(evt);
