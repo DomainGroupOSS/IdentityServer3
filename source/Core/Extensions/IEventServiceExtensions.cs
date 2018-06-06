@@ -18,6 +18,7 @@ using IdentityServer3.Core.Events;
 using IdentityServer3.Core.Models;
 using IdentityServer3.Core.Services;
 using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -452,13 +453,17 @@ namespace IdentityServer3.Core.Extensions
                 EventTypes.Success,
                 EventConstants.Ids.RefreshTokenRefreshedSuccess);
 
+            string subjectId = String.Empty;
+            if (token.AccessToken != null && token.AccessToken.Claims != null)
+                subjectId = token.AccessToken.Claims.Where(x => x.Type == Constants.ClaimTypes.Subject).Select(x => x.Value).SingleOrDefault();
+
             evt.Details = new RefreshTokenRefreshDetails
             {
                 OldHandle = oldHandle,
                 NewHandle = newHandle,
                 ClientId = token.ClientId,
                 Lifetime = token.LifeTime,
-                SubjectId = token.SubjectId
+                SubjectId = subjectId
             };
 
             await events.RaiseEventAsync(evt);
