@@ -93,9 +93,8 @@ task CreateNuGetPackage -depends ILMerge {
 	if ($buildNumber -ne 0){
 		$packageVersion = $packageVersion + "-build" + $buildNumber.ToString().PadLeft(5,'0')
 	}
-
-
+  
 	copy-item $src_directory\Domain.IdentityServer3.nuspec $dist_directory
 	copy-item $output_directory\IdentityServer3.xml $dist_directory\lib\net45\
-	exec { . $nuget_path pack $dist_directory\Domain.IdentityServer3.nuspec -BasePath $dist_directory -o $dist_directory -version $packageVersion }
+	exec { . $nuget_path pack $dist_directory\Domain.IdentityServer3.nuspec -BasePath $dist_directory -OutputDirectory $dist_directory -version $packageVersion }
 }
