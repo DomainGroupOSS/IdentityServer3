@@ -134,7 +134,10 @@ namespace IdentityServer3.Core.Services.Default
                 var newLifetime = currentLifetime + client.SlidingRefreshTokenLifetime;
                 Logger.Debug("New lifetime: " + newLifetime.ToString());
 
-                if (newLifetime > client.AbsoluteRefreshTokenLifetime)
+                // This is how IdentityServer 4 provides never expiring refresh tokens
+                // zero absolute refresh token lifetime represents unbounded absolute lifetime
+                // if absolute lifetime > 0, cap at absolute lifetime
+                if (client.AbsoluteRefreshTokenLifetime > 0 && newLifetime > client.AbsoluteRefreshTokenLifetime )
                 {
                     newLifetime = client.AbsoluteRefreshTokenLifetime;
                     Logger.Debug("New lifetime exceeds absolute lifetime, capping it to " + newLifetime.ToString());
