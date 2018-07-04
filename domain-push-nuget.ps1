@@ -2,7 +2,8 @@ Write-Host "Pushing to NuGet gallery"
 
 $nugetApiKey = "17d0e131-77ec-4f6b-a991-72b5032262bb"
 $nugetFeedUrl = "https://repository.domain.com.au/nuget/platform/package"
-$nugetExeLocation = ".\\Source\\.nuget\\NuGet.exe"
+#$nugetExeLocation = ".\\Source\\.nuget\\NuGet.exe"
+$nugetExeLocation = "Nuget"
 $componentPackageLocation = ".\\distribution"
 
 Write-Host "Nuget repository Url: " $nugetFeedUrl
