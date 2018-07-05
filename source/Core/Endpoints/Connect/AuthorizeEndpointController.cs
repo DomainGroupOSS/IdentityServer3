@@ -78,7 +78,6 @@ namespace IdentityServer3.Core.Endpoints
         /// <param name="antiForgeryToken">The anti forgery token.</param>
         /// <param name="clientListCookie">The client list cookie.</param>
         /// <param name="twoFactorCookie">The two factor cookie.</param>
-        /// <param name="twoFactorService"></param>
         public AuthorizeEndpointController(
             IViewService viewService,
             AuthorizeRequestValidator validator,

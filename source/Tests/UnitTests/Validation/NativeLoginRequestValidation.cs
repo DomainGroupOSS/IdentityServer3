@@ -838,7 +838,7 @@ namespace IdentityServer3.Tests.Validation
         }
 
         [Fact]
-        public async void Empty_Client_Should_Throw_Argument_Null_Exception()
+        public void Empty_Client_Should_Throw_Argument_Null_Exception()
         {
             Client client = null;
             _validatorSetup.InitializeValidator();
@@ -849,7 +849,7 @@ namespace IdentityServer3.Tests.Validation
         }
 
         [Fact]
-        public async void Empty_Parameters_Should_Throw_Argument_Null_Exception()
+        public void Empty_Parameters_Should_Throw_Argument_Null_Exception()
         {
             NameValueCollection parameters = null;
             _validatorSetup.InitializeValidator();
