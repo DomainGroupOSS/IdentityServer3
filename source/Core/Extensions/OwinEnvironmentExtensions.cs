@@ -110,6 +110,7 @@ namespace IdentityServer3.Core.Extensions
         /// <param name="env">The OWIN environment.</param>
         /// <param name="message">The signin message.</param>
         /// <param name="signinId"></param>
+        /// <param name="resumeUrl"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// env

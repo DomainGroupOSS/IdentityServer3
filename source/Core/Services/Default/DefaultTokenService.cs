@@ -185,6 +185,7 @@ namespace IdentityServer3.Core.Services.Default
         /// Creates an identity token for partially authenticated users.
         /// </summary>
         /// <param name="request">The token creation request.</param>
+        /// <param name="partialClaims"></param>
         /// <returns>
         /// An identity token
         /// </returns>
