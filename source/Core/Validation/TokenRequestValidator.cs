@@ -458,7 +458,7 @@ namespace IdentityServer3.Core.Validation
 
                 if (isActiveCtx.IsActive == false)
                 {
-                    var error = "User has been disabled: " + _validatedRequest.AuthorizationCode.Subject;
+                    var error = "User has been disabled: " + subjectClaim.Value;
                     LogWarn(error);
 
                     return Invalid(Constants.TokenErrors.InvalidRequest);
