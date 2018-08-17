@@ -36,7 +36,7 @@ namespace IdentityServer3.Core.Models
             Client = client;
             
             IsActive = true;
-            IsEmailVerificationRequired = true;
+            IsEmailVerificationRequired = false;
         }
 
         /// <summary>
