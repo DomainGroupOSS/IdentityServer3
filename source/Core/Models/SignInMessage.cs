@@ -112,5 +112,11 @@ namespace IdentityServer3.Core.Models
         {
             AcrValues = Enumerable.Empty<string>();
         }
+
+
+        /// <summary>
+        /// Is Email Verification Required
+        /// </summary>
+        public bool PromptAuthenticatedUserForEmailVerification { get; set; }
     }
 }

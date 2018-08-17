@@ -36,6 +36,7 @@ namespace IdentityServer3.Core.Models
             Client = client;
             
             IsActive = true;
+            IsEmailVerificationRequired = false;
         }
 
         /// <summary>
@@ -61,5 +62,13 @@ namespace IdentityServer3.Core.Models
         ///   <c>true</c> if the subject is active; otherwise, <c>false</c>.
         /// </value>
         public bool IsActive { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether email verification is required for user
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if email verification is verified; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsEmailVerificationRequired { get; set; }
     }
 }

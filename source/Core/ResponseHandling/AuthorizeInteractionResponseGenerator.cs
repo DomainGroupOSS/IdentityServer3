@@ -139,6 +139,7 @@ namespace IdentityServer3.Core.ResponseHandling
             
             // user de-activated
             bool isActive = false;
+            bool promptAuthenticatedUserForEmailVerification = false;
 
             if (isAuthenticated)
             {
@@ -146,7 +147,9 @@ namespace IdentityServer3.Core.ResponseHandling
                 await _users.IsActiveAsync(isActiveCtx);
                 
                 isActive = isActiveCtx.IsActive; 
-                if (!isActive) Logger.Info("User is not active. Redirecting to login.");               
+                if (!isActive) Logger.Info("User is not active. Redirecting to login.");
+
+                promptAuthenticatedUserForEmailVerification = isActiveCtx.IsEmailVerificationRequired;
             }
 
             if (!isAuthenticated || !isActive)
@@ -215,6 +218,16 @@ namespace IdentityServer3.Core.ResponseHandling
                 // we won't think we need to force a prompt again
                 request.Raw.Remove(Constants.AuthorizeRequest.Prompt);
 
+                return new LoginInteractionResponse
+                {
+                    SignInMessage = _signIn
+                };
+            }
+
+            if (promptAuthenticatedUserForEmailVerification)
+            {
+                Logger.Info("Email verification is Required. Redirecting to login..");
+                _signIn.PromptAuthenticatedUserForEmailVerification = true;
                 return new LoginInteractionResponse
                 {
                     SignInMessage = _signIn
