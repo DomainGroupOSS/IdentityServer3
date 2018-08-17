@@ -20,12 +20,11 @@ using IdentityServer3.Core;
 using IdentityServer3.Core.Configuration;
 using IdentityServer3.Core.Models;
 using IdentityServer3.Core.ResponseHandling;
-using IdentityServer3.Core.Services;
 using IdentityServer3.Core.Services.Default;
 using IdentityServer3.Core.Validation;
-using Moq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using IdentityServer3.Core.Services.InMemory;
 using Xunit;
 
 namespace IdentityServer3.Tests.Connect.ResponseHandling
@@ -58,8 +57,47 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         [Fact]
         public async Task Authenticated_User_must_not_SignIn()
         {
-            var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
+
+            var request = new ValidatedAuthorizeRequest
+            {
+                ClientId = "foo",
+                Client = new Client()
+            };
+
+            var principal = IdentityServerPrincipal.Create("123", "dom");
+            var result = await generator.ProcessLoginAsync(request, principal);
+
+            result.IsLogin.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task Authenticated_User_Requiring_Email_Verification_must_SignIn()
+        {
+            var users = new List<InMemoryUser>() {new InMemoryUser() {Subject = "123", Enabled = true}};
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification:true);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
+
+            var request = new ValidatedAuthorizeRequest
+            {
+                ClientId = "foo",
+                Client = new Client()
+            };
+
+            var principal = IdentityServerPrincipal.Create("123", "dom");
+            var result = await generator.ProcessLoginAsync(request, principal);
+
+            result.IsLogin.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Authenticated_User_Not_Requiring_Email_Verification_must_not_SignIn()
+        {
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification:false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -76,8 +114,9 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         [Fact]
         public async Task Authenticated_User_with_allowed_current_Idp_must_not_SignIn()
         {
-            var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -100,8 +139,9 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         [Fact]
         public async Task Authenticated_User_with_restricted_current_Idp_must_SignIn()
         {
-            var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -124,8 +164,9 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         [Fact]
         public async Task Authenticated_User_with_allowed_requested_Idp_must_not_SignIn()
         {
-            var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -145,8 +186,9 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         [Fact]
         public async Task Authenticated_User_with_different_requested_Idp_must_SignIn()
         {
-            var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -168,8 +210,9 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         {
             options.AuthenticationOptions.EnableLocalLogin = false;
 
-            var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -193,8 +236,9 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         {
             options.AuthenticationOptions.EnableLocalLogin = true;
 
-            var users = new Mock<IUserService>();
-            var generator = new AuthorizeInteractionResponseGenerator(options, null, users.Object, null, new DefaultLocalizationService());
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
             {
@@ -213,4 +257,21 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
             result.IsLogin.Should().BeTrue();
         }
     }
+
+    public class InMemoryUserServiceTest : InMemoryUserService
+    {
+        private bool _allUsersRequireEmailVerification;
+        public InMemoryUserServiceTest(List<InMemoryUser> users, bool allUsersRequireEmailVerification) : base(users)
+        {
+            _allUsersRequireEmailVerification = allUsersRequireEmailVerification;
+        }
+
+        public override Task IsActiveAsync(IsActiveContext context)
+        {
+            base.IsActiveAsync(context);
+            context.IsEmailVerificationRequired = _allUsersRequireEmailVerification;
+            return Task.FromResult(0);
+        }
+    }
+
 }
