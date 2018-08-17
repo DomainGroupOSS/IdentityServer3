@@ -60,7 +60,8 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         [Fact]
         public async Task Authenticated_User_must_not_SignIn()
         {
-            var userService = new InMemoryUserService(new List<InMemoryUser>(){new InMemoryUser(){Subject = "123", Enabled = true}});
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: true);
             var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
@@ -166,7 +167,8 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         [Fact]
         public async Task Authenticated_User_with_allowed_requested_Idp_must_not_SignIn()
         {
-            var userService = new InMemoryUserService(new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } });
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: true);
             var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
