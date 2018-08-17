@@ -20,14 +20,11 @@ using IdentityServer3.Core;
 using IdentityServer3.Core.Configuration;
 using IdentityServer3.Core.Models;
 using IdentityServer3.Core.ResponseHandling;
-using IdentityServer3.Core.Services;
 using IdentityServer3.Core.Services.Default;
 using IdentityServer3.Core.Validation;
-using Moq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using IdentityServer3.Core.Services.InMemory;
-using IdentityServer3.Tests.TokenClients;
 using Xunit;
 
 namespace IdentityServer3.Tests.Connect.ResponseHandling
@@ -61,7 +58,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         public async Task Authenticated_User_must_not_SignIn()
         {
             var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
-            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: true);
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
             var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
@@ -168,7 +165,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         public async Task Authenticated_User_with_allowed_requested_Idp_must_not_SignIn()
         {
             var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
-            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: true);
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
             var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 
             var request = new ValidatedAuthorizeRequest
