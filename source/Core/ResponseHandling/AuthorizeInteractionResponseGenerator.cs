@@ -149,7 +149,7 @@ namespace IdentityServer3.Core.ResponseHandling
                 isActive = isActiveCtx.IsActive; 
                 if (!isActive) Logger.Info("User is not active. Redirecting to login.");
 
-                promptAuthenticatedUserForEmailVerification = isActiveCtx.DoesClientEnforceEmailVerification && !isActiveCtx.IsUserAccountVerified;
+                promptAuthenticatedUserForEmailVerification = isActiveCtx.IsEmailVerificationRequired;
             }
 
             if (!isAuthenticated || !isActive)

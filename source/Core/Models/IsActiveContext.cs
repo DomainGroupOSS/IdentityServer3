@@ -36,8 +36,7 @@ namespace IdentityServer3.Core.Models
             Client = client;
             
             IsActive = true;
-            DoesClientEnforceEmailVerification = false;
-            IsUserAccountVerified = false;
+            IsEmailVerificationRequired = true;
         }
 
         /// <summary>
@@ -64,21 +63,12 @@ namespace IdentityServer3.Core.Models
         /// </value>
         public bool IsActive { get; set; }
 
-
         /// <summary>
-        /// Gets or sets a value indicating whether client enforce email verification
+        /// Gets or sets a value indicating whether email verification is required for user
         /// </summary>
         /// <value>
-        ///   <c>true</c> if client enforce email verification; otherwise, <c>false</c>.
+        ///   <c>true</c> if email verification is verified; otherwise, <c>false</c>.
         /// </value>
-        public bool DoesClientEnforceEmailVerification { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether user account is verified
-        /// </summary>
-        /// <value>
-        ///   <c>true</c> if user account is verified; otherwise, <c>false</c>.
-        /// </value>
-        public bool IsUserAccountVerified { get; set; }
+        public bool IsEmailVerificationRequired { get; set; }
     }
 }
