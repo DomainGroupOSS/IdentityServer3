@@ -21,7 +21,15 @@ gci .\source -Recurse "packages.config" |% {
     }
 }
 
-Import-Module .\source\packages\psake.4.4.1\tools\psake.psm1
+$msbuild = .\source\packages\vswhere.2.5.2\tools\vswhere.exe -version "[15.0,16.0)" -requires Microsoft.Component.MSBuild -property installationPath
+if ($msbuild) {
+    $msbuild = join-path $msbuild 'MSBuild\15.0\Bin\MSBuild.exe'
+}
+else {
+    $msbuild = "msbuild"
+}
+
+Import-Module .\source\packages\psake.4.7.1\tools\psake\psake.psm1
 
 #if(Test-Path Env:\APPVEYOR_BUILD_NUMBER){
 #	$buildNumber = [int]$Env:APPVEYOR_BUILD_NUMBER
@@ -32,6 +40,6 @@ Import-Module .\source\packages\psake.4.4.1\tools\psake.psm1
 
 "Build number $buildNumber"
 
-Invoke-Psake .\default-domain.ps1 $task -properties @{ buildNumber=$buildNumber; preRelease=$preRelease }
+Invoke-Psake .\default-domain.ps1 $task -properties @{ buildNumber=$buildNumber; preRelease=$preRelease; msbuild=$msbuild }
 
 Remove-Module psake
