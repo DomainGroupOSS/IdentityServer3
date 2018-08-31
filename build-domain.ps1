@@ -1,6 +1,8 @@
 Param(
-	[string]$buildNumber = "0",
-	[string]$preRelease = $null
+    [string]$buildNumber = "0",
+    [string]$preRelease = $null,
+    [string]$branchName = "master",
+    [string]$gitCommitHash = "1234567890123456789012345678901234567890"
 )
 
 $exists = Test-Path nuget.exe
@@ -40,6 +42,6 @@ Import-Module .\source\packages\psake.4.7.1\tools\psake\psake.psm1
 
 "Build number $buildNumber"
 
-Invoke-Psake .\default-domain.ps1 $task -properties @{ buildNumber=$buildNumber; preRelease=$preRelease; msbuild=$msbuild }
+Invoke-Psake .\default-domain.ps1 $task -properties @{ buildNumber=$buildNumber; preRelease=$preRelease; msbuild=$msbuild; branchName=$branchName; gitCommitHash=$gitCommitHash }
 
 Remove-Module psake

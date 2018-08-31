@@ -14,6 +14,8 @@ properties {
 	$version = "2.6.2.0"
 	$preRelease = $null
 	$msbuild = "msbuild"
+	$gitCommitHash = $null
+	$branchName = $null
 }
 
 task default -depends Clean, RunTests, CreateNuGetPackage
@@ -85,17 +87,14 @@ task CreateNuGetPackage -depends ILMerge {
 	}
 	$major = $vSplit[0]
 	$minor = $vSplit[1]
-	$patch = $vSplit[2]
-	$packageVersion =  "$major.$minor.$patch"
-	if($preRelease){
-		$packageVersion = "$packageVersion-$preRelease"
-	}
-	
-	if ($buildNumber -ne 0){
-		$packageVersion = $packageVersion + "-build" + $buildNumber.ToString().PadLeft(5,'0')
+	$packageVersion =  "$major.$minor.$buildNumber"
+	if($branchName){
+		if ($branchName -ne "master") {
+			$packageVersion = "$packageVersion-$branchName"
+		}
 	}
   
 	copy-item $src_directory\Domain.IdentityServer3.nuspec $dist_directory
 	copy-item $output_directory\IdentityServer3.xml $dist_directory\lib\net45\
-	exec { . $nuget_path pack $dist_directory\Domain.IdentityServer3.nuspec -BasePath $dist_directory -OutputDirectory $dist_directory -version $packageVersion }
+	exec { . $nuget_path pack $dist_directory\Domain.IdentityServer3.nuspec -BasePath $dist_directory -OutputDirectory $dist_directory -version $packageVersion -Properties "BranchName=$branchName;GitCommitHash=$gitCommitHash;BuildNumber=$buildNumber" }
 }
