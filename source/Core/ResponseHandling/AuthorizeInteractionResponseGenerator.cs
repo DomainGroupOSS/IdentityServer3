@@ -233,14 +233,14 @@ namespace IdentityServer3.Core.ResponseHandling
             }
 
             var acrValuesInRequest = request.Raw[Constants.AuthorizeRequest.AcrValues].FromSpaceSeparatedString().Distinct().ToList();
-            var twoFARequiredAcrValue = acrValuesInRequest.FirstOrDefault(x => 0 == string.CompareOrdinal(x, Constants.KnownAcrValues.TwoFaRequired));
-            if (twoFARequiredAcrValue.IsPresent())
+            var multiFactor = acrValuesInRequest.FirstOrDefault(x => 0 == string.CompareOrdinal(x, Constants.KnownAcrValues.MultiFactor));
+            if (multiFactor.IsPresent())
             {
                 // remove 2fa:required so when on resume partial, we don't initiate login process again
-                acrValuesInRequest.Remove(twoFARequiredAcrValue);
+                acrValuesInRequest.Remove(multiFactor);
                 request.Raw[Constants.AuthorizeRequest.AcrValues] = acrValuesInRequest.ToSpaceSeparatedString();
 
-                _signIn.Is2FARequired = true;
+                _signIn.IsMultiFactorRequested = true;
                 return new LoginInteractionResponse
                 {
                     SignInMessage = _signIn

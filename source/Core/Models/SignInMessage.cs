@@ -122,7 +122,7 @@ namespace IdentityServer3.Core.Models
         /// <summary>
         /// Is 2FA required
         /// </summary>
-        public bool Is2FARequired { get; set; }
+        public bool IsMultiFactorRequested { get; set; }
 
 
     }
