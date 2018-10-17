@@ -23,6 +23,7 @@ using IdentityServer3.Core.ResponseHandling;
 using IdentityServer3.Core.Services.Default;
 using IdentityServer3.Core.Validation;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Threading.Tasks;
 using IdentityServer3.Core.Services.InMemory;
 using Xunit;
@@ -71,6 +72,130 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
             var result = await generator.ProcessLoginAsync(request, principal);
 
             result.IsLogin.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task Authenticated_User_With_MultiFactor_Request_must_SignIn()
+        {
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
+
+            var request = new ValidatedAuthorizeRequest
+            {
+                ClientId = "foo",
+                Client = new Client(),
+                Raw = new NameValueCollection { { Constants.AuthorizeRequest.AcrValues, $"FirstACRValue {Constants.KnownAcrValues.MultiFactor} thirdAcrValue" }}
+            };
+
+            var principal = IdentityServerPrincipal.Create("123", "dom");
+            var result = await generator.ProcessLoginAsync(request, principal);
+
+            result.IsLogin.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Request_with_multiFactor_acr_should_return_signimessage_having_IsMultiFactorRequested_set_to_true_if_AuthenticatedUser_exists()
+        {
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
+
+            var request = new ValidatedAuthorizeRequest
+            {
+                ClientId = "foo",
+                Client = new Client(),
+                Raw = new NameValueCollection { { Constants.AuthorizeRequest.AcrValues, $"FirstACRValue {Constants.KnownAcrValues.MultiFactor} thirdAcrValue" } }
+            };
+
+            var principal = IdentityServerPrincipal.Create("123", "dom");
+            var result = await generator.ProcessLoginAsync(request, principal);
+
+            result.SignInMessage.IsMultiFactorRequested.Should().BeTrue();
+        }
+
+
+        [Fact]
+        public async Task Request_with_multiFactor_acr_should_return_signin_message_having_IsMultiFactorRequested_set_to_false_if_AuthenticatedUser_does_not_exists()
+        {
+            var users = new List<InMemoryUser>() { };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
+
+            var request = new ValidatedAuthorizeRequest
+            {
+                ClientId = "foo",
+                Client = new Client(),
+                Raw = new NameValueCollection { { Constants.AuthorizeRequest.AcrValues, $"FirstACRValue {Constants.KnownAcrValues.MultiFactor} thirdAcrValue" } }
+            };
+
+            var principal = IdentityServerPrincipal.Create("123", "dom");
+            var result = await generator.ProcessLoginAsync(request, principal);
+
+            result.SignInMessage.IsMultiFactorRequested.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task Request_with_multiFactor_acr_should_be_updated_to_not_have_the_multiFactor_acr_if_AuthenticatedUser_exists()
+        {
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
+
+            var originalAcrValue = $"FirstACRValue {Constants.KnownAcrValues.MultiFactor} thirdAcrValue";
+            var updatedAcrValue = $"FirstACRValue thirdAcrValue";
+            var request = new ValidatedAuthorizeRequest
+            {
+                ClientId = "foo",
+                Client = new Client(),
+                Raw = new NameValueCollection { { Constants.AuthorizeRequest.AcrValues, originalAcrValue } }
+            };
+
+            var principal = IdentityServerPrincipal.Create("123", "dom");
+            await generator.ProcessLoginAsync(request, principal);
+
+            request.Raw.GetValues(Constants.AuthorizeRequest.AcrValues).Should().Equal(updatedAcrValue);
+        }
+
+        [Fact]
+        public async Task Request_with_multiFactor_acr_should_not_be_updated_if_AuthenticatedUser_does_not_exists()
+        {
+            var users = new List<InMemoryUser>() {  };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
+
+            var originalAcrValue = $"FirstACRValue {Constants.KnownAcrValues.MultiFactor} thirdAcrValue";
+            var request = new ValidatedAuthorizeRequest
+            {
+                ClientId = "foo",
+                Client = new Client(),
+                Raw = new NameValueCollection { { Constants.AuthorizeRequest.AcrValues, originalAcrValue } }
+            };
+
+            var principal = IdentityServerPrincipal.Create("123", "dom", authenticationTime: 12);
+            await generator.ProcessLoginAsync(request, principal);
+
+            request.Raw.GetValues(Constants.AuthorizeRequest.AcrValues).Should().Equal(originalAcrValue);
+        }
+
+        [Fact]
+        public async Task Request_with_multiFactor_acr_should_return_signimessage_having_IsMultiFactorRequested_set_to_false_if_AuthenticatedUser_exists_but_Email_Verification_is_Required()
+        {
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: true);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
+
+            var request = new ValidatedAuthorizeRequest
+            {
+                ClientId = "foo",
+                Client = new Client(),
+                Raw = new NameValueCollection { { Constants.AuthorizeRequest.AcrValues, $"FirstACRValue {Constants.KnownAcrValues.MultiFactor} thirdAcrValue" } }
+            };
+
+            var principal = IdentityServerPrincipal.Create("123", "dom");
+            var result = await generator.ProcessLoginAsync(request, principal);
+
+            result.SignInMessage.IsMultiFactorRequested.Should().BeFalse();
         }
 
         [Fact]
@@ -236,7 +361,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         {
             options.AuthenticationOptions.EnableLocalLogin = true;
 
-            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = false } };
             var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
             var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
 

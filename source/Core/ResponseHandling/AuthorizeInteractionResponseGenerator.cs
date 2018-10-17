@@ -232,19 +232,22 @@ namespace IdentityServer3.Core.ResponseHandling
                 };
             }
 
-            var acrValuesInRequest = request.Raw[Constants.AuthorizeRequest.AcrValues].FromSpaceSeparatedString().Distinct().ToList();
-            var multiFactor = acrValuesInRequest.FirstOrDefault(x => 0 == string.CompareOrdinal(x, Constants.KnownAcrValues.MultiFactor));
-            if (multiFactor.IsPresent())
+            var acrValuesInRequest = request.Raw?[Constants.AuthorizeRequest.AcrValues]?.FromSpaceSeparatedString()?.Distinct().ToList();
+            if (acrValuesInRequest != null)
             {
-                // remove 2fa:required so when on resume partial, we don't initiate login process again
-                acrValuesInRequest.Remove(multiFactor);
-                request.Raw[Constants.AuthorizeRequest.AcrValues] = acrValuesInRequest.ToSpaceSeparatedString();
-
-                _signIn.IsMultiFactorRequested = true;
-                return new LoginInteractionResponse
+                var multiFactor = acrValuesInRequest.FirstOrDefault(x => 0 == string.CompareOrdinal(x, Constants.KnownAcrValues.MultiFactor));
+                if (multiFactor.IsPresent())
                 {
-                    SignInMessage = _signIn
-                };
+                    // remove 2fa:required so when on resume partial, we don't initiate login process again
+                    acrValuesInRequest.Remove(multiFactor);
+                    request.Raw[Constants.AuthorizeRequest.AcrValues] = acrValuesInRequest.ToSpaceSeparatedString();
+
+                    _signIn.IsMultiFactorRequested = true;
+                    return new LoginInteractionResponse
+                    {
+                        SignInMessage = _signIn
+                    };
+                }
             }
 
 
