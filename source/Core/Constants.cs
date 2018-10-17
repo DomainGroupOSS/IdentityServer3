@@ -354,6 +354,7 @@ namespace IdentityServer3.Core
             public const string HomeRealm = "idp:";
             public const string Tenant = "tenant:";
             public const string Signup = "signup:";
+            public const string TwoFaRequired = "2fa:required";
         }
 
         public static class CodeChallengeMethods
