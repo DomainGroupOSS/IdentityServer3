@@ -354,7 +354,7 @@ namespace IdentityServer3.Core
             public const string HomeRealm = "idp:";
             public const string Tenant = "tenant:";
             public const string Signup = "signup:";
-            public const string MultiFactor = "http://schemas.openid.net/pape/policies/2007/06/multi-factor";
+            public const string MultiFactor = "2fa:required"; //AkamaiGHost server won't allow http://schemas.openid.net/pape/policies/2007/06/multi-factor" in url returning 403
         }
 
         public static class CodeChallengeMethods
