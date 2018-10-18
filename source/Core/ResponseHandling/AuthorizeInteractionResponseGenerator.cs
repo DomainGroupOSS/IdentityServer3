@@ -27,8 +27,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.Owin;
-using Microsoft.Owin.Security;
 
 #pragma warning disable 1591
 
@@ -233,6 +231,25 @@ namespace IdentityServer3.Core.ResponseHandling
                     SignInMessage = _signIn
                 };
             }
+
+            var acrValuesInRequest = request.Raw?[Constants.AuthorizeRequest.AcrValues]?.FromSpaceSeparatedString()?.Distinct().ToList();
+            if (acrValuesInRequest != null)
+            {
+                var multiFactor = acrValuesInRequest.FirstOrDefault(x => 0 == string.CompareOrdinal(x, Constants.KnownAcrValues.MultiFactor));
+                if (multiFactor.IsPresent())
+                {
+                    // remove 2fa:required so when on resume partial, we don't initiate login process again
+                    acrValuesInRequest.Remove(multiFactor);
+                    request.Raw[Constants.AuthorizeRequest.AcrValues] = acrValuesInRequest.ToSpaceSeparatedString();
+
+                    _signIn.IsMultiFactorRequested = true;
+                    return new LoginInteractionResponse
+                    {
+                        SignInMessage = _signIn
+                    };
+                }
+            }
+
 
             return new LoginInteractionResponse();
         }

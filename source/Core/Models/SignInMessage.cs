@@ -118,5 +118,12 @@ namespace IdentityServer3.Core.Models
         /// Is Email Verification Required
         /// </summary>
         public bool PromptAuthenticatedUserForEmailVerification { get; set; }
+
+        /// <summary>
+        /// Is 2FA required
+        /// </summary>
+        public bool IsMultiFactorRequested { get; set; }
+
+
     }
 }
