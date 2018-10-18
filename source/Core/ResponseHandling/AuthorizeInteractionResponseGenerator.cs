@@ -242,7 +242,7 @@ namespace IdentityServer3.Core.ResponseHandling
                     acrValuesInRequest.Remove(multiFactor);
                     request.Raw[Constants.AuthorizeRequest.AcrValues] = acrValuesInRequest.ToSpaceSeparatedString();
 
-                    _signIn.IsMultiFactorRequested = true;
+                    _signIn.PromptAuthenticatedUserFor2FA = true;
                     return new LoginInteractionResponse
                     {
                         SignInMessage = _signIn
