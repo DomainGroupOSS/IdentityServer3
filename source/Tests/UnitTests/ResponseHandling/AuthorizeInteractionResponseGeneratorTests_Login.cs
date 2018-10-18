@@ -132,7 +132,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
             var principal = IdentityServerPrincipal.Create("123", "dom");
             var result = await generator.ProcessLoginAsync(request, principal);
 
-            result.SignInMessage.PromptAuthenticatedUserForEmailVerification.Should().BeFalse();
+            result.SignInMessage.PromptAuthenticatedUserFor2FA.Should().BeFalse();
         }
 
         [Fact]
