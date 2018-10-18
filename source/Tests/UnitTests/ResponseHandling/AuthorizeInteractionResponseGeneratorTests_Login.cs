@@ -95,7 +95,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         }
 
         [Fact]
-        public async Task Request_with_multiFactor_acr_should_return_signimessage_having_IsMultiFactorRequested_set_to_true_if_AuthenticatedUser_exists()
+        public async Task Request_with_multiFactor_acr_should_return_signimessage_having_PromptAuthenticatedUserFor2FA_property_set_to_true_if_AuthenticatedUser_exists()
         {
             var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
             var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
@@ -111,12 +111,12 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
             var principal = IdentityServerPrincipal.Create("123", "dom");
             var result = await generator.ProcessLoginAsync(request, principal);
 
-            result.SignInMessage.IsMultiFactorRequested.Should().BeTrue();
+            result.SignInMessage.PromptAuthenticatedUserFor2FA.Should().BeTrue();
         }
 
 
         [Fact]
-        public async Task Request_with_multiFactor_acr_should_return_signin_message_having_IsMultiFactorRequested_set_to_false_if_AuthenticatedUser_does_not_exists()
+        public async Task Request_with_multiFactor_acr_should_return_signin_message_having_PromptAuthenticatedUserFor2FA_property_set_set_to_false_if_AuthenticatedUser_does_not_exists()
         {
             var users = new List<InMemoryUser>() { };
             var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
@@ -132,7 +132,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
             var principal = IdentityServerPrincipal.Create("123", "dom");
             var result = await generator.ProcessLoginAsync(request, principal);
 
-            result.SignInMessage.IsMultiFactorRequested.Should().BeFalse();
+            result.SignInMessage.PromptAuthenticatedUserForEmailVerification.Should().BeFalse();
         }
 
         [Fact]
@@ -179,7 +179,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
         }
 
         [Fact]
-        public async Task Request_with_multiFactor_acr_should_return_signimessage_having_IsMultiFactorRequested_set_to_false_if_AuthenticatedUser_exists_but_Email_Verification_is_Required()
+        public async Task Request_with_multiFactor_acr_should_return_signimessage_having_PromptAuthenticatedUserFor2FA_property_set_to_false_if_AuthenticatedUser_exists_but_Email_Verification_is_Required()
         {
             var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
             var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: true);
@@ -195,7 +195,7 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
             var principal = IdentityServerPrincipal.Create("123", "dom");
             var result = await generator.ProcessLoginAsync(request, principal);
 
-            result.SignInMessage.IsMultiFactorRequested.Should().BeFalse();
+            result.SignInMessage.PromptAuthenticatedUserFor2FA.Should().BeFalse();
         }
 
         [Fact]
