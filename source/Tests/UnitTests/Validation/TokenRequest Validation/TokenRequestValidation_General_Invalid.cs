@@ -65,6 +65,38 @@ namespace IdentityServer3.Tests.Validation.TokenRequest
 
         [Fact]
         [Trait("Category", "TokenRequest Validation - General - Invalid")]
+        public async Task Client_Is_Not_Enabled()
+        {
+            var client = await _clients.FindClientByIdAsync("codeclient");
+            client.Enabled = false;
+            var store = new InMemoryAuthorizationCodeStore();
+
+            var code = new AuthorizationCode
+            {
+                Subject = IdentityServerPrincipal.Create("123", "bob"),
+                Client = client,
+                RedirectUri = "https://server/cb"
+            };
+
+            await store.StoreAsync("valid", code);
+
+            var validator = Factory.CreateTokenRequestValidator(
+                authorizationCodeStore: store);
+
+            var parameters = new NameValueCollection();
+            parameters.Add(Constants.TokenRequest.GrantType, Constants.GrantTypes.AuthorizationCode);
+            parameters.Add(Constants.TokenRequest.Code, "valid");
+            parameters.Add(Constants.TokenRequest.RedirectUri, "https://server/cb");
+
+            var result = await validator.ValidateRequestAsync(parameters, client);
+
+            result.IsError.Should().BeTrue();
+            result.Error.Should().Be(Constants.TokenErrors.InvalidClient);
+
+        }
+
+        [Fact]
+        [Trait("Category", "TokenRequest Validation - General - Invalid")]
         public async Task Unknown_Grant_Type()
         {
             var client = await _clients.FindClientByIdAsync("codeclient");

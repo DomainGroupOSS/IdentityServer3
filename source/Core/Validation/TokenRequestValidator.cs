@@ -88,6 +88,14 @@ namespace IdentityServer3.Core.Validation
             _validatedRequest.Client = client;
             _validatedRequest.Options = _options;
 
+
+            if (!client.Enabled)
+            {
+                Logger.Warn("Client is not enabled. Client Id is:" + client.ClientId);
+                return Invalid(Constants.TokenErrors.InvalidClient);
+            }
+
+
             /////////////////////////////////////////////
             // check grant type
             /////////////////////////////////////////////
