@@ -176,6 +176,11 @@ namespace IdentityServer3.Core.ResponseHandling
                     SignInMessage = _signIn
                 };
             }
+            else //Authenticated users shouln't be redirected to AuthenticationController:Signup but rather to Login action.
+                //The former would always render signup screen whereas later would use preauthenticate & other hooks to take user to next step.
+            {
+                _signIn.IsSignUp = false;
+            }
 
             // check current idp
             var currentIdp = user.GetIdentityProvider();

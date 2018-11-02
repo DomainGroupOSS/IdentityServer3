@@ -163,6 +163,70 @@ namespace IdentityServer3.Tests.Connect.ResponseHandling
             request.Raw.GetValues(Constants.AuthorizeRequest.AcrValues).Should().Equal(updatedAcrValue);
         }
 
+        [Fact]
+        public async Task Request_with_Signup_False_acr_value_should_return_signinMessage_having_IsSignUp_set_to_False()
+        {
+            var users = new List<InMemoryUser>() { };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
+
+            var originalAcrValues = new List<string>() { "FirstACRValue", Constants.KnownAcrValues.Signup + "False", "thirdAcrValue" };
+            var request = new ValidatedAuthorizeRequest
+            {
+                ClientId = "foo",
+                Client = new Client(),
+                AuthenticationContextReferenceClasses = originalAcrValues,
+                Raw = new NameValueCollection { { Constants.AuthorizeRequest.AcrValues, originalAcrValues.ToSpaceSeparatedString() } }
+            };
+
+            var principal = IdentityServerPrincipal.Create("123", "dom");
+            var result = await generator.ProcessLoginAsync(request, principal);
+            result.SignInMessage.IsSignUp.Should().BeFalse();
+        }
+
+
+        [Fact]
+        public async Task Request_with_Signup_True_acr_value_should_return_signinMessage_having_IsSignUp_set_to_True_if_authenticated_user_does_not_exists()
+        {
+            var users = new List<InMemoryUser>() { };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
+
+            var originalAcrValues = new List<string>() { "FirstACRValue", Constants.KnownAcrValues.Signup+"True", "thirdAcrValue" };
+            var request = new ValidatedAuthorizeRequest
+            {
+                ClientId = "foo",
+                Client = new Client(),
+                AuthenticationContextReferenceClasses = originalAcrValues,
+                Raw = new NameValueCollection { { Constants.AuthorizeRequest.AcrValues, originalAcrValues.ToSpaceSeparatedString() } }
+            };
+
+            var principal = IdentityServerPrincipal.Create("123", "dom");
+            var result = await generator.ProcessLoginAsync(request, principal);
+            result.SignInMessage.IsSignUp.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Request_with_Signup_True_acr_value_should_return_a_null_signinMessage_if_authenticated_user_exists()
+        {
+            var users = new List<InMemoryUser>() { new InMemoryUser() { Subject = "123", Enabled = true } };
+            var userService = new InMemoryUserServiceTest(users, allUsersRequireEmailVerification: false);
+            var generator = new AuthorizeInteractionResponseGenerator(options, null, userService, null, new DefaultLocalizationService());
+
+            var originalAcrValues = new List<string>() { "FirstACRValue", Constants.KnownAcrValues.Signup + "True", "thirdAcrValue" };
+            var request = new ValidatedAuthorizeRequest
+            {
+                ClientId = "foo",
+                Client = new Client(),
+                AuthenticationContextReferenceClasses = originalAcrValues,
+                Raw = new NameValueCollection { { Constants.AuthorizeRequest.AcrValues, originalAcrValues.ToSpaceSeparatedString() } }
+            };
+
+            var principal = IdentityServerPrincipal.Create("123", "dom");
+            var result = await generator.ProcessLoginAsync(request, principal);
+            result.SignInMessage.Should().BeNull();
+        }
+
 
         [Fact]
         public async Task Request_with_multiFactor_acr_should_be_updated_to_not_have_the_multiFactor_acr_if_AuthenticatedUser_exists()
