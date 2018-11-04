@@ -107,6 +107,7 @@ namespace IdentityServer3.Core.ResponseHandling
             var signup = acrValues.FirstOrDefault(x => x.StartsWith(Constants.KnownAcrValues.Signup));
             if (signup.IsPresent())
             {
+                RemoveAcrValueFromRequest(request, Constants.KnownAcrValues.Signup);
                 _signIn.IsSignUp =  String.Equals(signup.Substring(Constants.KnownAcrValues.Signup.Length), bool.TrueString, StringComparison.CurrentCultureIgnoreCase);
 				acrValues.Remove(signup);
             }
@@ -175,6 +176,11 @@ namespace IdentityServer3.Core.ResponseHandling
                     SignInMessage = _signIn
                 };
             }
+            else //Authenticated users shouln't be redirected to AuthenticationController:Signup but rather to Login action.
+                //The former would always render signup screen whereas later would use preauthenticate & other hooks to take user to next step.
+            {
+                _signIn.IsSignUp = false;
+            }
 
             // check current idp
             var currentIdp = user.GetIdentityProvider();
@@ -232,26 +238,29 @@ namespace IdentityServer3.Core.ResponseHandling
                 };
             }
 
-            var acrValuesInRequest = request.Raw?[Constants.AuthorizeRequest.AcrValues]?.FromSpaceSeparatedString()?.Distinct().ToList();
-            if (acrValuesInRequest != null)
+            var multiFactor =  acrValues.FirstOrDefault(x => 0 == string.CompareOrdinal(x, Constants.KnownAcrValues.MultiFactor));
+            if (multiFactor.IsPresent())
             {
-                var multiFactor = acrValuesInRequest.FirstOrDefault(x => 0 == string.CompareOrdinal(x, Constants.KnownAcrValues.MultiFactor));
-                if (multiFactor.IsPresent())
+                // remove 2fa:required so when on resume partial, we don't initiate login process again
+                RemoveAcrValueFromRequest(request, Constants.KnownAcrValues.MultiFactor);
+                _signIn.PromptAuthenticatedUserFor2FA = true;
+                return new LoginInteractionResponse
                 {
-                    // remove 2fa:required so when on resume partial, we don't initiate login process again
-                    acrValuesInRequest.Remove(multiFactor);
-                    request.Raw[Constants.AuthorizeRequest.AcrValues] = acrValuesInRequest.ToSpaceSeparatedString();
-
-                    _signIn.PromptAuthenticatedUserFor2FA = true;
-                    return new LoginInteractionResponse
-                    {
-                        SignInMessage = _signIn
-                    };
-                }
+                    SignInMessage = _signIn
+                };
             }
 
-
             return new LoginInteractionResponse();
+        }
+
+        private static void RemoveAcrValueFromRequest(ValidatedAuthorizeRequest request, string knownAcrValue)
+        {
+            var acrValuesInRequest = request.Raw?[Constants.AuthorizeRequest.AcrValues]?.FromSpaceSeparatedString()?.Distinct().ToList();
+            var knownAcrValueInRequest = acrValuesInRequest.FirstOrDefault(x => x.StartsWith(knownAcrValue));
+            if (!knownAcrValueInRequest.IsPresent())
+                return;
+            acrValuesInRequest.Remove(knownAcrValueInRequest);
+            request.Raw[Constants.AuthorizeRequest.AcrValues] = acrValuesInRequest.ToSpaceSeparatedString();
         }
 
         public Task<LoginInteractionResponse> ProcessClientLoginAsync(ValidatedAuthorizeRequest request)
