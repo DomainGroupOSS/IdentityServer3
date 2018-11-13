@@ -546,7 +546,7 @@ namespace IdentityServer3.Core.Validation
             }
 
             if (request.Subject.Identity.IsAuthenticated && 
-            request.Subject.Claims.Any(c => c.Type == Constants.ClaimTypes.AuthenticationMethod && c.Value == Constants.AuthenticationMethods.TwoFactorAuthentication))
+            request.Subject.Claims.Any(c => c.Type == Constants.ClaimTypes.AuthenticationMethod && c.Value == Constants.AuthenticationMethods.MultiFactorAuthentication))
             {
                 if (!_twoFactorCookie.IsValid(request.Subject.GetSubjectId()))
                 {
