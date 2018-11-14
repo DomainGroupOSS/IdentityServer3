@@ -863,7 +863,7 @@ namespace IdentityServer3.Core.Endpoints
                 sessionCookie.IssueSessionId(rememberMe);
 
                 var twoFactorAmr = id.FindFirst(c => c.Type == Constants.ClaimTypes.AuthenticationMethod);
-                if (twoFactorAmr != null && twoFactorAmr.Value == Constants.AuthenticationMethods.TwoFactorAuthentication)
+                if (twoFactorAmr != null && twoFactorAmr.Value == Constants.AuthenticationMethods.MultiFactorAuthentication && !twoFactorCookie.IsValid(authResult.User.GetSubjectId()))
                 {
                     var twoFactorAmrRemember = id.FindFirst(c => c.Type == Constants.ClaimTypes.TwoFactorRememberDevice);
                     var remember = twoFactorAmrRemember != null && bool.Parse(twoFactorAmrRemember.Value);
