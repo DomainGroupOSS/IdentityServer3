@@ -152,6 +152,8 @@ namespace IdentityServer3.Core.Endpoints
                 if (token.ClientId == client.ClientId)
                 {
                     await _refreshTokens.RevokeAsync(token.SubjectId, token.ClientId);
+                    var message = string.Format("Client {0} revoked refreshed token: {1} for user with subject id of {2}", client.ClientId, handle, token.SubjectId);
+                    Logger.Debug(message);
                     await _tokenHandles.RevokeAsync(token.SubjectId, token.ClientId);
                     await _events.RaiseTokenRevokedEventAsync(token.SubjectId, handle, Constants.TokenTypeHints.RefreshToken);
                 }

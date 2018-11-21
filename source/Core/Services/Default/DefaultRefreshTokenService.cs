@@ -105,14 +105,14 @@ namespace IdentityServer3.Core.Services.Default
         /// </returns>
         public virtual async Task<string> UpdateRefreshTokenAsync(string handle, RefreshToken refreshToken, Client client)
         {
-            Logger.Debug("Updating refresh token");
+            Logger.Debug("Updating refresh token:" + handle);
 
             bool needsUpdate = false;
             string newHandle = handle;
 
             if (client.RefreshTokenUsage == TokenUsage.OneTimeOnly)
             {
-                Logger.Debug("Token usage is one-time only. Generating new handle");
+                Logger.Debug("Token usage is one-time only. Generating new handle. Old handle is:" + handle);
 
                 // delete old one
                 await _store.RemoveAsync(handle);
@@ -124,7 +124,7 @@ namespace IdentityServer3.Core.Services.Default
 
             if (client.RefreshTokenExpiration == TokenExpiration.Sliding)
             {
-                Logger.Debug("Refresh token expiration is sliding - extending lifetime");
+                Logger.Debug("Refresh token expiration is sliding - extending lifetime. Old handle is: " + handle + " New handle is:" + newHandle);
 
                 // make sure we don't exceed absolute exp
                 // cap it at absolute exp
@@ -149,12 +149,13 @@ namespace IdentityServer3.Core.Services.Default
 
             if (needsUpdate)
             {
+                Logger.Debug("Updating refresh token in store. Old handle is: " + handle + " New handle is:" + newHandle);
                 await _store.StoreAsync(newHandle, refreshToken);
-                Logger.Debug("Updated refresh token in store");
+                Logger.Debug("Updated refresh token in store. Old handle is: "+ handle + " New handle is:"+ newHandle);
             }
             else
             {
-                Logger.Debug("No updates to refresh token done");
+                Logger.Debug("No updates to refresh token done. Handle is:" + handle);
             }
 
             await RaiseRefreshTokenRefreshedEventAsync(handle, newHandle, refreshToken);
