@@ -75,6 +75,7 @@ namespace IdentityServer3.Core.Endpoints
             return await ProcessRequest(parameters);
         }
 
+        [NewRelic.Api.Agent.Trace]
         internal async Task<IHttpActionResult> ProcessRequest(NameValueCollection parameters)
         {
             var token = parameters.Get("token");
