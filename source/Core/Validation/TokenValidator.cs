@@ -146,6 +146,7 @@ namespace IdentityServer3.Core.Validation
             return customResult;
         }
 
+        [NewRelic.Api.Agent.Trace]
         public virtual async Task<TokenValidationResult> ValidateAccessTokenAsync(string token, string expectedScope = null)
         {
             Logger.Info("Start access token validation");
@@ -225,6 +226,7 @@ namespace IdentityServer3.Core.Validation
             return customResult;
         }
 
+        [NewRelic.Api.Agent.Trace]
         private async Task<TokenValidationResult> ValidateJwtAsync(string jwt, string audience, IEnumerable<X509Certificate2> signingCertificates, bool validateLifetime = true)
         {
             var handler = new JwtSecurityTokenHandler
@@ -287,6 +289,7 @@ namespace IdentityServer3.Core.Validation
             }
         }
 
+        [NewRelic.Api.Agent.Trace]
         private async Task<TokenValidationResult> ValidateReferenceAccessTokenAsync(string tokenHandle)
         {
             _log.TokenHandle = tokenHandle;
