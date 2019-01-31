@@ -76,7 +76,10 @@ namespace Owin
             app.ConfigureIdentityServerBaseUrl(options.PublicOrigin);
             app.ConfigureIdentityServerIssuer(options);
 
+            app.ConfigureRequestBodyBufferCheckpoint();
             app.ConfigureRequestBodyBuffer();
+            app.ConfigurePostRequestBodyBufferCheckpoint();
+
 
             // this needs to be earlier than the autofac middleware so anything is disposed and re-initialized
             // if we send the request back into the pipeline to render the logged out page
