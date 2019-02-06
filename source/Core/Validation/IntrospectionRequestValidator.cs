@@ -59,8 +59,8 @@ namespace IdentityServer3.Core.Validation
             var expectedScope = tokenValidationResult.Claims.FirstOrDefault(
                 c => c.Type == Constants.ClaimTypes.Scope && c.Value == scope.Name);
 
-            // expected scope not present
-            if (expectedScope == null)
+            // expected scope not present and unrestricted introspection is not allowed
+            if (expectedScope == null && !scope.AllowUnrestrictedIntrospection)
             {
                 fail.IsActive = false;
                 fail.IsError = true;
