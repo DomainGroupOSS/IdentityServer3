@@ -291,7 +291,7 @@ namespace IdentityServer3.Core.ResponseHandling
 
             var code = await CreateCodeAsync(request);
 
-            var claims = GetPartialAuthenitcationClaims(request, code);
+            var claims = GetPartialAuthenticationClaims(request, code);
 
             var identityToken = await _tokenService.CreatePartialAuthNIdentityTokenAsync(tokenRequest, claims).ConfigureAwait(false);
 
@@ -366,7 +366,7 @@ namespace IdentityServer3.Core.ResponseHandling
             return request.ProofKey;
         }
 
-        private IEnumerable<Claim> GetPartialAuthenitcationClaims(ValidatedNativeLoginRequest request, string code)
+        private IEnumerable<Claim> GetPartialAuthenticationClaims(ValidatedNativeLoginRequest request, string code)
         {
             var claims = new List<Claim>();
             claims.Add(new Claim(Constants.ClaimTypes.Partial.Reason, request.PartialReason));
