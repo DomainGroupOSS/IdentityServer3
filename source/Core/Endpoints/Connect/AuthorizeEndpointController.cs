@@ -159,7 +159,7 @@ namespace IdentityServer3.Core.Endpoints
                     var localAuthenticationContext = new LocalAuthenticationContext
                     {
                         PasswordlessConnectType = Constants.NativeLoginRequest.ConnectTypes.NativeLogin,
-                        PasswordlessConnectCode = connectSessionCode,
+                        PasswordlessSessionCode = connectSessionCode,
                         SignInMessage = loginInteraction.SignInMessage
                     };
 
