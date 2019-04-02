@@ -72,5 +72,30 @@ namespace IdentityServer3.Tests.Connect.Endpoints
             var resp = PostForm(Constants.RoutePaths.Oidc.Consent, (object)null);
             resp.AssertPage("error");
         }
+
+        /// <summary>
+        /// This flow allows the mobile team to spawn a web-view with the user already authenticated
+        /// </summary>
+        [Fact]
+        public void GetAuthorize_ConnectSessionPassed_TriesToLogin()
+        {
+            var param = System.Web.HttpUtility.ParseQueryString("");
+            param["client_id"] = "privilegedclient";
+            param["connect_session"] = "passwordlessAuthCode";
+            param["redirect_uri"] = "https://localhost:44312/callback";
+            param["response_type"] = "id_token";
+            param["scope"] = "openid";
+            param["nonce"] = "nonce";
+
+            var resp = Get(Constants.RoutePaths.Oidc.Authorize + "?" + param.ToString());
+
+            // check that we redirect the user correctly
+            resp.Headers.Location.Should().NotBeNull();
+            resp.Headers.Location.AbsoluteUri.StartsWith("https://localhost:44312/callback#id_token").Should().BeTrue();
+
+            // check that we drop a session cookie
+            resp.AssertCookie("idsrv");
+        }
+
     }
 }

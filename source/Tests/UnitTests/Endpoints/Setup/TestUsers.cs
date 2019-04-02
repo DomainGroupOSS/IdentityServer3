@@ -15,6 +15,7 @@
  */
 
 using IdentityServer3.Core;
+using IdentityServer3.Core.Models;
 using IdentityServer3.Core.Services.InMemory;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -27,17 +28,17 @@ namespace IdentityServer3.Tests.Endpoints
         {
             return new List<InMemoryUser>
                 {
-                    new InMemoryUser{Subject = "818727", Username = "alice", Password = "alice", 
+                    new InMemoryUser{Subject = "818727", Username = "alice", Password = "alice",
                         Claims = new Claim[]
                         {
                             new Claim(Constants.ClaimTypes.GivenName, "Alice"),
                             new Claim(Constants.ClaimTypes.FamilyName, "Smith"),
                             new Claim(Constants.ClaimTypes.Email, "AliceSmith@email.com"),
-                        }, 
-                        Provider = "Google", 
+                        },
+                        Provider = "Google",
                         ProviderId = "123"
                     },
-                    new InMemoryUser{Subject = "88421113", Username = "bob", Password = "bob", 
+                    new InMemoryUser{Subject = "88421113", Username = "bob", Password = "bob",
                         Claims = new Claim[]
                         {
                             new Claim(Constants.ClaimTypes.GivenName, "Bob"),
@@ -61,6 +62,15 @@ namespace IdentityServer3.Tests.Endpoints
                             new Claim(Constants.ClaimTypes.FamilyName, "user"),
                             new Claim(Constants.ClaimTypes.Email, "TestUser@email.com"),
                         }
+                    },
+                    new DomainInMemoryUser{Subject = "1000", Username = "passwordlessUser", Password = "",
+                        Claims = new Claim[]
+                        {
+                            new Claim(Constants.ClaimTypes.GivenName, "test"),
+                            new Claim(Constants.ClaimTypes.FamilyName, "user"),
+                            new Claim(Constants.ClaimTypes.Email, "TestUser@email.com"),
+                        },
+                        PasswordlessAuthCode = "passwordlessAuthCode".Sha256(),
                     },
                 };
         }

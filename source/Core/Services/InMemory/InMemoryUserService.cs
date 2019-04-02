@@ -55,6 +55,15 @@ namespace IdentityServer3.Core.Services.InMemory
                 select u;
 
             var user = query.SingleOrDefault();
+            if (user == null && context.IsPasswordless && !string.IsNullOrEmpty(context.PasswordlessSessionCode))
+            {
+                user = (
+                        from u in _users.OfType<DomainInMemoryUser>()
+                        where u.PasswordlessAuthCode == context.PasswordlessSessionCode.Sha256()
+                        select u
+                    ).SingleOrDefault();
+            }
+
             if (user != null)
             {
                 context.AuthenticateResult = new AuthenticateResult(user.Subject, GetDisplayName(user));

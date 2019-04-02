@@ -277,6 +277,7 @@
     <Compile Include="Extensions\EventExtensions.cs" />
     <Compile Include="Services\IAuthenticationSessionValidator.cs" />
     <Compile Include="Services\ICustomTokenResponseGenerator.cs" />
+    <Compile Include="Services\InMemory\DomainInMemoryUser.cs" />
     <Compile Include="Services\ISigningKeyService.cs" />
     <Compile Include="Services\ITwoFactorService.cs" />
     <Compile Include="Validation\BasicAuthenticationSecretParser.cs" />
