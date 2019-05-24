@@ -377,6 +377,19 @@ namespace IdentityServer3.Core.Endpoints
             message = message ?? new SignInMessage();
 
             var path = Url.Route(Constants.RouteNames.Oidc.Authorize, null).AddQueryString(parameters.ToQueryString());
+
+            Logger.Info("Before getting gaValues");
+            string gaUrl = string.Empty;
+            string[] gaValues = parameters.GetValues("_ga");
+            Logger.Info("After getting gaValue");
+            if (gaValues != null || gaValues.Length >= 0)
+            {
+                Logger.Info("Before getting single gaValue");
+                var gaValue = gaValues[0];
+                gaUrl = $"_ga={gaValue}";
+                Logger.Info($"gaUrl is {gaUrl}");
+            }
+
             var host = new Uri(Request.GetOwinEnvironment().GetIdentityServerHost());
             var url = new Uri(host, path);
             message.ReturnUrl = url.AbsoluteUri;
@@ -393,7 +406,7 @@ namespace IdentityServer3.Core.Endpoints
                 }
             }
 
-            return new LoginResult(Request.GetOwinContext().Environment, message, resumeUrl, authenticateResult);
+            return new LoginResult(Request.GetOwinContext().Environment, message, resumeUrl, authenticateResult, gaUrl);
         }
 
         async Task<IHttpActionResult> AuthorizeErrorAsync(ErrorTypes errorType, string error, string errorDescription, ValidatedAuthorizeRequest request)

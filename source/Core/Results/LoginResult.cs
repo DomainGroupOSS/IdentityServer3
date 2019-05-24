@@ -36,8 +36,9 @@ namespace IdentityServer3.Core.Results
         private readonly SignInMessage message;
         private readonly string resumeUrl;
         private readonly AuthenticateResult authResult;
+        private readonly string gaUrl;
 
-        public LoginResult(IDictionary<string, object> env, SignInMessage message, string resumeUrl = null, AuthenticateResult authResult = null)
+        public LoginResult(IDictionary<string, object> env, SignInMessage message, string resumeUrl = null, AuthenticateResult authResult = null, string gaUrl = null)
         {
             if (env == null) throw new ArgumentNullException("env");
             if (message == null) throw new ArgumentNullException("message");
@@ -46,6 +47,7 @@ namespace IdentityServer3.Core.Results
             this.message = message;
             this.resumeUrl = resumeUrl;
             this.authResult = authResult;
+            this.gaUrl = gaUrl;
         }
 
         public Task<HttpResponseMessage> ExecuteAsync(CancellationToken cancellationToken)
@@ -60,6 +62,21 @@ namespace IdentityServer3.Core.Results
             var response = new HttpResponseMessage(HttpStatusCode.Redirect);
             var signinId = string.Empty;
             var url = this.env.CreateSignInRequest(this.message, out signinId, resumeUrl);
+
+            if (gaUrl.IsPresent())
+            {
+                Logger.Info($"Before appending gaUrl. Url is {url}");
+                if (url.Contains("?"))
+                {
+                    url = $"&{url}{gaUrl}";
+                }
+                else
+                {
+                    url = $"{url}?{gaUrl}";
+                }
+
+                Logger.Info($"After appending gaUrl. Url is {url}");
+            }
 
             if (!string.IsNullOrWhiteSpace(resumeUrl) && !string.IsNullOrWhiteSpace(signinId))
             {
