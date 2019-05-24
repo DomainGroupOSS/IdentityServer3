@@ -124,20 +124,22 @@ namespace IdentityServer3.Core.Endpoints
 
         [Route(Constants.RoutePaths.Login, Name = Constants.RouteNames.Login)]
         [HttpGet]
-        public async Task<IHttpActionResult> Login(string signin = null)
+        public async Task<IHttpActionResult> Login(string signin = null, string _ga = null)
         {
             Logger.Info("Login page requested");
+
+            Logger.Info($"_ga Value is {_ga}");
 
             if (signin.IsMissing())
             {
                 Logger.Info("No signin id passed");
-                return HandleNoSignin();
+                return HandleNoSignin(_ga);
             }
 
             if (signin.Length > MaxSignInMessageLength)
             {
                 Logger.Warn("Signin parameter passed was larger than max length");
-                return RenderErrorPage();
+                return RenderErrorPage(_ga);
             }
 
             var signInMessage = signInMessageCookie.Read(signin);
@@ -145,7 +147,7 @@ namespace IdentityServer3.Core.Endpoints
             if (signInMessage == null)
             {
                 Logger.Info("No cookie matching signin id found");
-                return HandleNoSignin();
+                return HandleNoSignin(_ga);
             }
 
             Logger.DebugFormat("signin message passed to login: {0}", JsonConvert.SerializeObject(signInMessage, Formatting.Indented));
@@ -718,7 +720,7 @@ namespace IdentityServer3.Core.Endpoints
             return await RenderLoggedOutPage(id);
         }
 
-        private IHttpActionResult HandleNoSignin()
+        private IHttpActionResult HandleNoSignin(string gaValue = "")
         {
             if (options.AuthenticationOptions.InvalidSignInRedirectUrl.IsMissing())
             {
@@ -738,6 +740,16 @@ namespace IdentityServer3.Core.Endpoints
             else
             {
                 url = options.AuthenticationOptions.InvalidSignInRedirectUrl;
+            }
+
+            if (gaValue.IsPresent())
+            {
+                if (url.Contains("?"))
+                    url = $"{url}&_ga={gaValue}";
+                else
+                {
+                    url = $"{url}?_ga={gaValue}";
+                }
             }
 
             return Redirect(url);

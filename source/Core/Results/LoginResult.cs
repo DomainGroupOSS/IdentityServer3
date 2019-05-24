@@ -68,7 +68,7 @@ namespace IdentityServer3.Core.Results
                 Logger.Info($"Before appending gaUrl. Url is {url}");
                 if (url.Contains("?"))
                 {
-                    url = $"&{url}{gaUrl}";
+                    url = $"{url}&{gaUrl}";
                 }
                 else
                 {
