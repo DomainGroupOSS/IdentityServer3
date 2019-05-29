@@ -124,6 +124,8 @@ namespace IdentityServer3.Core.Models
         /// </summary>
         public bool PromptAuthenticatedUserFor2FA { get; set; }
 
+        public string GaLinkerQueryParam { get; set; }
+
 
     }
 }

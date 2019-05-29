@@ -382,10 +382,11 @@ namespace IdentityServer3.Core.Endpoints
             string gaUrl = string.Empty;
             string[] gaValues = parameters.GetValues("_ga");
             Logger.Info("After getting gaValue");
-            if (gaValues != null || gaValues.Length >= 0)
+            if (gaValues != null && gaValues.Length >= 0)
             {
                 Logger.Info("Before getting single gaValue");
                 var gaValue = gaValues[0];
+                message.GaLinkerQueryParam = $"_ga={gaValue}";
                 gaUrl = $"_ga={gaValue}";
                 Logger.Info($"gaUrl is {gaUrl}");
             }

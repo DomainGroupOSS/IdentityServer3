@@ -63,20 +63,33 @@ namespace IdentityServer3.Core.Results
             var signinId = string.Empty;
             var url = this.env.CreateSignInRequest(this.message, out signinId, resumeUrl);
 
-            if (gaUrl.IsPresent())
+            //if (gaUrl.IsPresent())
+            //{
+            //    Logger.Info($"Before appending gaUrl. Url is {url}");
+            //    if (url.Contains("?"))
+            //    {
+            //        url = $"{url}&{gaUrl}";
+            //    }
+            //    else
+            //    {
+            //        url = $"{url}?{gaUrl}";
+            //    }
+
+            //    Logger.Info($"After appending gaUrl. Url is {url}");
+            //}
+
+            if (message.GaLinkerQueryParam.IsPresent())
             {
-                Logger.Info($"Before appending gaUrl. Url is {url}");
                 if (url.Contains("?"))
                 {
-                    url = $"{url}&{gaUrl}";
+                    url = $"{url}&{message.GaLinkerQueryParam}";
                 }
                 else
                 {
-                    url = $"{url}?{gaUrl}";
+                    url = $"{url}?{message.GaLinkerQueryParam}";
                 }
-
-                Logger.Info($"After appending gaUrl. Url is {url}");
             }
+
 
             if (!string.IsNullOrWhiteSpace(resumeUrl) && !string.IsNullOrWhiteSpace(signinId))
             {
